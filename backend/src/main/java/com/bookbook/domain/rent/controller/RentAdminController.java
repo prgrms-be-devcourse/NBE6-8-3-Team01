@@ -51,7 +51,7 @@ public class RentAdminController {
         Pageable pageable = PageRequest.of(page - 1, size);
 
         Page<RentSimpleResponseDto> rentHistoryPage = rentService.getRentsPage(pageable, status, userId);
-        PageResponseDto<RentSimpleResponseDto> response = PageResponseDto.from(rentHistoryPage);
+        PageResponseDto<RentSimpleResponseDto> response = new PageResponseDto<>(rentHistoryPage);
 
         return ResponseEntity.ok(
                 RsData.of(

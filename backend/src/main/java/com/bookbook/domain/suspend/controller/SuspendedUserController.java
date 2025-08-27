@@ -44,7 +44,7 @@ public class SuspendedUserController {
         Pageable pageable = PageRequest.of(page - 1, size);
 
         Page<UserSuspendResponseDto> historyPage = suspendedUserService.getSuspendedHistoryPage(pageable, userId);
-        PageResponseDto<UserSuspendResponseDto> response = PageResponseDto.from(historyPage);
+        PageResponseDto<UserSuspendResponseDto> response = new PageResponseDto<>(historyPage);
 
         return ResponseEntity.ok(
                 RsData.of(

@@ -52,7 +52,7 @@ public class ReportAdminController {
         Pageable pageable = PageRequest.of(page - 1, size);
 
         Page<ReportSimpleResponseDto> reportHistoryPage = reportService.getReportPage(pageable, status, targetUserId);
-        PageResponseDto<ReportSimpleResponseDto> response = PageResponseDto.from(reportHistoryPage);
+        PageResponseDto<ReportSimpleResponseDto> response = new PageResponseDto<>(reportHistoryPage);
 
         return ResponseEntity.ok(
                 RsData.of(

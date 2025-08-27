@@ -146,7 +146,7 @@ public class AdminController {
         Pageable pageable = PageRequest.of(page - 1, size);
 
         Page<UserBaseDto> userPage = adminService.getFilteredUsers(pageable, status, userId);
-        PageResponseDto<UserBaseDto> response = PageResponseDto.from(userPage);
+        PageResponseDto<UserBaseDto> response = new PageResponseDto<>(userPage);
 
         return ResponseEntity.ok(
                 RsData.of(
