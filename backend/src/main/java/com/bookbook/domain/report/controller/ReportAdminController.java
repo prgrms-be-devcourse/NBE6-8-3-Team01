@@ -6,7 +6,7 @@ import com.bookbook.domain.report.enums.ReportStatus;
 import com.bookbook.domain.report.service.ReportService;
 import com.bookbook.global.rsdata.RsData;
 import com.bookbook.global.security.CustomOAuth2User;
-import com.bookbook.global.util.PageResponse;
+import com.bookbook.global.jpa.dto.response.PageResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -43,7 +43,7 @@ public class ReportAdminController {
      */
     @GetMapping
     @Operation(summary = "신고 목록 조회")
-    public ResponseEntity<RsData<PageResponse<ReportSimpleResponseDto>>> getReportPage(
+    public ResponseEntity<RsData<PageResponseDto<ReportSimpleResponseDto>>> getReportPage(
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size,
             @RequestParam(required = false) List<ReportStatus> status,
@@ -52,7 +52,7 @@ public class ReportAdminController {
         Pageable pageable = PageRequest.of(page - 1, size);
 
         Page<ReportSimpleResponseDto> reportHistoryPage = reportService.getReportPage(pageable, status, targetUserId);
-        PageResponse<ReportSimpleResponseDto> response = PageResponse.from(reportHistoryPage, page, size);
+        PageResponseDto<ReportSimpleResponseDto> response = PageResponseDto.from(reportHistoryPage);
 
         return ResponseEntity.ok(
                 RsData.of(
