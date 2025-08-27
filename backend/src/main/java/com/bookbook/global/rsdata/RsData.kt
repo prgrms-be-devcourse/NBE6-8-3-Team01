@@ -1,52 +1,38 @@
-package com.bookbook.global.rsdata;
+package com.bookbook.global.rsdata
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.annotation.Nullable;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+import com.fasterxml.jackson.annotation.JsonProperty
 
 /**
  * API 응답 공통 형식
  */
-@Getter
-@AllArgsConstructor
-public class RsData<T> {
-
+data class RsData<T>(
     @JsonProperty("resultCode")
-    private String resultCode;
+    val resultCode: String,
     
     @JsonProperty("msg")
-    private String msg;
+    val msg: String?,
     
     @JsonProperty("data")
-    private T data;
-    
-    @JsonProperty("statusCode")
-    private int statusCode;
+    val data: T?
+) {
+    @get:JsonProperty("statusCode")
+    val statusCode: Int
+        get() = resultCode.split("-", limit = 2)[0].toInt()
 
-    public RsData(String resultCode, String msg, T data) {
-        this.resultCode = resultCode;
-        this.msg = msg;
-        this.data = data;
-        this.statusCode = Integer.parseInt(resultCode.split("-", 2)[0]);
-    }
+    @get:JsonProperty("success")
+    val isSuccess: Boolean
+        get() = resultCode.startsWith("200")
 
-    @JsonProperty("success")
-    public boolean isSuccess() {
-        return resultCode.startsWith("200");
-    }
+    val isFail: Boolean
+        get() = !isSuccess
 
-    public boolean isFail() {
-        return !isSuccess();
-    }
+    companion object {
+        @JvmStatic
+        fun <T> of(resultCode: String, msg: String?, data: T?): RsData<T?> =
+            RsData(resultCode, msg, data)
 
-    // 성공 응답 생성 메서드
-    public static <T> RsData<T> of(String resultCode, String msg, T data) {
-        return new RsData<>(resultCode, msg, data);
-    }
-
-    // 실패 응답 생성 메서드
-    public static <T> RsData<T> of(String resultCode, String msg) {
-        return new RsData<>(resultCode, msg, null);
+        @JvmStatic
+        fun <T> of(resultCode: String, msg: String?): RsData<T?> =
+            RsData(resultCode, msg, null)
     }
 }
