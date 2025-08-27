@@ -125,7 +125,7 @@ export function ReportHistoryComponent({ data, onRefresh }: ContentComponentProp
             신고 목록
           </h3>
           <div className="text-sm text-gray-500">
-            {(data?.data?.length ?? 0) > 0 ? `총 ${data.data.length}건 검색 완료` : "검색 결과 없음"}
+            {(data?.content?.length ?? 0) > 0 ? `총 ${data.content.length}건 검색 완료` : "검색 결과 없음"}
           </div>
         </div>
 
