@@ -16,9 +16,9 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 @RestControllerAdvice
 class GlobalExceptionHandler {
     @ExceptionHandler(NoSuchElementException::class)
-    fun handle(ex: NoSuchElementException?): ResponseEntity<RsData<Void?>?> {
-        return ResponseEntity<RsData<Void?>?>(
-            RsData<Void?>(
+    fun handle(ex: NoSuchElementException?): ResponseEntity<RsData<Void>> {
+        return ResponseEntity(
+            RsData<Void>(
                 "404-1",
                 "해당 데이터가 존재하지 않습니다.",
                 null
@@ -28,7 +28,7 @@ class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(ConstraintViolationException::class)
-    fun handle(ex: ConstraintViolationException): ResponseEntity<RsData<Void?>?> {
+    fun handle(ex: ConstraintViolationException): ResponseEntity<RsData<Void>> {
         val message = ex.constraintViolations
             .map { violation ->
                 val field = violation.propertyPath.toString().split(".", limit = 2)[1]
@@ -40,8 +40,8 @@ class GlobalExceptionHandler {
             .sorted()
             .joinToString("\n")
 
-        return ResponseEntity<RsData<Void?>?>(
-            RsData<Void?>(
+        return ResponseEntity(
+            RsData<Void>(
                 "400-1",
                 message,
                 null
@@ -51,7 +51,7 @@ class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException::class)
-    fun handle(ex: MethodArgumentNotValidException): ResponseEntity<RsData<Void?>?> {
+    fun handle(ex: MethodArgumentNotValidException): ResponseEntity<RsData<Void>> {
         val message = ex.bindingResult
             .allErrors
             .filterIsInstance<FieldError>()
@@ -59,8 +59,8 @@ class GlobalExceptionHandler {
             .sorted()
             .joinToString("\n")
 
-        return ResponseEntity<RsData<Void?>?>(
-            RsData<Void?>(
+        return ResponseEntity(
+            RsData<Void>(
                 "400-1",
                 message,
                 null
@@ -70,9 +70,9 @@ class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(HttpMessageNotReadableException::class)
-    fun handle(ex: HttpMessageNotReadableException?): ResponseEntity<RsData<Void?>?> {
-        return ResponseEntity<RsData<Void?>?>(
-            RsData<Void?>(
+    fun handle(ex: HttpMessageNotReadableException?): ResponseEntity<RsData<Void>> {
+        return ResponseEntity(
+            RsData<Void>(
                 "400-1",
                 "요청 본문이 올바르지 않습니다.",
                 null
@@ -82,9 +82,9 @@ class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MissingRequestHeaderException::class)
-    fun handle(ex: MissingRequestHeaderException): ResponseEntity<RsData<Void?>?> {
-        return ResponseEntity<RsData<Void?>?>(
-            RsData<Void?>(
+    fun handle(ex: MissingRequestHeaderException): ResponseEntity<RsData<Void>> {
+        return ResponseEntity(
+            RsData<Void>(
                 "400-1",
                 "${ex.headerName}-NotBlank-${ex.localizedMessage}",
                 null
@@ -94,7 +94,7 @@ class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(ServiceException::class)
-    fun handle(ex: ServiceException, response: HttpServletResponse): RsData<Void?> {
+    fun handle(ex: ServiceException, response: HttpServletResponse): RsData<Void> {
         val rsData = ex.rsData
         response.status = rsData.statusCode
         return rsData
