@@ -17,11 +17,14 @@ abstract class BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Setter(AccessLevel.PROTECTED)
-    private val id = 0
+    var id: Int = 0
+        protected set
 
     @CreatedDate
-    private val createdDate: LocalDateTime? = null
+    var createdDate: LocalDateTime? = null
+        protected set
 
     @LastModifiedDate
-    private val modifiedDate: LocalDateTime? = null
+    var modifiedDate: LocalDateTime? = null
+        protected set
 }
