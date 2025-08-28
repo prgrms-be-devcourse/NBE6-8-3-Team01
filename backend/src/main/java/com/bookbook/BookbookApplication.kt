@@ -1,7 +1,6 @@
 package com.bookbook
 
 import io.github.cdimascio.dotenv.Dotenv
-import io.github.cdimascio.dotenv.DotenvEntry
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing
@@ -16,11 +15,8 @@ fun main(args: Array<String>) {
     try {
         Dotenv.configure()
             .ignoreIfMissing()
+            .systemProperties() // 이 한 줄로 기존의 forEach 루프를 대체합니다.
             .load()
-            .entries()
-            .forEach { entry: DotenvEntry ->
-                System.setProperty(entry.key, entry.value)
-            }
     } catch (e: Exception) {
         println(".env 파일 없음 - 기본 설정으로 실행")
     }
