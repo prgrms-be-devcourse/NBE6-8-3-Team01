@@ -6,10 +6,8 @@ import java.time.LocalDateTime
 
 // 25.08.28 현준
 // 대여 게시글의 간단한 정보를 담는 DTO.
-// 25.08.28 현준
-// 대여 게시글의 간단한 정보를 담는 DTO.
 data class RentSimpleResponseDto(
-    val id: Int,
+    val id: Long,
     val lenderUserId: Long?,
     val status: RentStatus?,
     val bookCondition: String?,

@@ -7,7 +7,7 @@ import java.time.LocalDateTime
 // 25.08.28 현준
 // 대여 게시글의 상세 정보를 담는 DTO.
 data class RentDetailResponseDto(
-    val id: Int,                           // 글 ID
+    val id: Long,                           // 글 ID
     val lenderUserId: Long?,               // 대여자 ID
     val title: String?,                    // 글 제목
     val bookCondition: String?,            // 책 상태
