@@ -114,7 +114,7 @@ public class RentService {
         boolean isWishlisted = false;
         if (currentUserId != null) {
             isWishlisted = wishListRepository.findByUserIdAndRentIdAndStatus(
-                    currentUserId, id, WishListStatus.ACTIVE).isPresent();
+                    currentUserId, id, WishListStatus.ACTIVE) != null;
         }
 
         return new RentResponseDto(
