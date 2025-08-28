@@ -15,7 +15,7 @@ import org.springframework.stereotype.Repository
 interface RentRepository : JpaRepository<Rent, Long> {
 
     // 대여자가 작성한 글 갯수 조회
-    fun countByLenderUserId(lenderUserId: Long): Long
+    fun countByLenderUserId(lenderUserId: Long): Int
 
     // 대여 가능한 책 목록 조회 (기본)
     fun findByRentStatus(rentStatus: RentStatus, pageable: Pageable): Page<Rent>
