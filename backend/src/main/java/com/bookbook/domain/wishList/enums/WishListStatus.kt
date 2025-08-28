@@ -1,9 +1,6 @@
-package com.bookbook.domain.wishList.enums;
+package com.bookbook.domain.wishList.enums
 
-import lombok.Getter;
-
-@Getter
-public enum WishListStatus {
+enum class WishListStatus {
     ACTIVE,
-    DELETED;
+    DELETED
 }
