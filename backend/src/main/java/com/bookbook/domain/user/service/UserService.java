@@ -167,10 +167,7 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ServiceException("404-USER-NOT-FOUND", "해당 ID의 사용자를 찾을 수 없습니다."));
 
-        return UserStatusResponseDto.builder()
-                .id(user.getId())
-                .userStatus(user.getUserStatus())
-                .build();
+        return new UserStatusResponseDto(user.getId(), user.getUserStatus());
     }
 
     @Transactional
