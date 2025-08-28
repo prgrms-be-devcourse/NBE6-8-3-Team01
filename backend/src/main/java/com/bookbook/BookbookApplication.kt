@@ -1,8 +1,8 @@
 package com.bookbook
 
 import io.github.cdimascio.dotenv.Dotenv
-import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.boot.runApplication
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing
 import org.springframework.scheduling.annotation.EnableScheduling
 
@@ -20,5 +20,5 @@ fun main(args: Array<String>) {
     } catch (e: Exception) {
         println(".env 파일 없음 - 기본 설정으로 실행")
     }
-    SpringApplication.run(BookbookApplication::class.java, *args)
+    runApplication<BookbookApplication>(*args)
 }
