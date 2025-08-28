@@ -12,10 +12,10 @@ import org.springframework.stereotype.Repository
 // 대여 게시글 관련 데이터베이스 작업을 처리하는 리포지토리 인터페이스
 // 25.08.28 현준
 @Repository
-interface RentRepository : JpaRepository<Rent, Int> {
+interface RentRepository : JpaRepository<Rent, Long> {
 
     // 대여자가 작성한 글 갯수 조회
-    fun countByLenderUserId(lenderUserId: Long): Int
+    fun countByLenderUserId(lenderUserId: Long): Long
 
     // 대여 가능한 책 목록 조회 (기본)
     fun findByRentStatus(rentStatus: RentStatus, pageable: Pageable): Page<Rent>
