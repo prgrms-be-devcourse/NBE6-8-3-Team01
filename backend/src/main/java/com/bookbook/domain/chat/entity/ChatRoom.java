@@ -36,7 +36,6 @@ public class ChatRoom extends BaseEntity {
     private Long borrowerId; // 빌리는 사람 ID
     
     @Column(nullable = false)
-    @Builder.Default
     private boolean isActive = true; // 채팅방 활성화 상태
     
     // isActive 필드의 getter/setter 명시적 정의
@@ -61,7 +60,6 @@ public class ChatRoom extends BaseEntity {
     private String lastMessage; // 마지막 메시지 내용
     
     @Column(nullable = false)
-    @Builder.Default
     private LocalDateTime createdDate = LocalDateTime.now();
     
     // 채팅방이 특정 사용자에게 속하는지 확인

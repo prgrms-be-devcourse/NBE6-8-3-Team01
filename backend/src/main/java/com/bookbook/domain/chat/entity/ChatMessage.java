@@ -35,17 +35,14 @@ public class ChatMessage extends BaseEntity {
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    @Builder.Default
     private MessageType messageType = MessageType.TEXT; // 메시지 타입
     
     @Column(nullable = false)
-    @Builder.Default
     private boolean isRead = false; // 읽음 여부
     
     private LocalDateTime readTime; // 읽은 시간
     
     @Column(nullable = false)
-    @Builder.Default
     private LocalDateTime createdDate = LocalDateTime.now();
     
     // 메시지 읽음 처리
