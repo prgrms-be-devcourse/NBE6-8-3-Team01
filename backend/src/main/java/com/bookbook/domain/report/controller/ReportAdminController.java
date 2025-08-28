@@ -77,7 +77,7 @@ public class ReportAdminController {
         return ResponseEntity.ok(
                 RsData.of(
                         "200-1",
-                        "%d번 신고글 조회 완료".formatted(reportDetail.id()),
+                        "%d번 신고글 조회 완료".formatted(reportDetail.id),
                         reportDetail
                 )
         );
