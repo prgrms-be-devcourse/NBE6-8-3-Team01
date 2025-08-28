@@ -3,7 +3,7 @@ package com.bookbook.domain.user.entity;
 import com.bookbook.domain.suspend.entity.SuspendedUser;
 import com.bookbook.domain.user.enums.Role;
 import com.bookbook.domain.user.enums.UserStatus;
-import com.bookbook.global.entity.BaseEntity; // BaseEntity 임포트 유지
+import com.bookbook.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -11,7 +11,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.AllArgsConstructor; // ✅ AllArgsConstructor 추가
+import lombok.AllArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -126,12 +126,4 @@ public class User extends BaseEntity {
         this.username = username;
     }
 
-    public void updateInfo(String nickname, String address) {
-        if (nickname != null && !nickname.trim().isEmpty()) {
-            this.setNickname(nickname);
-        }
-        if (address != null && !address.trim().isEmpty()) {
-            this.setAddress(address);
-        }
-    }
 }
