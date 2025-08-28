@@ -11,9 +11,7 @@ import java.time.LocalDateTime
 import java.util.*
 
 interface UserRepository : JpaRepository<User, Long> {
-    fun findByNickname(nickname: String): Optional<User>
     fun findByUsername(username: String): Optional<User>
-    fun findByEmail(email: String): Optional<User>
     fun findAllByUserStatusAndResumedAtBefore(userStatus: UserStatus, now: LocalDateTime): MutableList<User>
 
     @Query(
