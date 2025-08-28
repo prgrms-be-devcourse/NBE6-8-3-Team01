@@ -1,32 +1,26 @@
-package com.bookbook.domain.home.dto;
-
-import lombok.Builder;
-import lombok.Getter;
+package com.bookbook.domain.home.dto
 
 /**
  * 도서 정보 DTO (ID 포함)
  */
-@Getter
-@Builder
-public class BookInfoDto {
-    
+data class BookInfoDto(
     /**
      * 도서 ID
      */
-    private Long id;
-    
+    val id: Long? = null,
+
     /**
      * 도서 이미지 URL
      */
-    private String imageUrl;
-    
+    val imageUrl: String? = null,
+
     /**
      * 도서 제목
      */
-    private String title;
-    
+    val title: String? = null,
+
     /**
      * 도서 제목 (중복이지만 프론트엔드 호환성을 위해 추가)
      */
-    private String bookTitle;
-}
+    val bookTitle: String? = null
+)

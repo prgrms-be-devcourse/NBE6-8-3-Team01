@@ -1,8 +1,6 @@
-package com.bookbook.domain.home.entity;
+package com.bookbook.domain.home.entity
 
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*
 
 /**
  * 메인페이지용 Book 엔티티 (조회 전용)
@@ -10,30 +8,25 @@ import lombok.NoArgsConstructor;
  */
 @Entity
 @Table(name = "rent")
-@NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
-@Getter
-public class Book {
-    
+data class Book(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    
-    private String bookImage; // Rent 엔티티와 동일한 필드명 사용
-    
-    private String bookTitle; // 책 제목
-    
-    private String address; // 사용자 주소 (지역)
-    
-    // Getter 메서드들 - 프론트엔드 호환성을 위해 다른 이름으로 제공
-    public String getImage() {
-        return bookImage;
-    }
-    
-    public String getTitle() {
-        return bookTitle;
-    }
-    
-    public String getRegion() {
-        return address;
-    }
+    val id: Long? = null,
+
+    // 기존 Rent 엔티티와 동일한 필드명 사용 (bookImage)
+    val bookImage: String? = null,
+
+    val bookTitle: String? = null,
+
+    val address: String? = null
+) {
+    // 프론트엔드 호환성을 위한 getter 메서드들
+    val image: String?
+        get() = bookImage
+        
+    val title: String?
+        get() = bookTitle
+        
+    val region: String?
+        get() = address
 }

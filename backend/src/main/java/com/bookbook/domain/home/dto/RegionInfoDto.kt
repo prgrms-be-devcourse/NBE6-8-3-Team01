@@ -1,22 +1,16 @@
-package com.bookbook.domain.home.dto;
-
-import lombok.Builder;
-import lombok.Getter;
+package com.bookbook.domain.home.dto
 
 /**
  * 지역 정보 DTO
  */
-@Getter
-@Builder
-public class RegionInfoDto {
-    
+data class RegionInfoDto(
     /**
      * 지역명
      */
-    private String name;
-    
+    val name: String,
+
     /**
      * 지역 코드
      */
-    private String code;
-}
+    val code: String
+)
