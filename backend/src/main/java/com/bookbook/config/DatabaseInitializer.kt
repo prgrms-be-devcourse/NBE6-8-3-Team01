@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component
  * 데이터베이스 초기화 및 제약조건 업데이트 컴포넌트
  */
 @Component
-@Profile("dev", "test", "default") // production 환경에서는 실행하지 않음
+@Profile("!production") // production 환경을 제외한 모든 환경에서 실행
 class DatabaseInitializer(
     private val jdbcTemplate: JdbcTemplate
 ) {
