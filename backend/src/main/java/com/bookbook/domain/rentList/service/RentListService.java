@@ -302,7 +302,7 @@ public class RentListService {
      * @throws IllegalArgumentException 대여 기록을 찾을 수 없거나 이미 반납된 경우
      */
     @Transactional
-    public void returnBook(Long borrowerUserId, Integer rentId) {
+    public void returnBook(Long borrowerUserId, Long rentId) {
         // 해당 사용자의 진행 중인 대여 기록 조회 (APPROVED 상태만)
         List<RentList> rentLists = rentListRepository.findByRentIdAndBorrowerUserIdAndStatus(
                 rentId, borrowerUserId, RentRequestStatus.APPROVED);

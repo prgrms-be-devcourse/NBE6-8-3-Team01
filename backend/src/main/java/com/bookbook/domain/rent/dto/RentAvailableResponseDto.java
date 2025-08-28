@@ -20,7 +20,7 @@ public class RentAvailableResponseDto {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class BookInfo {
-        private Integer id;
+        private Long id;
         private String bookTitle;       // 책 제목
         private String author;          // 저자
         private String publisher;       // 출판사

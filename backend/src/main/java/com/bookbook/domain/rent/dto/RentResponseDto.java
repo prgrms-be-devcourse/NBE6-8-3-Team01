@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 // 대여 글 단건 조회를 위한 DTO
 @Builder
 public record RentResponseDto(
-        int id, // 글 ID
+        long id, // 글 ID
         Long lenderUserId, // 대여자 ID
         String title, // 글 제목
         String bookCondition, // 책 상태

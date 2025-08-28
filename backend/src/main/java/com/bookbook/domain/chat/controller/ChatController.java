@@ -53,7 +53,7 @@ public class ChatController {
                         .body(RsData.of("401", "로그인이 필요합니다.", null));
             }
             
-            ChatRoomResponse response = chatService.createOrGetChatRoom(request, user.getUserId().intValue());
+            ChatRoomResponse response = chatService.createOrGetChatRoom(request, user.getUserId());
             
             log.info("채팅방 생성/조회 성공 - roomId: {}", response.getRoomId());
             return ResponseEntity.ok(RsData.of("200", "채팅방이 생성되었습니다.", response));
@@ -83,7 +83,7 @@ public class ChatController {
         
         try {
             Pageable pageable = PageRequest.of(page, size);
-            Page<ChatRoomResponse> chatRooms = chatService.getChatRooms(user.getUserId().intValue(), pageable);
+            Page<ChatRoomResponse> chatRooms = chatService.getChatRooms(user.getUserId(), pageable);
             
             return ResponseEntity.ok(RsData.of("200", "채팅방 목록을 조회했습니다.", chatRooms));
         } catch (Exception e) {
@@ -104,7 +104,7 @@ public class ChatController {
         log.info("채팅방 정보 조회 - roomId: {}, userId: {}", roomId, user.getUserId());
         
         try {
-            ChatRoomResponse chatRoom = chatService.getChatRoom(roomId, user.getUserId().intValue());
+            ChatRoomResponse chatRoom = chatService.getChatRoom(roomId, user.getUserId());
             return ResponseEntity.ok(RsData.of("200", "채팅방 정보를 조회했습니다.", chatRoom));
         } catch (Exception e) {
             log.error("채팅방 정보 조회 실패", e);
@@ -132,7 +132,7 @@ public class ChatController {
         
         try {
             Pageable pageable = PageRequest.of(page, size);
-            Page<MessageResponse> messages = chatService.getChatMessages(roomId, user.getUserId().intValue(), pageable);
+            Page<MessageResponse> messages = chatService.getChatMessages(roomId, user.getUserId(), pageable);
             
             return ResponseEntity.ok(RsData.of("200", "채팅 메시지를 조회했습니다.", messages));
         } catch (Exception e) {
@@ -158,7 +158,7 @@ public class ChatController {
                 request.getRoomId(), user.getUserId(), request.getMessageType());
         
         try {
-            MessageResponse response = chatService.sendMessage(request, user.getUserId().intValue());
+            MessageResponse response = chatService.sendMessage(request, user.getUserId());
             
             return ResponseEntity.ok(RsData.of("200", "메시지가 전송되었습니다.", response));
         } catch (Exception e) {
@@ -183,7 +183,7 @@ public class ChatController {
         log.info("메시지 읽음 처리 - roomId: {}, userId: {}", roomId, user.getUserId());
         
         try {
-            chatService.markMessagesAsRead(roomId, user.getUserId().intValue());
+            chatService.markMessagesAsRead(roomId, user.getUserId());
             return ResponseEntity.ok(RsData.of("200", "메시지를 읽음 처리했습니다.", null));
         } catch (Exception e) {
             log.error("메시지 읽음 처리 실패", e);
@@ -206,7 +206,7 @@ public class ChatController {
         log.info("읽지 않은 메시지 개수 조회 - userId: {}", user.getUserId());
         
         try {
-            long unreadCount = chatService.getUnreadMessageCount(user.getUserId().intValue());
+            long unreadCount = chatService.getUnreadMessageCount(user.getUserId());
             return ResponseEntity.ok(RsData.of("200", "읽지 않은 메시지 개수를 조회했습니다.", unreadCount));
         } catch (Exception e) {
             log.error("읽지 않은 메시지 개수 조회 실패", e);
@@ -226,7 +226,7 @@ public class ChatController {
         log.info("채팅방 나가기 요청 - roomId: {}, userId: {}", roomId, user.getUserId());
         
         try {
-            chatService.leaveChatRoom(roomId, user.getUserId().intValue());
+            chatService.leaveChatRoom(roomId, user.getUserId());
             return ResponseEntity.ok(RsData.of("200", "채팅방을 나갔습니다.", null));
         } catch (Exception e) {
             log.error("채팅방 나가기 실패", e);

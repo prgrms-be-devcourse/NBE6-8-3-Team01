@@ -15,18 +15,18 @@ public interface RentListRepository extends JpaRepository<RentList, Long> {
     
     List<RentList> findByBorrowerUserIdAndStatus(Long borrowerUserId, RentRequestStatus status);
 
-    List<RentList> findByRentId(Integer rentId);
+    List<RentList> findByRentId(Long rentId);
 
-    Optional<RentList> findByBorrowerUserIdAndRentId(Long borrowerUserId, Integer rentId);
+    Optional<RentList> findByBorrowerUserIdAndRentId(Long borrowerUserId, Long rentId);
 
-    List<RentList> findByRentIdAndStatus(Integer rentId, RentRequestStatus status);
+    List<RentList> findByRentIdAndStatus(Long rentId, RentRequestStatus status);
 
     // 특정 신청자의 특정 책에 대한 특정 상태의 신청 조회
-    List<RentList> findByRentIdAndBorrowerUserIdAndStatus(Integer rentId, Long borrowerUserId, RentRequestStatus status);
+    List<RentList> findByRentIdAndBorrowerUserIdAndStatus(Long rentId, Long borrowerUserId, RentRequestStatus status);
 
     // 특정 신청자의 특정 책에 대한 모든 신청 조회 (상태 무관)
-    List<RentList> findByRentIdAndBorrowerUserId(Integer rentId, Long borrowerUserId);
+    List<RentList> findByRentIdAndBorrowerUserId(Long rentId, Long borrowerUserId);
 
     // 중복 신청 방지를 위한 메서드
-    boolean existsByBorrowerUserIdAndRentIdAndStatus(Long borrowerUserId, Integer rentId, RentRequestStatus status);
+    boolean existsByBorrowerUserIdAndRentIdAndStatus(Long borrowerUserId, Long rentId, RentRequestStatus status);
 }

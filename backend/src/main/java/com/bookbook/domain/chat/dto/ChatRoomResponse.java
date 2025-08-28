@@ -11,12 +11,12 @@ import java.time.LocalDateTime;
 @Builder
 public class ChatRoomResponse {
     
-    private Integer id;
+    private Long id;
     private String roomId;
-    private Integer rentId;
+    private Long rentId;
     private String bookTitle;
     private String bookImage;
-    private Integer otherUserId;
+    private Long otherUserId;
     private String otherUserNickname;
     private String otherUserProfileImage;
     private String lastMessage;

@@ -4,7 +4,7 @@ import com.bookbook.domain.wishList.entity.WishList
 import java.time.LocalDateTime
 
 data class WishListResponseDto(
-    val id: Int,
+    val id: Long,
     val rentId: Int,
     val title: String,
     val bookTitle: String,

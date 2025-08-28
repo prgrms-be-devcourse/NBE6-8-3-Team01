@@ -10,7 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
-public interface RentRepository extends JpaRepository<Rent, Integer> { // findById의 반환 타입이 Optional<Rent> 이므로, .orElseThrow()로 예외처리
+public interface RentRepository extends JpaRepository<Rent, Long> { // findById의 반환 타입이 Optional<Rent> 이므로, .orElseThrow()로 예외처리
 
     // 대여자가 작성한 글 갯수 조회
     int countByLenderUserId(Long lenderUserId);

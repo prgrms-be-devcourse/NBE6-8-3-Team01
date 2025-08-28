@@ -13,9 +13,9 @@ import java.time.LocalDateTime;
 @Builder
 public class MessageResponse {
     
-    private Integer id;
+    private Long id;
     private String roomId;
-    private Integer senderId;
+    private Long senderId;
     private String senderNickname;
     private String senderProfileImage;
     private String content;

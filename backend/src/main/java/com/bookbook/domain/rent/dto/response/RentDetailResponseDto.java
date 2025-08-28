@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 @Builder
 public record RentDetailResponseDto (
-    Integer id, // 글 ID
+    Long id, // 글 ID
     Long lenderUserId, // 대여자 ID
     String title, // 글 제목
     String bookCondition, // 책 상태

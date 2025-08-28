@@ -10,11 +10,11 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class RentListResponseDto {
     
-    private Integer id;
+    private Long id;
     private LocalDateTime loanDate;
     private LocalDateTime returnDate;
     private Long borrowerUserId;
-    private Integer rentId;
+    private Long rentId;
     private String title;
     private String bookTitle;
     private String author;

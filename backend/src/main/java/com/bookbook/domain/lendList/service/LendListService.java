@@ -128,7 +128,7 @@ public class LendListService {
      * 도서 게시글 삭제 (소프트 삭제)
      */
     @Transactional
-    public void deleteLendList(Long userId, Integer rentId) {
+    public void deleteLendList(Long userId, Long rentId) {
         Rent rent = rentRepository.findById(rentId)
                 .orElseThrow(() -> new ServiceException("404-RENT-NOT-FOUND", "해당 대여 게시글을 찾을 수 없습니다."));
 

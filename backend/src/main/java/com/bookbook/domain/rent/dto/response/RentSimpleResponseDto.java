@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 @Builder
 public record RentSimpleResponseDto(
-        @NonNull Integer id,
+        @NonNull Long id,
         @NonNull Long lenderUserId,
         @NonNull RentStatus status,
         @NonNull String bookCondition,

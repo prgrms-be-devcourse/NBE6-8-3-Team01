@@ -70,7 +70,7 @@ public class RentAdminController {
     @GetMapping("/{id}")
     @Operation(summary = "단일 대여 게시글 상세 조회")
     public ResponseEntity<RsData<RentDetailResponseDto>> getRentDetail(
-            @PathVariable int id
+            @PathVariable long id
     ){
         RentDetailResponseDto responseDto = rentService.getRentPostDetail(id);
 
@@ -88,7 +88,7 @@ public class RentAdminController {
     @PatchMapping("/{id}")
     @Operation(summary = "대여 게시글 상태 수정")
     public ResponseEntity<RsData<RentDetailResponseDto>> changeRentStatus(
-            @PathVariable int id,
+            @PathVariable long id,
             @RequestBody ChangeRentStatusRequestDto status
     ){ // 경로 변수로 전달된 id를 사용
         RentDetailResponseDto responseDto = rentService.modifyRentPageStatus(id, status);
@@ -106,7 +106,7 @@ public class RentAdminController {
      */
     @DeleteMapping("/{id}")
     @Operation(summary = "대여 게시글 영구 삭제")
-    public ResponseEntity<RsData<Void>> deleteRentPage(@PathVariable int id){ // 경로 변수로 전달된 id를 사용
+    public ResponseEntity<RsData<Void>> deleteRentPage(@PathVariable long id){ // 경로 변수로 전달된 id를 사용
         rentService.removeRentPage(id);
         return ResponseEntity.ok(RsData.of("200-1", "%d 번 글 삭제 완료".formatted(id)));
     }
@@ -119,7 +119,7 @@ public class RentAdminController {
      */
     @PatchMapping("/{id}/restore")
     @Operation(summary = "대여 게시글 복구")
-    public ResponseEntity<RsData<RentDetailResponseDto>> restoreRentPage(@PathVariable int id){ // 경로 변수로 전달된 id를 사용
+    public ResponseEntity<RsData<RentDetailResponseDto>> restoreRentPage(@PathVariable long id){ // 경로 변수로 전달된 id를 사용
         RentDetailResponseDto responseDto = rentService.restoreRentPage(id);
 
         return ResponseEntity.ok(

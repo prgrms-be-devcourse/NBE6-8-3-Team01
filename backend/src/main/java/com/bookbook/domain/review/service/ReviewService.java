@@ -47,7 +47,7 @@ public class ReviewService {
      * @throws IllegalStateException 거래가 완료되지 않았거나 이미 리뷰를 작성한 경우
      */
     @Transactional
-    public ReviewResponseDto createLenderReview(Long lenderId, Integer rentId, ReviewCreateRequestDto request) {
+    public ReviewResponseDto createLenderReview(Long lenderId, Long rentId, ReviewCreateRequestDto request) {
         // 대여 게시글 조회
         Rent rent = rentRepository.findById(rentId)
                 .orElseThrow(() -> new IllegalArgumentException("대여 게시글을 찾을 수 없습니다. rentId: " + rentId));
@@ -108,7 +108,7 @@ public class ReviewService {
      * @throws IllegalStateException 거래가 완료되지 않았거나 이미 리뷰를 작성한 경우
      */
     @Transactional
-    public ReviewResponseDto createBorrowerReview(Long borrowerId, Integer rentId, ReviewCreateRequestDto request) {
+    public ReviewResponseDto createBorrowerReview(Long borrowerId, Long rentId, ReviewCreateRequestDto request) {
         // 대여 게시글 조회
         Rent rent = rentRepository.findById(rentId)
                 .orElseThrow(() -> new IllegalArgumentException("대여 게시글을 찾을 수 없습니다. rentId: " + rentId));
@@ -152,7 +152,7 @@ public class ReviewService {
      * @param rentId 대여 게시글 ID
      * @param rating 평점
      */
-    private void validateReviewCreation(Rent rent, Long reviewerId, Integer rentId, Integer rating) {
+    private void validateReviewCreation(Rent rent, Long reviewerId, Long rentId, Integer rating) {
         // 거래 완료 상태 확인 - FINISHED 상태일 때만 리뷰 작성 가능
         if (rent.getRentStatus() != RentStatus.FINISHED) {
             throw new IllegalStateException("거래가 완료된 경우에만 리뷰를 작성할 수 있습니다.");

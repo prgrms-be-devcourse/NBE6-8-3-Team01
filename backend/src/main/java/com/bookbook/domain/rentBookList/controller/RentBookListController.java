@@ -54,7 +54,7 @@ public class RentBookListController {
     @GetMapping("/{rentId}")
     @Operation(summary = "책 상세 정보 조회", description = "특정 책의 상세 정보를 조회합니다.")
     public RsData<RentBookListResponseDto> getBookDetail(
-            @PathVariable Integer rentId
+            @PathVariable Long rentId
     ) {
         log.debug("책 상세 정보 조회 - rentId: {}", rentId);
 
@@ -66,7 +66,7 @@ public class RentBookListController {
     @PostMapping("/{rentId}/request")
     @Operation(summary = "대여 신청", description = "특정 책에 대해 대여 신청을 합니다.")
     public RsData<Void> requestRent(
-            @PathVariable Integer rentId,          // Long → Integer로 변경
+            @PathVariable Long rentId,          // Long → Integer로 변경
             @RequestBody RentRequestDto requestDto
     ) {
         log.debug("대여 신청 - rentId: {}, message: {}", rentId, requestDto.getMessage());

@@ -70,7 +70,7 @@ class WishListController(
     @DeleteMapping("/{rentId}")
     fun deleteWishList(
         @PathVariable userId: Long,
-        @PathVariable rentId: Int
+        @PathVariable rentId: Long
     ): ResponseEntity<RsData<Unit?>> {
         wishListService.deleteWishList(userId, rentId)
         return ResponseEntity.ok(RsData.of("200", "찜 목록에서 삭제했습니다."))

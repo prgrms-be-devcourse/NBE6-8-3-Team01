@@ -12,8 +12,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ReviewResponseDto {
     
-    private int id;
-    private Integer rentId;
+    private long id;
+    private Long rentId;
     private Long reviewerId;
     private Long revieweeId;
     private String reviewerNickname;

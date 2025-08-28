@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @Builder
 public class LendListResponseDto {
     
-    private Integer id;
+    private Long id;
     private Long lenderUserId;
     private String title;
     private String bookTitle;

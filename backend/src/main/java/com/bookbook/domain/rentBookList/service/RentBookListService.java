@@ -64,7 +64,7 @@ public class RentBookListService {
 
     // 대여 신청
     @Transactional
-    public void requestRent(Integer rentId, String message) {         // Long → Integer로 변경
+    public void requestRent(Long rentId, String message) {         // Long 사용
         // 대여 글 조회
         Rent rent = rentBookListRepository.findById(rentId)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 대여 글입니다. ID: " + rentId));
@@ -111,7 +111,7 @@ public class RentBookListService {
     }
 
     // 책 상세 정보 조회
-    public RentBookListResponseDto getBookDetail(Integer rentId) {
+    public RentBookListResponseDto getBookDetail(Long rentId) {
         Rent rent = rentBookListRepository.findById(rentId)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 책입니다. ID: " + rentId));
         

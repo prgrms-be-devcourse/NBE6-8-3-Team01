@@ -96,7 +96,7 @@ public class RentService {
     // Rent 페이지 조회 Get 요청
     // /bookbook/rent/{id}
     @Transactional(readOnly = true) // 조회 기능이므로 readOnly=true 설정
-    public RentResponseDto getRentPage(int id, Long currentUserId) {
+    public RentResponseDto getRentPage(long id, Long currentUserId) {
 
         // 글 ID로 대여글 정보 조회
         Rent rent = rentRepository.findById(id)
@@ -150,7 +150,7 @@ public class RentService {
     // Rent 페이지 수정 Put 요청
     // /bookbook/rent/edit/{id}
     @Transactional
-    public void editRentPage(int id, @Valid RentRequestDto dto, Long userId) {
+    public void editRentPage(long id, @Valid RentRequestDto dto, Long userId) {
         // 글 ID로 대여글 정보 조회
         Rent rent = rentRepository.findById(id)
                 .orElseThrow(() -> new ServiceException("404-2", "해당 대여글을 찾을 수 없습니다."));
@@ -275,7 +275,7 @@ public class RentService {
      * @return 수정된 대여 게시글 상세 정보
      */
     @Transactional
-    public RentDetailResponseDto modifyRentPageStatus(int rentId, ChangeRentStatusRequestDto requestDto) {
+    public RentDetailResponseDto modifyRentPageStatus(long rentId, ChangeRentStatusRequestDto requestDto) {
         Rent rent = rentRepository.findById(rentId)
                 .orElseThrow(()-> new ServiceException("404-2", "해당 대여글을 찾을 수 없습니다."));
 
@@ -296,7 +296,7 @@ public class RentService {
      * @throws ServiceException (404) 해당 대여 게시글이 존재하지 않을 때
      */
     @Transactional
-    public void removeRentPage(int rentId) {
+    public void removeRentPage(long rentId) {
         Rent rent = rentRepository.findById(rentId)
                 .orElseThrow(()-> new ServiceException("404-2", "해당 대여글은 찾을 수 없습니다."));
 
@@ -314,7 +314,7 @@ public class RentService {
      * @throws ServiceException (404) 해당 대여 게시글이 존재하지 않을 때
      */
     @Transactional
-    public RentDetailResponseDto restoreRentPage(int rentId) {
+    public RentDetailResponseDto restoreRentPage(long rentId) {
         Rent rent = rentRepository.findById(rentId)
                 .orElseThrow(()-> new ServiceException("404-2", "해당 대여글은 찾을 수 없습니다."));
 
@@ -334,7 +334,7 @@ public class RentService {
      * @throws ServiceException (404) 해당 대여 게시글이 존재하지 않을 때
      */
     @Transactional(readOnly = true)
-    public RentDetailResponseDto getRentPostDetail(int rentId) {
+    public RentDetailResponseDto getRentPostDetail(long rentId) {
         Rent rent = rentRepository.findById(rentId)
                 .orElseThrow(() -> new ServiceException("404-2", "해당 대여글을 찾을 수 없습니다."));
 

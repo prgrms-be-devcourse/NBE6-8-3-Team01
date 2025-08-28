@@ -10,7 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface ChatMessageRepository extends JpaRepository<ChatMessage, Integer> {
+public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
     
     // 채팅방별 메시지 목록 조회 (최신순)
     Page<ChatMessage> findByRoomIdOrderByCreatedDateDesc(String roomId, Pageable pageable);
@@ -28,7 +28,7 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Intege
            "AND cm.senderId != :userId " +
            "AND cm.senderId != 0 " +
            "AND cm.isRead = false")
-    long countUnreadMessagesByUserId(@Param("userId") Integer userId);
+    long countUnreadMessagesByUserId(@Param("userId") Long userId);
     
     // 특정 채팅방에서 특정 사용자의 읽지 않은 메시지 개수 - 시스템 메시지 제외
     @Query("SELECT COUNT(cm) FROM ChatMessage cm " +
@@ -36,7 +36,7 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Intege
            "AND cm.senderId != :userId " +
            "AND cm.senderId != 0 " +
            "AND cm.isRead = false")
-    long countUnreadMessagesByRoomIdAndUserId(@Param("roomId") String roomId, @Param("userId") Integer userId);
+    long countUnreadMessagesByRoomIdAndUserId(@Param("roomId") String roomId, @Param("userId") Long userId);
     
     // 특정 채팅방의 특정 사용자가 받은 메시지를 모두 읽음 처리
     @Modifying
@@ -44,7 +44,7 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Intege
            "WHERE cm.roomId = :roomId " +
            "AND cm.senderId != :userId " +
            "AND cm.isRead = false")
-    int markAllMessagesAsReadInRoom(@Param("roomId") String roomId, @Param("userId") Integer userId);
+    int markAllMessagesAsReadInRoom(@Param("roomId") String roomId, @Param("userId") Long userId);
     
     // 채팅방의 마지막 메시지 조회
     @Query("SELECT cm FROM ChatMessage cm " +

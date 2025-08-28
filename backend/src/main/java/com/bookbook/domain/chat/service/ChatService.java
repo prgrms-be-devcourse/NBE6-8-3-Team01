@@ -35,7 +35,7 @@ public class ChatService {
     private final RentRepository rentRepository;
 
     @Transactional
-    public ChatRoomResponse createOrGetChatRoom(ChatRoomCreateRequest request, Integer borrowerId) {
+    public ChatRoomResponse createOrGetChatRoom(ChatRoomCreateRequest request, Long borrowerId) {
         log.info("채팅방 생성 요청 - rentId: {}, lenderId: {}, borrowerId: {}",
                 request.getRentId(), request.getLenderId(), borrowerId);
 
@@ -53,13 +53,13 @@ public class ChatService {
                         return new ServiceException("존재하지 않는 대여 게시글입니다.");
                     });
 
-            User lender = userRepository.findById(request.getLenderId().longValue())
+            User lender = userRepository.findById(request.getLenderId())
                     .orElseThrow(() -> {
                         log.error("존재하지 않는 빌려주는 사용자 - lenderId: {}", request.getLenderId());
                         return new ServiceException("존재하지 않는 빌려주는 사용자입니다.");
                     });
 
-            User borrower = userRepository.findById(borrowerId.longValue())
+            User borrower = userRepository.findById(borrowerId)
                     .orElseThrow(() -> {
                         log.error("존재하지 않는 빌리는 사용자 - borrowerId: {}", borrowerId);
                         return new ServiceException("존재하지 않는 빌리는 사용자입니다.");
@@ -161,7 +161,7 @@ public class ChatService {
         }
     }
 
-    public Page<ChatRoomResponse> getChatRooms(Integer userId, Pageable pageable) {
+    public Page<ChatRoomResponse> getChatRooms(Long userId, Pageable pageable) {
         log.info("채팅방 목록 조회 - userId: {}", userId);
 
         Page<ChatRoom> chatRooms = chatRoomRepository.findByUserIdOrderByLastMessageTimeDesc(userId, pageable);
@@ -174,8 +174,8 @@ public class ChatService {
                     String bookTitle = rent != null ? rent.getBookTitle() : "알 수 없는 책";
                     String bookImage = rent != null ? rent.getBookImage() : null;
 
-                    Integer otherUserId = room.getOtherUserId(userId);
-                    User otherUser = userRepository.findById(otherUserId.longValue()).orElse(null);
+                    Long otherUserId = room.getOtherUserId(userId);
+                    User otherUser = userRepository.findById(otherUserId).orElse(null);
                     String otherUserNickname = otherUser != null ? otherUser.getNickname() : "알 수 없는 사용자";
 
                     Long unreadCount = chatMessageRepository.countUnreadMessagesByRoomIdAndUserId(room.getRoomId(), userId);
@@ -192,7 +192,7 @@ public class ChatService {
         return new PageImpl<>(validChatRooms, pageable, validChatRooms.size());
     }
 
-    public ChatRoomResponse getChatRoom(String roomId, Integer userId) {
+    public ChatRoomResponse getChatRoom(String roomId, Long userId) {
         log.info("채팅방 정보 조회 - roomId: {}, userId: {}", roomId, userId);
 
         ChatRoom chatRoom = chatRoomRepository.findByRoomIdAndUserId(roomId, userId)
@@ -209,8 +209,8 @@ public class ChatService {
         String bookTitle = rent != null ? rent.getBookTitle() : "알 수 없는 책";
         String bookImage = rent != null ? rent.getBookImage() : null;
 
-        Integer otherUserId = chatRoom.getOtherUserId(userId);
-        User otherUser = userRepository.findById(otherUserId.longValue()).orElse(null);
+        Long otherUserId = chatRoom.getOtherUserId(userId);
+        User otherUser = userRepository.findById(otherUserId).orElse(null);
         String otherUserNickname = otherUser != null ? otherUser.getNickname() : "알 수 없는 사용자";
 
         Long unreadCount = chatMessageRepository.countUnreadMessagesByRoomIdAndUserId(roomId, userId);
@@ -223,7 +223,7 @@ public class ChatService {
         return response;
     }
 
-    public Page<MessageResponse> getChatMessages(String roomId, Integer userId, Pageable pageable) {
+    public Page<MessageResponse> getChatMessages(String roomId, Long userId, Pageable pageable) {
         log.info("채팅 메시지 조회 - roomId: {}, userId: {}, page: {}, size: {}",
                 roomId, userId, pageable.getPageNumber(), pageable.getPageSize());
 
@@ -250,7 +250,7 @@ public class ChatService {
                 return MessageResponse.from(message, "시스템", null, false);
             }
 
-            User sender = userRepository.findById(message.getSenderId().longValue()).orElse(null);
+            User sender = userRepository.findById(message.getSenderId()).orElse(null);
             String senderNickname = sender != null ? sender.getNickname() : "알 수 없는 사용자";
 
             // isMine 계산: 현재 사용자의 ID와 메시지 발신자 ID가 같은지 확인
@@ -261,7 +261,7 @@ public class ChatService {
     }
 
     @Transactional
-    public MessageResponse sendMessage(MessageSendRequest request, Integer senderId) {
+    public MessageResponse sendMessage(MessageSendRequest request, Long senderId) {
         log.info("메시지 전송 - roomId: {}, senderId: {}", request.getRoomId(), senderId);
 
         ChatRoom chatRoom = chatRoomRepository.findByRoomIdAndUserId(request.getRoomId(), senderId)
@@ -297,7 +297,7 @@ public class ChatService {
         chatRoom.updateLastMessage(request.getContent(), LocalDateTime.now());
         chatRoomRepository.save(chatRoom);
 
-        User sender = userRepository.findById(senderId.longValue()).orElse(null);
+        User sender = userRepository.findById(senderId).orElse(null);
         String senderNickname = sender != null ? sender.getNickname() : "알 수 없는 사용자";
 
         // 메시지를 보낸 사람이므로 항상 isMine = true
@@ -308,7 +308,7 @@ public class ChatService {
     }
 
     @Transactional
-    public void markMessagesAsRead(String roomId, Integer userId) {
+    public void markMessagesAsRead(String roomId, Long userId) {
         log.info("메시지 읽음 처리 - roomId: {}, userId: {}", roomId, userId);
 
         chatRoomRepository.findByRoomIdAndUserId(roomId, userId)
@@ -318,7 +318,7 @@ public class ChatService {
         log.info("읽음 처리 완료 - 업데이트된 메시지 수: {}", updatedCount);
     }
 
-    public Long getUnreadMessageCount(Integer userId) {
+    public Long getUnreadMessageCount(Long userId) {
         // 사용자가 참여한 모든 채팅방 중 나가지 않은 채팅방에서만 읽지 않은 메시지 카운트
         List<ChatRoom> userChatRooms = chatRoomRepository.findByLenderIdOrBorrowerId(userId, userId);
 
@@ -339,7 +339,7 @@ public class ChatService {
     }
 
     @Transactional
-    public void leaveChatRoom(String roomId, Integer userId) {
+    public void leaveChatRoom(String roomId, Long userId) {
         log.info("채팅방 나가기 시작 - roomId: {}, userId: {}", roomId, userId);
 
         // 채팅방 존재 여부 및 권한 확인
@@ -361,7 +361,7 @@ public class ChatService {
             log.info("채팅방 나가기 - 읽음 처리된 메시지 수: {}", markedAsReadCount);
 
             // 상대방에게 나가기 알림 메시지 전송
-            User leavingUser = userRepository.findById(userId.longValue()).orElse(null);
+            User leavingUser = userRepository.findById(userId).orElse(null);
             String leavingUserNickname = leavingUser != null ? leavingUser.getNickname() : "사용자";
             String leaveMessage = String.format("💔 %s님이 채팅방을 나갔습니다.", leavingUserNickname);
 
@@ -389,7 +389,7 @@ public class ChatService {
     public void createSystemMessage(String roomId, String content) {
         ChatMessage systemMessage = ChatMessage.builder()
                 .roomId(roomId)
-                .senderId(0)
+                .senderId(0L)
                 .content(content)
                 .messageType(MessageType.SYSTEM)
                 .isRead(false)
@@ -406,7 +406,7 @@ public class ChatService {
     }
 
     @Transactional
-    public void createBookCardMessage(String roomId, Integer rentId, String bookTitle, String bookImage, String message) {
+    public void createBookCardMessage(String roomId, Long rentId, String bookTitle, String bookImage, String message) {
         String jsonContent = String.format(
                 "{\"type\":\"BOOK_CARD\",\"rentId\":%d,\"bookTitle\":\"%s\",\"bookImage\":\"%s\",\"message\":\"%s\"}",
                 rentId, bookTitle, bookImage != null ? bookImage : "", message
@@ -414,7 +414,7 @@ public class ChatService {
 
         ChatMessage systemMessage = ChatMessage.builder()
                 .roomId(roomId)
-                .senderId(0)
+                .senderId(0L)
                 .content(jsonContent)
                 .messageType(MessageType.SYSTEM)
                 .isRead(false)
@@ -430,10 +430,10 @@ public class ChatService {
         }
     }
 
-    private ChatRoomResponse buildChatRoomResponse(ChatRoom room, Rent rent, User lender, User borrower, Integer currentUserId) {
+    private ChatRoomResponse buildChatRoomResponse(ChatRoom room, Rent rent, User lender, User borrower, Long currentUserId) {
         boolean isCurrentUserLender = room.getLenderId().equals(currentUserId);
         User otherUser = isCurrentUserLender ? borrower : lender;
-        Integer otherUserId = otherUser.getId().intValue();
+        Long otherUserId = otherUser.getId();
 
         Long unreadCount = chatMessageRepository.countUnreadMessagesByRoomIdAndUserId(room.getRoomId(), currentUserId);
 
@@ -462,7 +462,7 @@ public class ChatService {
         try {
             for (ChatRoom duplicateRoom : duplicateRooms) {
                 // 보호할 채팅방은 건드리지 않음
-                if (protectedRoom != null && duplicateRoom.getId().equals(protectedRoom.getId())) {
+                if (protectedRoom != null && duplicateRoom.getId() != null && duplicateRoom.getId().equals(protectedRoom.getId())) {
                     continue;
                 }
 
