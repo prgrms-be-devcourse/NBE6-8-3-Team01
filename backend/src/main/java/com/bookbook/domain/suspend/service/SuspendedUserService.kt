@@ -96,7 +96,7 @@ class SuspendedUserService(
      * @throws ServiceException (409) 해당 유저가 이미 정지되어 있을 때
      */
     private fun checkUserIsSuspended(user: User) {
-        if (user.isSuspended) {
+        if (user.isSuspended()) {
             throw ServiceException("409-1", "이 유저는 이미 정지 중입니다.")
         }
     }

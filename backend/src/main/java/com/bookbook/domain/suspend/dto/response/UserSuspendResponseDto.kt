@@ -25,7 +25,7 @@ data class UserSuspendResponseDto(
 ) {
     constructor(suspendedUser: SuspendedUser) : this(
         id = suspendedUser.id,
-        userId = suspendedUser.user.id,
+        userId = suspendedUser.user.id!!,
         name = suspendedUser.user.username,
         reason = suspendedUser.reason,
         suspendedAt = suspendedUser.suspendedAt,
