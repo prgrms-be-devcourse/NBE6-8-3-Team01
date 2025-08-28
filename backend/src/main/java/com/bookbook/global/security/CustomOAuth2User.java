@@ -45,4 +45,8 @@ public class CustomOAuth2User extends DefaultOAuth2User {
         return this.username;
     }
 
+    public Long getUserId() {
+        return this.userId;
+    }
+
 }
