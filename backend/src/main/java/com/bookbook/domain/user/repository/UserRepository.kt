@@ -10,11 +10,11 @@ import org.springframework.data.repository.query.Param
 import java.time.LocalDateTime
 import java.util.*
 
-interface UserRepository : JpaRepository<User?, Long?> {
-    fun findByNickname(nickname: String?): Optional<User?>?
-    fun findByUsername(username: String?): Optional<User?>?
-    fun findByEmail(email: String?): Optional<User?>?
-    fun findAllByUserStatusAndResumedAtBefore(userStatus: UserStatus?, now: LocalDateTime?): MutableList<User?>?
+interface UserRepository : JpaRepository<User, Long> {
+    fun findByNickname(nickname: String): Optional<User>
+    fun findByUsername(username: String): Optional<User>
+    fun findByEmail(email: String): Optional<User>
+    fun findAllByUserStatusAndResumedAtBefore(userStatus: UserStatus, now: LocalDateTime): MutableList<User>
 
     @Query(
         """
@@ -28,8 +28,8 @@ interface UserRepository : JpaRepository<User?, Long?> {
         pageable: Pageable?,
         @Param("status") status: MutableList<UserStatus?>?,
         @Param("userId") userId: Long?
-    ): Page<User?>?
+    ): Page<User>
 
-    fun existsByUsername(username: String?): Boolean // 사용자명 중복확인
-    fun existsByNickname(nickname: String?): Boolean // 닉네임 중복확인
+    fun existsByUsername(username: String): Boolean
+    fun existsByNickname(nickname: String): Boolean
 }
