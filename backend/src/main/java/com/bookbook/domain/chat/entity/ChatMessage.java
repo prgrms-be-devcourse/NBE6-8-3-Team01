@@ -22,13 +22,13 @@ public class ChatMessage extends BaseEntity {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
     
     @Column(nullable = false)
     private String roomId; // 채팅방 ID
     
     @Column(nullable = false)
-    private Integer senderId; // 보낸 사람 ID
+    private Long senderId; // 보낸 사람 ID
     
     @Column(columnDefinition = "TEXT")
     private String content; // 메시지 내용

@@ -35,7 +35,7 @@ public class WebSocketChatController {
             }
             
             CustomOAuth2User user = (CustomOAuth2User) auth.getPrincipal();
-            Integer userId = user.getUserId().intValue();
+            Long userId = user.getUserId();
             
             log.info("WebSocket 메시지 전송 - roomId: {}, userId: {}", request.getRoomId(), userId);
             
@@ -94,7 +94,7 @@ public class WebSocketChatController {
             }
             
             CustomOAuth2User user = (CustomOAuth2User) auth.getPrincipal();
-            Integer userId = user.getUserId().intValue();
+            Long userId = user.getUserId();
             
             log.info("WebSocket 읽음 처리 - roomId: {}, userId: {}", roomId, userId);
             

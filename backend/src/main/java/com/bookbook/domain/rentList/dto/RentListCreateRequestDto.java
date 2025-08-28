@@ -10,5 +10,5 @@ import java.time.LocalDateTime;
 public class RentListCreateRequestDto {
     
     private LocalDateTime loanDate;
-    private Integer rentId;
+    private Long rentId;
 }

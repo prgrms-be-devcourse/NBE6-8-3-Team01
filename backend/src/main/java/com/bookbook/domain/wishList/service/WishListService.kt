@@ -121,7 +121,7 @@ class WishListService(
      * @param rentId 삭제할 도서 게시글 ID
      * @throws IllegalArgumentException 찜하지 않은 게시글인 경우
      */
-    fun deleteWishList(userId: Long, rentId: Int) {
+    fun deleteWishList(userId: Long, rentId: Long) {
         // ACTIVE 상태인 찜 목록 조회 - 삭제된 것은 대상에서 제외
         val wishList = wishListRepository.findByUserIdAndRentIdAndStatus(userId, rentId, WishListStatus.ACTIVE)
             ?: throw IllegalArgumentException("찜하지 않은 게시글입니다.")

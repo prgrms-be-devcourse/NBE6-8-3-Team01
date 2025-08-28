@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
-public interface RentBookListRepository extends JpaRepository<Rent, Integer> {    // Long → Integer로 변경
+public interface RentBookListRepository extends JpaRepository<Rent, Long> {    // Long 사용
 
     // 대여 가능한 책 목록 조회 (필터링 포함)
     @Query("SELECT r FROM Rent r WHERE " +

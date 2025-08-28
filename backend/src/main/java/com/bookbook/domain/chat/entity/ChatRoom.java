@@ -21,19 +21,19 @@ public class ChatRoom extends BaseEntity {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
     
     @Column(unique = true, nullable = false)
     private String roomId; // UUID 형태의 채팅방 고유 ID
     
     @Column(nullable = false)
-    private Integer rentId; // 대여 게시글 ID
+    private Long rentId; // 대여 게시글 ID
     
     @Column(nullable = false)
-    private Integer lenderId; // 빌려주는 사람 ID
+    private Long lenderId; // 빌려주는 사람 ID
     
     @Column(nullable = false)
-    private Integer borrowerId; // 빌리는 사람 ID
+    private Long borrowerId; // 빌리는 사람 ID
     
     @Column(nullable = false)
     private boolean isActive = true; // 채팅방 활성화 상태
@@ -63,12 +63,12 @@ public class ChatRoom extends BaseEntity {
     private LocalDateTime createdDate = LocalDateTime.now();
     
     // 채팅방이 특정 사용자에게 속하는지 확인
-    public boolean belongsToUser(Integer userId) {
+    public boolean belongsToUser(Long userId) {
         return lenderId.equals(userId) || borrowerId.equals(userId);
     }
     
     // 상대방 ID 가져오기
-    public Integer getOtherUserId(Integer currentUserId) {
+    public Long getOtherUserId(Long currentUserId) {
         return lenderId.equals(currentUserId) ? borrowerId : lenderId;
     }
     
@@ -79,7 +79,7 @@ public class ChatRoom extends BaseEntity {
     }
     
     // 사용자가 채팅방을 나간 것으로 표시
-    public void markUserAsLeft(Integer userId) {
+    public void markUserAsLeft(Long userId) {
         LocalDateTime leftTime = LocalDateTime.now();
         
         // leftUserIds 업데이트
@@ -101,7 +101,7 @@ public class ChatRoom extends BaseEntity {
     }
     
     // 사용자가 나간 상태인지 확인
-    public boolean hasUserLeft(Integer userId) {
+    public boolean hasUserLeft(Long userId) {
         if (leftUserIds == null || leftUserIds.isEmpty()) {
             return false;
         }
@@ -119,7 +119,7 @@ public class ChatRoom extends BaseEntity {
     }
     
     // 사용자가 나간 시간 가져오기
-    public LocalDateTime getUserLeftTime(Integer userId) {
+    public LocalDateTime getUserLeftTime(Long userId) {
         if (userLeftTimes == null || userLeftTimes.isEmpty()) {
             return null;
         }
@@ -141,7 +141,7 @@ public class ChatRoom extends BaseEntity {
     }
     
     // 특정 사용자의 나간 시간 기록 제거
-    private String removeUserLeftTime(Integer userId) {
+    private String removeUserLeftTime(Long userId) {
         if (userLeftTimes == null || userLeftTimes.isEmpty()) {
             return "";
         }
@@ -162,7 +162,7 @@ public class ChatRoom extends BaseEntity {
     }
     
     // 사용자가 채팅방에 다시 들어올 때 나간 상태 해제
-    public void rejoinUser(Integer userId) {
+    public void rejoinUser(Long userId) {
         if (hasUserLeft(userId)) {
             String userIdStr = userId.toString();
             String[] leftIds = leftUserIds.split(",");

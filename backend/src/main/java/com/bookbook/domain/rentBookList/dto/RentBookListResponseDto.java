@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 @Getter
 public class RentBookListResponseDto {
-    private final Integer id;           // Long → Integer로 변경
+    private final Long id;           // Long 사용
     private final String bookTitle;
     private final String author;
     private final String publisher;
@@ -25,7 +25,7 @@ public class RentBookListResponseDto {
     private final LocalDateTime modifiedDate;
 
     public RentBookListResponseDto(Rent rent, String lenderNickname) {
-        this.id = rent.getId();         // 이제 int → Integer로 정상 변환
+        this.id = rent.getId();         // Long 사용
         this.bookTitle = rent.getBookTitle();
         this.author = rent.getAuthor();
         this.publisher = rent.getPublisher();

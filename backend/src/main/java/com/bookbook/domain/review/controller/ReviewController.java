@@ -34,7 +34,7 @@ public class ReviewController {
     @PostMapping("/lender/{lenderId}/rent/{rentId}")
     public ResponseEntity<RsData<ReviewResponseDto>> createLenderReview(
             @PathVariable Long lenderId,
-            @PathVariable Integer rentId,
+            @PathVariable Long rentId,
             @RequestBody ReviewCreateRequestDto request) {
         ReviewResponseDto review = reviewService.createLenderReview(lenderId, rentId, request);
         return ResponseEntity.ok(RsData.of("200", "대여자 리뷰를 작성했습니다.", review));
@@ -53,7 +53,7 @@ public class ReviewController {
     @PostMapping("/borrower/{borrowerId}/rent/{rentId}")
     public ResponseEntity<RsData<ReviewResponseDto>> createBorrowerReview(
             @PathVariable Long borrowerId,
-            @PathVariable Integer rentId,
+            @PathVariable Long rentId,
             @RequestBody ReviewCreateRequestDto request) {
         ReviewResponseDto review = reviewService.createBorrowerReview(borrowerId, rentId, request);
         return ResponseEntity.ok(RsData.of("200", "대여받은 사람 리뷰를 작성했습니다.", review));

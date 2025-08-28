@@ -60,7 +60,7 @@ public class LendListController {
     @DeleteMapping("/{rentId}")
     public ResponseEntity<RsData<Void>> deleteLendList(
             @PathVariable Long userId,
-            @PathVariable Integer rentId) {
+            @PathVariable Long rentId) {
         lendListService.deleteLendList(userId, rentId);
         return ResponseEntity.ok(RsData.of("200", "도서 게시글을 삭제했습니다."));
     }
@@ -80,7 +80,7 @@ public class LendListController {
             // @PathVariable - URL의 {userId} 값 (리뷰 작성자 = 대여자)
             @PathVariable Long userId,
             // @PathVariable - URL의 {rentId} 값 (어떤 대여 건에 대한 리뷰인지)
-            @PathVariable Integer rentId,
+            @PathVariable Long rentId,
             // @RequestBody - HTTP 요청 본문의 JSON 데이터를 객체로 변환
             // 클라이언트가 보낸 JSON 데이터가 ReviewCreateRequestDto로 변환됨
             @RequestBody ReviewCreateRequestDto request) {

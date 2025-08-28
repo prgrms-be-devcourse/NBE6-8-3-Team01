@@ -13,7 +13,7 @@ import lombok.Setter;
 public class Review extends BaseEntity {
 
     @Column(name = "rent_id", nullable = false)
-    private Integer rentId;
+    private Long rentId;
     
     // 리뷰 작성자 ID - 리뷰를 쓴 사람
     @Column(name = "reviewer_id", nullable = false)
@@ -35,7 +35,7 @@ public class Review extends BaseEntity {
     
     // 모든 필드를 받는 생성자 - 객체 생성시 모든 값을 한번에 설정
     // 주로 서비스에서 새로운 리뷰를 생성할 때 사용
-    public Review(Integer rentId, Long reviewerId, Long revieweeId, Integer rating, String reviewType) {
+    public Review(Long rentId, Long reviewerId, Long revieweeId, Integer rating, String reviewType) {
         this.rentId = rentId;           // 대여 게시글 ID 설정
         this.reviewerId = reviewerId;   // 작성자 ID 설정
         this.revieweeId = revieweeId;   // 대상자 ID 설정

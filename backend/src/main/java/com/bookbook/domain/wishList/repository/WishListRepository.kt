@@ -6,8 +6,8 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 
 @Repository
-interface WishListRepository : JpaRepository<WishList, Int> {
+interface WishListRepository : JpaRepository<WishList, Long> {
     fun findByUserIdAndStatusOrderByCreatedDateDesc(userId: Long, status: WishListStatus): List<WishList>
 
-    fun findByUserIdAndRentIdAndStatus(userId: Long, rentId: Int, status: WishListStatus): WishList?
+    fun findByUserIdAndRentIdAndStatus(userId: Long, rentId: Long, status: WishListStatus): WishList?
 }

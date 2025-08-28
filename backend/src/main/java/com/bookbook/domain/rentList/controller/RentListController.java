@@ -97,7 +97,7 @@ public class RentListController {
     @PatchMapping("/{rentId}/return")
     public ResponseEntity<RsData<Void>> returnBook(
             @PathVariable Long borrowerUserId,
-            @PathVariable Integer rentId,
+            @PathVariable Long rentId,
             @AuthenticationPrincipal CustomOAuth2User customOAuth2User) {
         
         // 로그인 검증
@@ -139,7 +139,7 @@ public class RentListController {
             // @PathVariable - URL의 {borrowerUserId} 값 (리뷰 작성자 = 대여받은 사람)
             @PathVariable Long borrowerUserId,
             // @PathVariable - URL의 {rentId} 값 (어떤 대여 건에 대한 리뷰인지)
-            @PathVariable Integer rentId,
+            @PathVariable Long rentId,
             // @RequestBody - HTTP 요청 본문의 JSON 데이터를 객체로 변환
             // 클라이언트가 보낸 JSON 데이터가 ReviewCreateRequestDto로 변환됨
             @RequestBody ReviewCreateRequestDto request) {

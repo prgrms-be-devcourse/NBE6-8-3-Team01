@@ -123,7 +123,7 @@ public class NotificationService {
         }
         
         // Rent 정보 조회
-        Rent rent = rentRepository.findById(rentId.intValue())
+        Rent rent = rentRepository.findById(rentId)
                 .orElseThrow(() -> new RuntimeException("대여 게시글을 찾을 수 없습니다. ID: " + rentId));
 
         // 📝 수정된 부분: 특정 알림의 발송자(신청자)와 일치하는 RentList 조회
@@ -142,7 +142,7 @@ public class NotificationService {
         if (requester != null) {
             // 해당 신청자의 모든 RentList 조회 (상태 무관)
             List<RentList> requesterRentLists = rentListRepository
-                    .findByRentIdAndBorrowerUserId(rentId.intValue(), requester.getId());
+                    .findByRentIdAndBorrowerUserId(rentId, requester.getId());
             
             if (!requesterRentLists.isEmpty()) {
                 // 가장 최근 신청의 상태 확인

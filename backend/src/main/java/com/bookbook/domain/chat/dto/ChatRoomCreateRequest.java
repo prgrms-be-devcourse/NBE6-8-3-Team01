@@ -7,8 +7,8 @@ import lombok.Data;
 public class ChatRoomCreateRequest {
     
     @NotNull(message = "대여 게시글 ID는 필수입니다.")
-    private Integer rentId;
+    private Long rentId;
     
     @NotNull(message = "빌려주는 사람 ID는 필수입니다.")
-    private Integer lenderId;
+    private Long lenderId;
 }

@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 public class RentListResponseDto {
 
     // 기본 정보
-    private Integer id;                 // Rent ID (프론트: id)
+    private Long id;                 // Rent ID (프론트: id)
     private String bookTitle;           // 책 제목 (프론트: bookTitle)
     private String author;              // 저자 (프론트: author)
     private String publisher;           // 출판사 (프론트: publisher)
@@ -38,7 +38,7 @@ public class RentListResponseDto {
      */
     public static RentListResponseDto from(Rent rent) {
         return RentListResponseDto.builder()
-                .id(Integer.valueOf(rent.getId())) // int -> Integer 변환
+                .id(rent.getId()) // Long 변환
                 .bookTitle(rent.getBookTitle())
                 .author(rent.getAuthor())
                 .publisher(rent.getPublisher())
