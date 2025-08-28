@@ -15,8 +15,8 @@ open class BaseEntity {
     var id: Long = 0
 
     @CreatedDate
-    var createdDate: LocalDateTime? = null
+    lateinit var createdDate: LocalDateTime
 
     @LastModifiedDate
-    var modifiedDate: LocalDateTime? = null
+    lateinit var modifiedDate: LocalDateTime
 }
