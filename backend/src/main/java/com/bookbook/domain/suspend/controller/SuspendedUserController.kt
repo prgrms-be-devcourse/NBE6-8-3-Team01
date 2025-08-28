@@ -1,34 +1,40 @@
-package com.bookbook.domain.suspend.controller;
+package com.bookbook.domain.suspend.controller
 
-import com.bookbook.domain.suspend.dto.request.UserSuspendRequestDto;
-import com.bookbook.domain.suspend.dto.response.UserSuspendResponseDto;
-import com.bookbook.domain.suspend.entity.SuspendedUser;
-import com.bookbook.domain.suspend.service.SuspendedUserService;
-import com.bookbook.domain.user.dto.response.UserDetailResponseDto;
-import com.bookbook.domain.user.entity.User;
-import com.bookbook.global.rsdata.RsData;
-import com.bookbook.global.jpa.dto.response.PageResponseDto;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import com.bookbook.domain.suspend.dto.request.UserSuspendRequestDto
+import com.bookbook.domain.suspend.dto.response.UserSuspendResponseDto
+import com.bookbook.domain.suspend.service.SuspendedUserService
+import com.bookbook.domain.user.dto.response.UserDetailResponseDto
+import com.bookbook.global.jpa.dto.response.PageResponseDto
+import com.bookbook.global.rsdata.RsData
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.validation.Valid
+import lombok.RequiredArgsConstructor
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Pageable
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.*
 
+// 25.08.28 김지훈
+
+/**
+ * 회원 정지 관련 컨트롤러
+ *
+ * 회원 정지 및 해제 / 정지 이력 페이징 조회
+ */
 @RestController
 @RequestMapping("/api/v1/admin/users")
 @RequiredArgsConstructor
 @Tag(name = "SuspendedUserController", description = "어드민 전용 유저 정지 관리 컨트롤러")
-public class SuspendedUserController {
-
-    private final SuspendedUserService suspendedUserService;
-
+class SuspendedUserController (
+    private val suspendedUserService: SuspendedUserService
+){
     /**
      * 유저 정지 히스토리를 가져옵니다.
      *
-     * <p>페이지 번호와 사이즈의 조합으로 필터링된 페이지를 가져올 수 있습니다.
+     *
+     * 페이지 번호와 사이즈의 조합으로 필터링된 페이지를 가져올 수 있습니다.
      *
      * @param page 페이지 번호
      * @param size 페이지 당 항목 수
@@ -36,23 +42,22 @@ public class SuspendedUserController {
      */
     @GetMapping("/suspend")
     @Operation(summary = "유저 정지 이력 조회")
-    public ResponseEntity<RsData<PageResponseDto<UserSuspendResponseDto>>> getAllSuspendedHistory(
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "10") Integer size,
-            @RequestParam(required = false) Long userId
-    ) {
-        Pageable pageable = PageRequest.of(page - 1, size);
+    fun getAllSuspendedHistory(
+        @RequestParam(defaultValue = "1") page: Int,
+        @RequestParam(defaultValue = "10") size: Int,
+        @RequestParam(required = false) userId: Long?
+    ): ResponseEntity<RsData<PageResponseDto<UserSuspendResponseDto>>> {
+        val pageable: Pageable = PageRequest.of(page - 1, size)
 
-        Page<UserSuspendResponseDto> historyPage = suspendedUserService.getSuspendedHistoryPage(pageable, userId);
-        PageResponseDto<UserSuspendResponseDto> response = new PageResponseDto<>(historyPage);
+        val historyPage: Page<UserSuspendResponseDto> =
+            suspendedUserService.getSuspendedHistoryPage(pageable, userId)
+        val response = PageResponseDto(historyPage)
 
-        return ResponseEntity.ok(
-                RsData.of(
-                        "200-1",
-                        "%d개의 정지 이력을 발견했습니다".formatted(historyPage.getTotalElements()),
-                        response
-                )
-        );
+        return ResponseEntity.ok(RsData(
+            "200-1",
+            "${historyPage.totalElements}개의 정지 이력을 발견했습니다",
+            response
+        ))
     }
 
     /**
@@ -63,19 +68,19 @@ public class SuspendedUserController {
      */
     @PatchMapping("/suspend")
     @Operation(summary = "유저 정지")
-    public ResponseEntity<RsData<UserDetailResponseDto>> suspendUser(
-            @RequestBody UserSuspendRequestDto requestDto
-    ) {
-        SuspendedUser suspendedUser = suspendedUserService.addUserAsSuspended(requestDto);
-        UserDetailResponseDto userSuspendResponseDto = UserDetailResponseDto.from(suspendedUser.getUser());
+    fun suspendUser(
+        @Valid @RequestBody requestDto: UserSuspendRequestDto
+    ): ResponseEntity<RsData<UserDetailResponseDto>> {
+        val suspendedUser = suspendedUserService.addUserAsSuspended(requestDto)
+        val userSuspendResponseDto = UserDetailResponseDto.from(suspendedUser.user)
 
         return ResponseEntity.ok(
-                RsData.of(
-                        "200-1",
-                        "%s님을 정지하였습니다".formatted(suspendedUser.getUser().getUsername()),
-                        userSuspendResponseDto
-                )
-        );
+            RsData(
+                "200-1",
+                "${suspendedUser.user.username}님을 정지하였습니다",
+                userSuspendResponseDto
+            )
+        )
     }
 
     /**
@@ -86,18 +91,18 @@ public class SuspendedUserController {
      */
     @PatchMapping("/{userId}/resume")
     @Operation(summary = "유저 정지 해제")
-    public ResponseEntity<RsData<UserDetailResponseDto>> resumeUser(
-            @PathVariable Long userId
-    ) {
-        User user = suspendedUserService.resumeUser(userId);
-        UserDetailResponseDto userSuspendResponseDto = UserDetailResponseDto.from(user);
+    fun resumeUser(
+        @PathVariable userId: Long
+    ): ResponseEntity<RsData<UserDetailResponseDto>> {
+        val user = suspendedUserService.resumeUser(userId)
+        val userDetailResponseDto = UserDetailResponseDto.from(user)
 
         return ResponseEntity.ok(
-                RsData.of(
-                        "200-1",
-                        "%s님을 정지하였습니다".formatted(userSuspendResponseDto.baseResponseDto().nickname()),
-                        userSuspendResponseDto
-                )
-        );
+            RsData(
+                "200-1",
+                "${userDetailResponseDto.baseResponseDto.username}님의 정지가 해지되었습니다",
+                userDetailResponseDto
+            )
+        )
     }
 }
