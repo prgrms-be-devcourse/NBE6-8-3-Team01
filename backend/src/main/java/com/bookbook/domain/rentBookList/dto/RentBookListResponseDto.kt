@@ -3,6 +3,7 @@ package com.bookbook.domain.rentBookList.dto
 import com.bookbook.domain.rent.entity.Rent
 import java.time.LocalDateTime
 
+// 책 대여 목록 응답 DTO
 data class RentBookListResponseDto(
     val id: Long,
     val bookTitle: String?,
@@ -20,6 +21,7 @@ data class RentBookListResponseDto(
     val createdDate: LocalDateTime,
     val modifiedDate: LocalDateTime
 ) {
+    // Rent 엔티티로부터 DTO 생성하는 생성자
     constructor(rent: Rent, lenderNickname: String?) : this(
         id = rent.id,
         bookTitle = rent.bookTitle,
@@ -39,27 +41,24 @@ data class RentBookListResponseDto(
     )
 
     companion object {
+        // 이미지 URL 처리 메서드
         private fun processImageUrl(imageUrl: String?): String {
             if (imageUrl.isNullOrBlank()) {
                 return "/book-placeholder.png"
             }
 
-            // 이미 전체 URL인 경우 그대로 반환
             if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
                 return imageUrl
             }
 
-            // 상대 경로인 경우 절대 경로로 변환
             if (imageUrl.startsWith("/uploads/")) {
                 return "http://localhost:8080$imageUrl"
             }
 
-            // uploads/로 시작하는 경우
             if (imageUrl.startsWith("uploads/")) {
                 return "http://localhost:8080/$imageUrl"
             }
 
-            // 기타 경우 기본 처리
             return "http://localhost:8080${if (imageUrl.startsWith("/")) imageUrl else "/$imageUrl"}"
         }
     }
