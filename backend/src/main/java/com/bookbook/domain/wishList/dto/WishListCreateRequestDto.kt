@@ -1,6 +1,5 @@
-package com.bookbook.domain.wishList.dto;
+package com.bookbook.domain.wishList.dto
 
-public record WishListCreateRequestDto(
-        Integer rentId
-) {
-}
+data class WishListCreateRequestDto(
+    val rentId: Int
+)
