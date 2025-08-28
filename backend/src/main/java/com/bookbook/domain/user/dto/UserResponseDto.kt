@@ -26,7 +26,7 @@ data class UserResponseDto(
         rating = user.rating,
         role = user.role,
         userStatus = user.userStatus,
-        createAt = user.createAt,
+        createAt = user.createdDate,
         isRegistrationCompleted = user.isRegistrationCompleted()
     )
 }

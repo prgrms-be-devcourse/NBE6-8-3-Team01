@@ -44,9 +44,7 @@ class UserService(
                 email = adminEmail,
                 nickname = "관리자",
                 address = "서울시 강남구",
-                rating = 5.0f,
                 role = Role.ADMIN,
-                userStatus = UserStatus.ACTIVE,
                 registrationCompleted = true
             )
             userRepository.save(adminUser)
@@ -136,8 +134,8 @@ class UserService(
         }
 
         user.apply {
-            changeUserStatus(UserStatus.INACTIVE)
-            changeUsername("${username}_deleted_${UUID.randomUUID()}")
+            userStatus = UserStatus.INACTIVE
+            username = "${username}_deleted_${UUID.randomUUID()}"
             email = email?.let { "${it}_deleted_${UUID.randomUUID()}" }
             nickname = null
             address = null
@@ -165,12 +163,6 @@ class UserService(
                     username = username,
                     email = email,
                     password = passwordEncoder.encode(UUID.randomUUID().toString()),
-                    nickname = null,
-                    address = null,
-                    rating = 0.0f,
-                    role = Role.USER,
-                    userStatus = UserStatus.ACTIVE,
-                    registrationCompleted = false
                 )
                 userRepository.save(newUser)
                 newUser
@@ -186,11 +178,11 @@ class UserService(
         val user = getByIdOrThrow(userId)
 
         return if (user.role == Role.ADMIN) {
-            UserProfileResponseDto.from(user, 5.0, 0)
+            UserProfileResponseDto(user, 5.0, 0)
         } else {
             val averageRating = reviewRepository.findAverageRatingByRevieweeId(userId).orElse(0.0)
             val mannerScoreCount = reviewRepository.countByRevieweeId(userId)
-            UserProfileResponseDto.from(user, averageRating, mannerScoreCount.toInt())
+            UserProfileResponseDto(user, averageRating, mannerScoreCount.toInt())
         }
     }
 }

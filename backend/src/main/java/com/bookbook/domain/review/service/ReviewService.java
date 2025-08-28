@@ -119,7 +119,7 @@ public class ReviewService {
         // 본인이 해당 도서를 대여했는지 확인
         boolean isBorrower = rentListRepository.findByRentId(rentId)
                 .stream()
-                .anyMatch(rl -> rl.getBorrowerUser().getId().equals(borrowerId));
+                .anyMatch(rl -> rl.getBorrowerUser().getId() == borrowerId);
 
         if (!isBorrower) {
             throw new IllegalArgumentException("해당 도서를 대여한 사용자만 리뷰를 작성할 수 있습니다.");
