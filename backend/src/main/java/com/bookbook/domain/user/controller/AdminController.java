@@ -10,7 +10,7 @@ import com.bookbook.domain.user.service.AdminService;
 import com.bookbook.global.rsdata.RsData;
 import com.bookbook.global.security.CustomOAuth2User;
 import com.bookbook.global.security.jwt.JwtProvider;
-import com.bookbook.global.util.PageResponse;
+import com.bookbook.global.jpa.dto.response.PageResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
@@ -137,7 +137,7 @@ public class AdminController {
      */
     @GetMapping("/users")
     @Operation(summary = "유저 목록 조회")
-    public ResponseEntity<RsData<PageResponse<UserBaseDto>>> getFilteredUsers(
+    public ResponseEntity<RsData<PageResponseDto<UserBaseDto>>> getFilteredUsers(
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size,
             @RequestParam(required = false) List<UserStatus> status,
@@ -146,7 +146,7 @@ public class AdminController {
         Pageable pageable = PageRequest.of(page - 1, size);
 
         Page<UserBaseDto> userPage = adminService.getFilteredUsers(pageable, status, userId);
-        PageResponse<UserBaseDto> response = PageResponse.from(userPage, page, size);
+        PageResponseDto<UserBaseDto> response = new PageResponseDto<>(userPage);
 
         return ResponseEntity.ok(
                 RsData.of(
