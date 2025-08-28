@@ -28,11 +28,10 @@ data class RsData<T>(
 
     companion object {
         @JvmStatic
-        fun <T> of(resultCode: String, msg: String?, data: T): RsData<T> =
-            RsData(resultCode, msg, data)
+        fun <T> of(resultCode: String, msg: String?, data: T?): RsData<T?> = RsData(resultCode, msg, data)
 
         @JvmStatic
-        fun of(resultCode: String, msg: String?): RsData<Void> =
+        fun <T> of(resultCode: String, msg: String?): RsData<T?> =
             RsData(resultCode, msg, null)
     }
 }
