@@ -1,16 +1,14 @@
-package com.bookbook.global.util;
+package com.bookbook.global.util
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.List;
-import java.util.stream.Collectors;
+import org.springframework.context.annotation.Profile
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.*
+import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.nio.file.StandardCopyOption
+import java.util.*
 
 /**
  * 개발 환경에서만 사용할 수 있는 이미지 관리 API
@@ -18,34 +16,36 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/dev/images")
 @Profile("dev") // 개발 환경에서만 활성화
-public class ImageManagementController {
-
+class ImageManagementController {
+    
+    companion object {
+        private val IMAGE_EXTENSIONS = listOf(".png", ".jpg", ".jpeg", ".gif")
+    }
+    
     /**
      * uploads 폴더의 모든 이미지 파일 목록 조회
      */
     @GetMapping("/list")
-    public ResponseEntity<List<String>> listImages() {
-        try {
-            Path uploadsPath = Paths.get("uploads");
-            
+    fun listImages(): ResponseEntity<List<String>> {
+        return try {
+            val uploadsPath = Paths.get("uploads")
+
             if (!Files.exists(uploadsPath)) {
-                return ResponseEntity.ok(List.of());
+                return ResponseEntity.ok(emptyList())
             }
-            
-            List<String> imageFiles = Files.list(uploadsPath)
-                    .filter(Files::isRegularFile)
-                    .filter(path -> {
-                        String fileName = path.getFileName().toString().toLowerCase();
-                        return fileName.endsWith(".png") || fileName.endsWith(".jpg") || 
-                               fileName.endsWith(".jpeg") || fileName.endsWith(".gif");
-                    })
-                    .map(path -> path.getFileName().toString())
-                    .collect(Collectors.toList());
-            
-            return ResponseEntity.ok(imageFiles);
-            
-        } catch (IOException e) {
-            return ResponseEntity.internalServerError().build();
+
+            val imageFiles = Files.list(uploadsPath)
+                .filter { Files.isRegularFile(it) }
+                .filter { path ->
+                    val fileName = path.fileName.toString().lowercase(Locale.getDefault())
+                    IMAGE_EXTENSIONS.any { fileName.endsWith(it) }
+                }
+                .map { it.fileName.toString() }
+                .toList()
+
+            ResponseEntity.ok(imageFiles)
+        } catch (e: IOException) {
+            ResponseEntity.internalServerError().build()
         }
     }
 
@@ -53,34 +53,33 @@ public class ImageManagementController {
      * 특정 이미지 파일이 존재하는지 확인
      */
     @GetMapping("/exists/{fileName}")
-    public ResponseEntity<Boolean> checkImageExists(@PathVariable String fileName) {
-        Path imagePath = Paths.get("uploads", fileName);
-        boolean exists = Files.exists(imagePath);
-        return ResponseEntity.ok(exists);
+    fun checkImageExists(@PathVariable fileName: String): ResponseEntity<Boolean> {
+        val imagePath = Paths.get("uploads", fileName)
+        val exists = Files.exists(imagePath)
+        return ResponseEntity.ok(exists)
     }
 
     /**
      * 기존 이미지를 다른 이름으로 복사 (개발용)
      */
     @PostMapping("/copy")
-    public ResponseEntity<String> copyImage(
-            @RequestParam String sourceFileName,
-            @RequestParam String targetFileName
-    ) {
-        try {
-            Path sourcePath = Paths.get("uploads", sourceFileName);
-            Path targetPath = Paths.get("uploads", targetFileName);
-            
+    fun copyImage(
+        @RequestParam sourceFileName: String,
+        @RequestParam targetFileName: String
+    ): ResponseEntity<String> {
+        return try {
+            val sourcePath = Paths.get("uploads", sourceFileName)
+            val targetPath = Paths.get("uploads", targetFileName)
+
             if (!Files.exists(sourcePath)) {
-                return ResponseEntity.badRequest().body("Source file not found: " + sourceFileName);
+                return ResponseEntity.badRequest().body("Source file not found: $sourceFileName")
             }
-            
-            Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
-            
-            return ResponseEntity.ok("Image copied: " + sourceFileName + " -> " + targetFileName);
-            
-        } catch (IOException e) {
-            return ResponseEntity.internalServerError().body("Copy failed: " + e.getMessage());
+
+            Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING)
+
+            ResponseEntity.ok("Image copied: $sourceFileName -> $targetFileName")
+        } catch (e: IOException) {
+            ResponseEntity.internalServerError().body("Copy failed: ${e.message}")
         }
     }
 
@@ -88,44 +87,42 @@ public class ImageManagementController {
      * 누락된 이미지 파일들을 기본 이미지로 생성
      */
     @PostMapping("/create-missing")
-    public ResponseEntity<String> createMissingImages(@RequestBody List<String> missingFileNames) {
-        try {
-            Path uploadsPath = Paths.get("uploads");
-            
+    fun createMissingImages(@RequestBody missingFileNames: List<String>): ResponseEntity<String> {
+        return try {
+            val uploadsPath = Paths.get("uploads")
+
             // uploads 폴더가 없으면 생성
             if (!Files.exists(uploadsPath)) {
-                Files.createDirectories(uploadsPath);
+                Files.createDirectories(uploadsPath)
             }
-            
+
             // 기존 이미지 파일 중 하나를 템플릿으로 사용
-            List<Path> existingImages = Files.list(uploadsPath)
-                    .filter(Files::isRegularFile)
-                    .filter(path -> {
-                        String fileName = path.getFileName().toString().toLowerCase();
-                        return fileName.endsWith(".png") || fileName.endsWith(".jpg") || 
-                               fileName.endsWith(".jpeg") || fileName.endsWith(".gif");
-                    })
-                    .collect(Collectors.toList());
-            
+            val existingImages = Files.list(uploadsPath)
+                .filter { Files.isRegularFile(it) }
+                .filter { path ->
+                    val fileName = path.fileName.toString().lowercase(Locale.getDefault())
+                    IMAGE_EXTENSIONS.any { fileName.endsWith(it) }
+                }
+                .toList()
+
             if (existingImages.isEmpty()) {
-                return ResponseEntity.badRequest().body("No existing images to use as template");
+                return ResponseEntity.badRequest().body("No existing images to use as template")
             }
-            
-            Path templateImage = existingImages.get(0);
-            int copiedCount = 0;
-            
-            for (String fileName : missingFileNames) {
-                Path targetPath = Paths.get("uploads", fileName);
+
+            val templateImage = existingImages.first()
+            var copiedCount = 0
+
+            for (fileName in missingFileNames) {
+                val targetPath = Paths.get("uploads", fileName)
                 if (!Files.exists(targetPath)) {
-                    Files.copy(templateImage, targetPath, StandardCopyOption.REPLACE_EXISTING);
-                    copiedCount++;
+                    Files.copy(templateImage, targetPath, StandardCopyOption.REPLACE_EXISTING)
+                    copiedCount++
                 }
             }
-            
-            return ResponseEntity.ok("Created " + copiedCount + " missing image files using template: " + templateImage.getFileName());
-            
-        } catch (IOException e) {
-            return ResponseEntity.internalServerError().body("Failed to create missing images: " + e.getMessage());
+
+            ResponseEntity.ok("Created $copiedCount missing image files using template: ${templateImage.fileName}")
+        } catch (e: IOException) {
+            ResponseEntity.internalServerError().body("Failed to create missing images: ${e.message}")
         }
     }
 }

@@ -1,9 +1,9 @@
-package com.bookbook.config;
+package com.bookbook.config
 
-import com.bookbook.global.util.ImageMigrationUtil;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Component;
+import com.bookbook.global.util.ImageMigrationUtil
+import org.springframework.boot.CommandLineRunner
+import org.springframework.context.annotation.Profile
+import org.springframework.stereotype.Component
 
 /**
  * 개발 환경에서만 실행되는 이미지 동기화 컴포넌트
@@ -11,12 +11,11 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @Profile("dev") // 개발 환경에서만 실행
-public class ImageSyncRunner implements CommandLineRunner {
-
-    @Override
-    public void run(String... args) throws Exception {
-        System.out.println("=== 개발 환경: 이미지 동기화 시작 ===");
-        ImageMigrationUtil.copyFromStaticToUploads();
-        System.out.println("=== 이미지 동기화 완료 ===");
+class ImageSyncRunner : CommandLineRunner {
+    
+    override fun run(vararg args: String) {
+        println("=== 개발 환경: 이미지 동기화 시작 ===")
+        ImageMigrationUtil.copyFromStaticToUploads()
+        println("=== 이미지 동기화 완료 ===")
     }
 }
