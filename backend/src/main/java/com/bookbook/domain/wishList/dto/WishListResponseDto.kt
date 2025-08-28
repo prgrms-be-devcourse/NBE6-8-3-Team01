@@ -1,37 +1,40 @@
-package com.bookbook.domain.wishList.dto;
+package com.bookbook.domain.wishList.dto
 
-import com.bookbook.domain.wishList.entity.WishList;
+import com.bookbook.domain.wishList.entity.WishList
+import java.time.LocalDateTime
 
-import java.time.LocalDateTime;
-
-public record WishListResponseDto(
-        Integer id,
-        Integer rentId,
-        String title,
-        String bookTitle,
-        String author,
-        String publisher,
-        String bookCondition,
-        String rentStatus,
-        String bookImage,
-        String address,
-        String lenderNickname,
-        LocalDateTime createDate
+data class WishListResponseDto(
+    val id: Int,
+    val rentId: Int,
+    val title: String,
+    val bookTitle: String,
+    val author: String,
+    val publisher: String,
+    val bookCondition: String,
+    val rentStatus: String,
+    val bookImage: String,
+    val address: String,
+    val lenderNickname: String,
+    val createDate: LocalDateTime
 ) {
-    public static WishListResponseDto from(WishList wishList, String lenderNickname) {
-        return new WishListResponseDto(
-                wishList.getId(),
-                wishList.getRent().getId(),
-                wishList.getRent().getTitle(),
-                wishList.getRent().getBookTitle(),
-                wishList.getRent().getAuthor(),
-                wishList.getRent().getPublisher(),
-                wishList.getRent().getBookCondition(),
-                wishList.getRent().getRentStatus().name(),
-                wishList.getRent().getBookImage(),
-                wishList.getRent().getAddress(),
-                lenderNickname,
-                wishList.getCreatedDate()
-        );
+    companion object {
+        @JvmStatic
+        fun from(wishList: WishList, lenderNickname: String): WishListResponseDto {
+            val rent = wishList.rent!!
+            return WishListResponseDto(
+                id = wishList.id!!,
+                rentId = rent.id,
+                title = rent.title,
+                bookTitle = rent.bookTitle,
+                author = rent.author,
+                publisher = rent.publisher,
+                bookCondition = rent.bookCondition,
+                rentStatus = rent.rentStatus!!.name,
+                bookImage = rent.bookImage,
+                address = rent.address,
+                lenderNickname = lenderNickname,
+                createDate = wishList.createdDate!!
+            )
+        }
     }
 }
