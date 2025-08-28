@@ -128,7 +128,7 @@ export function UserListComponent({ data, onRefresh }: ContentComponentProps) {
             멤버 목록
           </h3>
             <div className="text-sm text-gray-500">
-              {data.data.length > 0 ? `총 ${data.data.length}명 검색 완료` : "검색 결과 없음"}
+              {data.content.length > 0 ? `총 ${data.content.length}명 검색 완료` : "검색 결과 없음"}
             </div>
         </div>
 

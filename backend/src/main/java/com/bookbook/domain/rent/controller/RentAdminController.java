@@ -5,7 +5,7 @@ import com.bookbook.domain.rent.entity.RentStatus;
 import com.bookbook.domain.rent.service.RentService;
 import com.bookbook.domain.rent.dto.request.ChangeRentStatusRequestDto;
 import com.bookbook.domain.rent.dto.response.RentSimpleResponseDto;
-import com.bookbook.global.util.PageResponse;
+import com.bookbook.global.jpa.dto.response.PageResponseDto;
 import com.bookbook.global.rsdata.RsData;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -42,7 +42,7 @@ public class RentAdminController {
      */
     @GetMapping
     @Operation(summary = "대여 게시글 목록 조회")
-    public ResponseEntity<RsData<PageResponse<RentSimpleResponseDto>>> getPosts(
+    public ResponseEntity<RsData<PageResponseDto<RentSimpleResponseDto>>> getPosts(
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size,
             @RequestParam(required = false) List<RentStatus> status,
@@ -51,7 +51,7 @@ public class RentAdminController {
         Pageable pageable = PageRequest.of(page - 1, size);
 
         Page<RentSimpleResponseDto> rentHistoryPage = rentService.getRentsPage(pageable, status, userId);
-        PageResponse<RentSimpleResponseDto> response = PageResponse.from(rentHistoryPage, page, size);
+        PageResponseDto<RentSimpleResponseDto> response = new PageResponseDto<>(rentHistoryPage);
 
         return ResponseEntity.ok(
                 RsData.of(

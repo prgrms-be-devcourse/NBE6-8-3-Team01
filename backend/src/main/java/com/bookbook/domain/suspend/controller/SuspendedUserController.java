@@ -7,7 +7,7 @@ import com.bookbook.domain.suspend.service.SuspendedUserService;
 import com.bookbook.domain.user.dto.response.UserDetailResponseDto;
 import com.bookbook.domain.user.entity.User;
 import com.bookbook.global.rsdata.RsData;
-import com.bookbook.global.util.PageResponse;
+import com.bookbook.global.jpa.dto.response.PageResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +36,7 @@ public class SuspendedUserController {
      */
     @GetMapping("/suspend")
     @Operation(summary = "유저 정지 이력 조회")
-    public ResponseEntity<RsData<PageResponse<UserSuspendResponseDto>>> getAllSuspendedHistory(
+    public ResponseEntity<RsData<PageResponseDto<UserSuspendResponseDto>>> getAllSuspendedHistory(
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size,
             @RequestParam(required = false) Long userId
@@ -44,7 +44,7 @@ public class SuspendedUserController {
         Pageable pageable = PageRequest.of(page - 1, size);
 
         Page<UserSuspendResponseDto> historyPage = suspendedUserService.getSuspendedHistoryPage(pageable, userId);
-        PageResponse<UserSuspendResponseDto> response = PageResponse.from(historyPage, page, size);
+        PageResponseDto<UserSuspendResponseDto> response = new PageResponseDto<>(historyPage);
 
         return ResponseEntity.ok(
                 RsData.of(

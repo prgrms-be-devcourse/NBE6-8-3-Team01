@@ -59,7 +59,7 @@ export function ListComponentContainer() {
         );
     }
 
-    if (data?.data)  {
+    if (data?.content)  {
         return <ContentComponent data={data} onRefresh={refreshData}/>
     }
 

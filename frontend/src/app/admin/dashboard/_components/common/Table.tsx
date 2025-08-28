@@ -35,7 +35,7 @@ interface DataTableProps<Z> {
 export function DataTable<Z extends { id: string | number }>(
     { columns, data }: DataTableProps<Z>
 ) {
-  const pagedData = data?.data || [];
+  const content = data?.content || [];
 
   return (
     <table className="min-w-full divide-y divide-gray-100">
@@ -55,8 +55,8 @@ export function DataTable<Z extends { id: string | number }>(
       </thead>
       {/* 테이블 Body */}
       <tbody className="bg-white divide-y divide-gray-200">
-        {pagedData?.length > 0 ? (
-          pagedData.map((item) => (
+        {content?.length > 0 ? (
+          content.map((item) => (
             <tr key={item.id} className="hover:bg-gray-50 transition-colors">
               {columns.map((col) => (
                 <td key={String(col.key)} className="px-7 py-3 whitespace-nowrap text-sm text-gray-800">
