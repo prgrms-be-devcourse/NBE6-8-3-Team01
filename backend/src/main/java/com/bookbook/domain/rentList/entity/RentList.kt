@@ -1,31 +1,23 @@
-package com.bookbook.domain.rentList.entity;
+package com.bookbook.domain.rentList.entity
 
-import com.bookbook.domain.rent.entity.Rent;
-import com.bookbook.domain.user.entity.User;
-import com.bookbook.global.jpa.entity.BaseEntity;
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
-import java.time.LocalDateTime;
+import com.bookbook.domain.rent.entity.Rent
+import com.bookbook.domain.user.entity.User
+import com.bookbook.global.jpa.entity.BaseEntity
+import jakarta.persistence.*
+import java.time.LocalDateTime
 
 @Entity
-@Getter
-@Setter
-@NoArgsConstructor
-public class RentList extends BaseEntity {
+class RentList(
+    @ManyToOne
+    var borrowerUser: User? = null,
     
-    private LocalDateTime loanDate;
-    private LocalDateTime returnDate;
+    @ManyToOne
+    var rent: Rent? = null,
+    
+    var loanDate: LocalDateTime? = null,
+    var returnDate: LocalDateTime? = null,
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private RentRequestStatus status = RentRequestStatus.PENDING;
-    
-    @ManyToOne
-    private User borrowerUser;
-    
-    @ManyToOne
-    private Rent rent;
-}
+    var status: RentRequestStatus = RentRequestStatus.PENDING
+) : BaseEntity()
