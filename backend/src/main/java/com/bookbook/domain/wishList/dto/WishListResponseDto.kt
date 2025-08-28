@@ -17,24 +17,19 @@ data class WishListResponseDto(
     val lenderNickname: String,
     val createDate: LocalDateTime
 ) {
-    companion object {
-        @JvmStatic
-        fun from(wishList: WishList, lenderNickname: String): WishListResponseDto {
-            val rent = wishList.rent!!
-            return WishListResponseDto(
-                id = wishList.id!!,
-                rentId = rent.id,
-                title = rent.title,
-                bookTitle = rent.bookTitle,
-                author = rent.author,
-                publisher = rent.publisher,
-                bookCondition = rent.bookCondition,
-                rentStatus = rent.rentStatus!!.name,
-                bookImage = rent.bookImage,
-                address = rent.address,
-                lenderNickname = lenderNickname,
-                createDate = wishList.createdDate!!
-            )
-        }
-    }
+    constructor(wishList: WishList, lenderNickname: String) : this(
+        id = wishList.id,
+        // Rent가 코틀린으로 마이그레이션되면 null-safe 처리 불필요
+        rentId = wishList.rent?.id ?: 0,
+        title = wishList.rent?.title ?: "",
+        bookTitle = wishList.rent?.bookTitle ?: "",
+        author = wishList.rent?.author ?: "",
+        publisher = wishList.rent?.publisher ?: "",
+        bookCondition = wishList.rent?.bookCondition ?: "",
+        rentStatus = wishList.rent?.rentStatus?.name ?: "",
+        bookImage = wishList.rent?.bookImage ?: "",
+        address = wishList.rent?.address ?: "",
+        lenderNickname = lenderNickname,
+        createDate = wishList.createdDate ?: LocalDateTime.now()
+    )
 }
