@@ -8,15 +8,10 @@ data class UserProfileResponseDto(
     val mannerScore: Double,
     val mannerScoreCount: Int
 ) {
-    companion object {
-        @JvmStatic
-        fun from(user: User, mannerScore: Double, mannerScoreCount: Int): UserProfileResponseDto {
-            return UserProfileResponseDto(
-                userId = user.id!!,
-                nickname = user.nickname,
-                mannerScore = mannerScore,
-                mannerScoreCount = mannerScoreCount
-            )
-        }
-    }
+    constructor(user: User, mannerScore: Double, mannerScoreCount: Int) : this(
+        userId = user.id,
+        nickname = user.nickname,
+        mannerScore = mannerScore,
+        mannerScoreCount = mannerScoreCount
+    )
 }
