@@ -28,8 +28,8 @@ public record UserBaseDto(
                 .nickname(user.getNickname())
                 .email(user.getEmail())
                 .rating(user.getRating())
-                .createdAt(user.getCreateAt())
-                .updatedAt(user.getUpdateAt())
+                .createdAt(user.getCreatedDate())
+                .updatedAt(user.getModifiedDate())
                 .userStatus(user.getUserStatus())
                 .role(user.getRole())
                 .build();

@@ -19,7 +19,7 @@ interface UserRepository : JpaRepository<User, Long> {
         SELECT u FROM User u WHERE
         (:status IS NULL OR u.userStatus in :status) AND
         (:userId IS NULL OR u.id = :userId)
-        ORDER BY u.createAt DESC
+        ORDER BY u.createdDate DESC
     """
     )
     fun findFilteredUsers(
