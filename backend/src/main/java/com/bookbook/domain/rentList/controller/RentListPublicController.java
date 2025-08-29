@@ -58,13 +58,6 @@ public class RentListPublicController {
                         .body(RsData.of("401-1", "로그인이 필요합니다. JWT 토큰이 없습니다.", "NO_TOKEN"));
             }
             
-            // JWT 토큰 유효성 검증
-            if (!jwtProvider.validateToken(jwt)) {
-                log.warn("JWT 토큰이 유효하지 않음");
-                return ResponseEntity.status(401)
-                        .body(RsData.of("401-2", "로그인이 필요합니다. 토큰이 만료되었거나 유효하지 않습니다.", "INVALID_TOKEN"));
-            }
-            
             // JWT에서 사용자 정보 추출
             Claims claims = jwtProvider.getAllClaimsFromToken(jwt);
             Long userId = claims.get("userId", Long.class);

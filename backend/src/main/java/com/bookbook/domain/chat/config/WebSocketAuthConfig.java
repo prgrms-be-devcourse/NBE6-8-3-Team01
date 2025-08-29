@@ -48,7 +48,7 @@ public class WebSocketAuthConfig implements WebSocketMessageBrokerConfigurer {
                     // 쿠키에서 JWT 토큰 추출
                     String token = extractJwtFromCookie(accessor);
                     
-                    if (token != null && jwtProvider.validateToken(token)) {
+                    if (token != null) {
                         try {
                             // JWT에서 사용자 정보 추출
                             Claims claims = jwtProvider.getAllClaimsFromToken(token);
