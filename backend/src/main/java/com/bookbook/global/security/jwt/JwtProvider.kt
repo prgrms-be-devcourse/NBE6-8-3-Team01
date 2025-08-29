@@ -31,7 +31,11 @@ class JwtProvider(
     private val _refreshTokenValidityInSeconds: Int,
     private val refreshTokenRepository: RefreshTokenRepository
 ) {
-    private var key: Key? = null
+
+    private val key: Key by lazy {
+        val keyBytes = Decoders.BASE64.decode(secretKey)
+        Keys.hmacShaKeyFor(keyBytes)
+    }
 
     val accessTokenValidityInSeconds: Int
         get() = _accessTokenValidityInSeconds
@@ -41,18 +45,6 @@ class JwtProvider(
 
     companion object {
         private val log = LoggerFactory.getLogger(JwtProvider::class.java)
-    }
-
-    init {
-        getSigningKey()
-    }
-
-    private fun getSigningKey(): Key {
-        if (key == null) {
-            val keyBytes = Decoders.BASE64.decode(secretKey)
-            key = Keys.hmacShaKeyFor(keyBytes)
-        }
-        return key!!
     }
 
     // Access Token 생성 메서드
@@ -70,7 +62,7 @@ class JwtProvider(
             .setSubject(userId.toString())
             .setIssuedAt(now)
             .setExpiration(validity)
-            .signWith(getSigningKey(), SignatureAlgorithm.HS512)
+            .signWith(key, SignatureAlgorithm.HS512)
             .compact()
     }
 
@@ -88,7 +80,7 @@ class JwtProvider(
             .setSubject(userId.toString())
             .setIssuedAt(now)
             .setExpiration(validity)
-            .signWith(getSigningKey(), SignatureAlgorithm.HS512)
+            .signWith(key, SignatureAlgorithm.HS512)
             .compact()
 
         // DB에 기존 리프레시 토큰이 있는지 확인하고 업데이트하거나 새로 저장
@@ -107,40 +99,29 @@ class JwtProvider(
         return refreshTokenValue
     }
 
-    // 토큰에서 모든 클레임(claims) 추출
+    // 토큰에서 모든 클레임(claims) 추출 및 유효성 검사를 통합
     fun getAllClaimsFromToken(token: String): Claims {
         return try {
             Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
+                .setSigningKey(key)
                 .build()
                 .parseClaimsJws(token)
                 .body
-        } catch (_: SecurityException) {
-            log.info("잘못된 JWT 서명입니다.")
+        } catch (e: SecurityException) {
+            log.info("잘못된 JWT 서명입니다.", e)
             throw ServiceException("401-JWT-INVALID", "잘못된 JWT 서명입니다.")
-        } catch (_: MalformedJwtException) {
-            log.info("잘못된 JWT 서명입니다.")
+        } catch (e: MalformedJwtException) {
+            log.info("잘못된 JWT 서명입니다.", e)
             throw ServiceException("401-JWT-INVALID", "잘못된 JWT 서명입니다.")
-        } catch (_: ExpiredJwtException) {
-            log.info("만료된 JWT 토큰입니다.")
+        } catch (e: ExpiredJwtException) {
+            log.info("만료된 JWT 토큰입니다.", e)
             throw ServiceException("401-JWT-EXPIRED", "만료된 JWT 토큰입니다.")
-        } catch (_: UnsupportedJwtException) {
-            log.info("지원되지 않는 JWT 토큰입니다.")
+        } catch (e: UnsupportedJwtException) {
+            log.info("지원되지 않는 JWT 토큰입니다.", e)
             throw ServiceException("401-JWT-UNSUPPORTED", "지원되지 않는 JWT 토큰입니다.")
-        } catch (_: IllegalArgumentException) {
-            log.info("JWT 토큰이 잘못되었습니다.")
+        } catch (e: IllegalArgumentException) {
+            log.info("JWT 토큰이 잘못되었습니다.", e)
             throw ServiceException("401-JWT-ILLEGAL", "JWT 토큰이 잘못되었습니다.")
-        }
-    }
-
-    // Access Token 유효성 검사
-    fun validateToken(token: String): Boolean {
-        return try {
-            Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(token)
-            true
-        } catch (e: Exception) {
-            log.error("JWT token validation failed: {}", e.message)
-            false
         }
     }
 
@@ -148,9 +129,9 @@ class JwtProvider(
     @Transactional
     fun validateRefreshToken(refreshTokenValue: String) {
         try {
-            // JWT 자체의 유효성 (서명, 구조 등) 검사
+            // JWT 자체의 유효성 (서명, 구조 등) 검사 - getAllClaimsFromToken이 대신 처리
             val claims = getAllClaimsFromToken(refreshTokenValue)
-            val userId = claims["userId"] as Long
+            val userId = (claims["userId"] as Int).toLong()
 
             // DB에 저장된 리프레시 토큰과 일치하는지, 만료되지 않았는지 확인
             val storedRefreshToken = refreshTokenRepository.findByToken(refreshTokenValue)
@@ -163,7 +144,7 @@ class JwtProvider(
             }
 
             if (storedRefreshToken.isExpired()) {
-                refreshTokenRepository.delete(storedRefreshToken) // 만료된 토큰 DB에서 삭제
+                refreshTokenRepository.delete(storedRefreshToken)
                 throw ServiceException("401-REFRESH-TOKEN-EXPIRED", "만료된 리프레시 토큰입니다. 다시 로그인 해주세요.")
             }
 
