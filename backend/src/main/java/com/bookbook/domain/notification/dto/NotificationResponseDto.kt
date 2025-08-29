@@ -10,7 +10,7 @@ import kotlin.math.max
 //08-29 유효상
 data class NotificationResponseDto(
     @JsonProperty("id")
-    val id: Long?,
+    val id: Long,
 
     @JsonProperty("message")
     val message: String?,

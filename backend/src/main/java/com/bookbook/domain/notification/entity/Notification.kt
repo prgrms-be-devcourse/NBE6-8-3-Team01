@@ -2,7 +2,7 @@ package com.bookbook.domain.notification.entity
 
 import com.bookbook.domain.notification.enums.NotificationType
 import com.bookbook.domain.user.entity.User
-import com.bookbook.global.entity.BaseEntity
+import com.bookbook.global.jpa.entity.BaseEntity
 import jakarta.persistence.*
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedDate
@@ -13,11 +13,7 @@ import java.time.LocalDateTime
 @Entity
 @EntityListeners(AuditingEntityListener::class)
 class Notification() : BaseEntity() {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long? = null
-        protected set
-
+    
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "receiver_id", nullable = false)
     var receiver: User? = null
