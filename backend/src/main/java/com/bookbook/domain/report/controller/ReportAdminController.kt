@@ -9,6 +9,7 @@ import com.bookbook.global.rsdata.RsData
 import com.bookbook.global.security.CustomOAuth2User
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
+import org.slf4j.LoggerFactory
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.http.ResponseEntity
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.*
 class ReportAdminController (
     private val reportService: ReportService
 ){
+    private val log = LoggerFactory.getLogger(ReportAdminController::class.java)
     /**
      * 신고 글 목록을 가져옵니다.
      *
@@ -90,6 +92,7 @@ class ReportAdminController (
         @AuthenticationPrincipal adminUser: CustomOAuth2User
     ): ResponseEntity<RsData<Void>> {
         reportService.markReportAsProcessed(reportId, adminUser.userId)
+        log.info("{}번 신고 처리 완료", reportId)
 
         return ResponseEntity.ok(
             RsData("200-1", "${reportId}번 신고가 정상적으로 처리되었습니다.")
