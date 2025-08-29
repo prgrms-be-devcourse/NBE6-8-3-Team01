@@ -5,7 +5,6 @@ import com.bookbook.domain.report.dto.response.ReportSimpleResponseDto
 import com.bookbook.domain.report.entity.Report
 import com.bookbook.domain.report.enums.ReportStatus
 import com.bookbook.domain.report.repository.ReportRepository
-import com.bookbook.domain.user.repository.UserRepository
 import com.bookbook.domain.user.service.UserService
 import com.bookbook.global.exception.ServiceException
 import org.springframework.data.domain.Page
@@ -16,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 class ReportService(
     private val reportRepository: ReportRepository,
-    private val userRepository: UserRepository,
     private val userService: UserService
 ) {
 
@@ -32,19 +30,18 @@ class ReportService(
      */
     @Transactional
     fun createReport(reporterUserId: Long, targetUserId: Long, reason: String) {
-        if (reporterUserId == targetUserId) {
+        if (reporterUserId == targetUserId)
             throw ServiceException("400-REPORT-SELF", "자기 자신을 신고할 수 없습니다.")
-        }
 
-        val reporterUser = userRepository.findById(reporterUserId)
-            .orElseThrow { ServiceException("404-USER-NOT-FOUND", "신고한 사용자를 찾을 수 없습니다.") }
+        userService.findById(reporterUserId)
+            ?: throw ServiceException("404-USER-NOT-FOUND", "신고한 사용자를 찾을 수 없습니다.")
 
-        val targetUser = userRepository.findById(targetUserId)
-            .orElseThrow { ServiceException("404-USER-NOT-FOUND", "신고 대상 사용자를 찾을 수 없습니다.") }
+        userService.findById(targetUserId)
+            ?: throw ServiceException("404-USER-NOT-FOUND", "신고 대상 사용자를 찾을 수 없습니다.")
 
         val report = Report(
-            reporterUser,
-            targetUser,
+            reporterUserId,
+            targetUserId,
             reason
         )
 
@@ -68,7 +65,7 @@ class ReportService(
         val reportPage = reportRepository
             .findFilteredReportHistory(pageable, status, targetUserId)
 
-        return reportPage.map(::ReportSimpleResponseDto)
+        return reportPage.map { ReportSimpleResponseDto(it) }
     }
 
     /**
@@ -103,19 +100,22 @@ class ReportService(
     fun markReportAsProcessed(reportId: Long, userId: Long) {
         val report = findReportById(reportId)
 
+        val closer = userService.findById(userId)
+            ?: throw ServiceException("404-1", "존재하지 않는 사용자입니다.")
+
+        if (!closer.isAdmin)
+            throw ServiceException("403-1", "신고를 처리할 권한이 없습니다.")
+
         val status = report.status
 
-        if (status == ReportStatus.PENDING) {
+        if (status == ReportStatus.PENDING)
             throw ServiceException("422-1", "해당 신고를 먼저 확인해야 합니다.")
-        }
 
-        if (status == ReportStatus.PROCESSED) {
+        if (status == ReportStatus.PROCESSED)
             throw ServiceException("409-1", "해당 신고는 이미 처리가 완료되었습니다.")
-        }
 
-        val closerAdmin = userService.getByIdOrThrow(userId)
         // 신고 이슈를 닫은 사람을 표기할 수 있도록
-        report.markAsProcessed(closerAdmin)
+        report.markAsProcessed(closer)
     }
 
     /**

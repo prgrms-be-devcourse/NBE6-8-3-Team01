@@ -12,10 +12,10 @@ data class ReportSimpleResponseDto(
     val createdDate: LocalDateTime
 ) {
     constructor(report: Report) : this(
-        id = report.id ?: 0,
+        id = report.id,
         status = report.status,
-        reporterUserId = report.reporterUser.id ?: 0,
-        targetUserId = report.targetUser.id ?: 0,
-        createdDate = report.createdDate ?: LocalDateTime.MIN
+        reporterUserId = report.reporterUserId,
+        targetUserId = report.targetUserId,
+        createdDate = report.createdDate
     )
 }

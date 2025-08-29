@@ -12,7 +12,7 @@ interface ReportRepository : JpaRepository<Report, Long> {
     @Query(
         """
         SELECT r FROM Report r WHERE
-        (:targetId IS NULL OR r.targetUser.id = :targetId) AND
+        (:targetId IS NULL OR r.targetUserId = :targetId) AND
         (:status IS NULL OR r.status IN :status)
         ORDER BY r.createdDate DESC
     """

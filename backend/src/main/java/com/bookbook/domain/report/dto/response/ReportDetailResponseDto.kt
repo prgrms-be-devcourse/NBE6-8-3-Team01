@@ -5,7 +5,6 @@ import com.bookbook.domain.report.enums.ReportStatus
 import java.time.LocalDateTime
 
 data class ReportDetailResponseDto(
-    @JvmField
     val id: Long,
     val status: ReportStatus,
     val reporterUserId: Long,
@@ -14,17 +13,17 @@ data class ReportDetailResponseDto(
     val reason: String,
     val createdDate: LocalDateTime,
     val modifiedDate: LocalDateTime,
-    val reviewedDate: LocalDateTime?
+    val reviewedDate: LocalDateTime
 ) {
     constructor(report: Report) : this(
-        id = report.id ?: 0,
+        id = report.id,
         status = report.status,
-        reporterUserId = report.reporterUser.id ?: 0,
-        targetUserId = report.targetUser.id ?: 0,
-        closerId = report.closer?.id,
+        reporterUserId = report.reporterUserId,
+        targetUserId = report.targetUserId,
+        closerId = report.closerId,
         reason = report.reason,
-        createdDate = report.createdDate ?: LocalDateTime.MIN,
-        modifiedDate = report.modifiedDate ?: LocalDateTime.MIN,
+        createdDate = report.createdDate,
+        modifiedDate = report.modifiedDate,
         reviewedDate = report.reviewedDate
     )
 }
