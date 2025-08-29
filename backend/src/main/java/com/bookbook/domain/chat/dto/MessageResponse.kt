@@ -1,49 +1,52 @@
-package com.bookbook.domain.chat.dto;
+// TODO: MessageType enum을 Kotlin으로 변환 후 import 경로 확인 필요
+// TODO: ChatMessage entity getter 메서드들이 Kotlin으로 변환되면 프로퍼티 접근으로 변경 필요
+package com.bookbook.domain.chat.dto
 
-import com.bookbook.domain.chat.entity.ChatMessage;
-import com.bookbook.domain.chat.enums.MessageType;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Builder;
-import lombok.Data;
+import com.bookbook.domain.chat.entity.ChatMessage
+import com.bookbook.domain.chat.enums.MessageType
+import com.fasterxml.jackson.annotation.JsonFormat
+import com.fasterxml.jackson.annotation.JsonProperty
+import java.time.LocalDateTime
 
-import java.time.LocalDateTime;
+data class MessageResponse(
+    val id: Long?,
+    val roomId: String,
+    val senderId: Long,
+    val senderNickname: String?,
+    val senderProfileImage: String?,
+    val content: String,
+    val messageType: MessageType,
+    val isRead: Boolean,
 
-@Data
-@Builder
-public class MessageResponse {
-    
-    private Long id;
-    private String roomId;
-    private Long senderId;
-    private String senderNickname;
-    private String senderProfileImage;
-    private String content;
-    private MessageType messageType;
-    private boolean isRead;
-    
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime readTime;
-    
+    val readTime: LocalDateTime?,
+
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime createdDate;
-    
-    @JsonProperty("isMine")  // JSON 직렬화 시 필드명 명시
-    private boolean isMine; // 내가 보낸 메시지인지 여부
-    
-    public static MessageResponse from(ChatMessage message, String senderNickname, String senderProfileImage, boolean isMine) {
-        return MessageResponse.builder()
-                .id(message.getId())
-                .roomId(message.getRoomId())
-                .senderId(message.getSenderId())
-                .senderNickname(senderNickname)
-                .senderProfileImage(senderProfileImage)
-                .content(message.getContent())
-                .messageType(message.getMessageType())
-                .isRead(message.isRead())
-                .readTime(message.getReadTime())
-                .createdDate(message.getCreatedDate())
-                .isMine(isMine)
-                .build();
+    val createdDate: LocalDateTime,
+
+    @JsonProperty("isMine") // JSON 직렬화 시 필드명 명시
+    val isMine: Boolean // 내가 보낸 메시지인지 여부
+) {
+    companion object {
+        fun from(
+            message: ChatMessage,
+            senderNickname: String?,
+            senderProfileImage: String?,
+            isMine: Boolean
+        ): MessageResponse {
+            return MessageResponse(
+                id = message.id,
+                roomId = message.roomId,
+                senderId = message.senderId,
+                senderNickname = senderNickname,
+                senderProfileImage = senderProfileImage,
+                content = message.content,
+                messageType = message.messageType,
+                isRead = message.isRead,
+                readTime = message.readTime,
+                createdDate = message.createdDate,
+                isMine = isMine
+            )
+        }
     }
 }
