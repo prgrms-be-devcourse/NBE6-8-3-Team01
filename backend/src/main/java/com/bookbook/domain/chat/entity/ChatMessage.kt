@@ -1,58 +1,47 @@
-package com.bookbook.domain.chat.entity;
+// TODO: MessageType enum을 Kotlin으로 변환 후 import 경로 확인 필요
+package com.bookbook.domain.chat.entity
 
-import com.bookbook.domain.chat.enums.MessageType;
-import com.bookbook.global.entity.BaseEntity;
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-
-import java.time.LocalDateTime;
+import com.bookbook.domain.chat.enums.MessageType
+import com.bookbook.global.entity.BaseEntity
+import jakarta.persistence.*
+import java.time.LocalDateTime
 
 @Entity
-@Getter
-@Setter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 @Table(name = "chat_message")
-public class ChatMessage extends BaseEntity {
-    
+class ChatMessage : BaseEntity() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    
+    var id: Long? = null
+
     @Column(nullable = false)
-    private String roomId; // 채팅방 ID
-    
+    var roomId: String = ""
+
     @Column(nullable = false)
-    private Long senderId; // 보낸 사람 ID
-    
+    var senderId: Long = 0L
+
     @Column(columnDefinition = "TEXT")
-    private String content; // 메시지 내용
-    
+    var content: String = ""
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private MessageType messageType = MessageType.TEXT; // 메시지 타입
-    
+    var messageType: MessageType = MessageType.TEXT
+
     @Column(nullable = false)
-    private boolean isRead = false; // 읽음 여부
-    
-    private LocalDateTime readTime; // 읽은 시간
-    
+    var isRead: Boolean = false
+
+    var readTime: LocalDateTime? = null
+
     @Column(nullable = false)
-    private LocalDateTime createdDate = LocalDateTime.now();
-    
+    var createdDate: LocalDateTime = LocalDateTime.now()
+
     // 메시지 읽음 처리
-    public void markAsRead() {
-        this.isRead = true;
-        this.readTime = LocalDateTime.now();
+    fun markAsRead() {
+        this.isRead = true
+        this.readTime = LocalDateTime.now()
     }
-    
+
     // 내가 보낸 메시지인지 확인
-    public boolean isSentBy(Integer userId) {
-        return senderId.equals(userId);
+    fun isSentBy(userId: Int?): Boolean {
+        return userId?.let { senderId == it.toLong() } ?: false
     }
 }
