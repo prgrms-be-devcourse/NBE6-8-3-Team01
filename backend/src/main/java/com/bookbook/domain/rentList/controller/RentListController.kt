@@ -45,7 +45,7 @@ class RentListController(
         } else {
             rentListService.searchRentListByUserId(borrowerUserId, search)
         }
-        
+
         return ResponseEntity.ok(
             RsData("200", "대여 도서 목록을 조회했습니다.", rentList)
         )
@@ -98,12 +98,12 @@ class RentListController(
         @RequestBody decision: RentRequestDecisionDto,
         @AuthenticationPrincipal customOAuth2User: CustomOAuth2User?
     ): ResponseEntity<RsData<Void?>> {
-        if (customOAuth2User?.getUserId() == null) {
+        if (customOAuth2User?.userId == null) {
             return ResponseEntity.status(401)
                 .body(RsData("401-1", "로그인 후 사용해주세요."))
         }
 
-        val currentUser = userService.findById(customOAuth2User.getUserId())
+        val currentUser = userService.findById(customOAuth2User.userId)
             ?: return ResponseEntity.status(404)
                 .body(RsData("404-1", "사용자 정보를 찾을 수 없습니다."))
 
@@ -135,12 +135,12 @@ class RentListController(
         @PathVariable rentId: Long,
         @AuthenticationPrincipal customOAuth2User: CustomOAuth2User?
     ): ResponseEntity<RsData<Void?>> {
-        if (customOAuth2User?.getUserId() == null) {
+        if (customOAuth2User?.userId == null) {
             return ResponseEntity.status(401)
                 .body(RsData("401-1", "로그인 후 사용해주세요."))
         }
 
-        if (customOAuth2User.getUserId() != borrowerUserId) {
+        if (customOAuth2User.userId != borrowerUserId) {
             return ResponseEntity.status(403)
                 .body(RsData("403-1", "본인이 대여한 도서만 반납할 수 있습니다."))
         }
