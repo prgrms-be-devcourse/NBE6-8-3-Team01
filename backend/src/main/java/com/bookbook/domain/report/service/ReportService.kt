@@ -100,19 +100,19 @@ class ReportService(
     fun markReportAsProcessed(reportId: Long, userId: Long) {
         val report = findReportById(reportId)
 
+        val closer = userService.findById(userId)
+            ?: throw ServiceException("404-1", "존재하지 않는 사용자입니다.")
+
+        if (!closer.isAdmin)
+            throw ServiceException("403-1", "신고를 처리할 권한이 없습니다.")
+
         val status = report.status
 
         if (status == ReportStatus.PENDING)
             throw ServiceException("422-1", "해당 신고를 먼저 확인해야 합니다.")
 
         if (status == ReportStatus.PROCESSED)
-            throw ServiceException("409-1", "해당 신고는 이미 처리가 완료되었습니다.")
-
-        val closer = userService.findById(userId)
-            ?: throw ServiceException("404-1", "존재하지 않는 사용자입니다.")
-
-        if (closer.isAdmin)
-            throw ServiceException("403-1", "신고를 처리할 권한이 없습니다.")
+        throw ServiceException("409-1", "해당 신고는 이미 처리가 완료되었습니다.")
 
         // 신고 이슈를 닫은 사람을 표기할 수 있도록
         report.markAsProcessed(closer)
