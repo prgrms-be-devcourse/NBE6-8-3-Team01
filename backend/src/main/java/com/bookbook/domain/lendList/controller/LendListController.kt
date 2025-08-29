@@ -39,7 +39,7 @@ class LendListController(
         @RequestParam(required = false) search: String?,
         @PageableDefault(size = 10, sort = ["createdDate"], direction = Sort.Direction.DESC) 
         pageable: Pageable
-    ): ResponseEntity<RsData<Page<LendListResponseDto>?>> {
+    ): ResponseEntity<RsData<Page<LendListResponseDto>>> {
         val lendList = if (!search.isNullOrBlank()) {
             lendListService.getLendListByUserIdAndSearch(userId, search, pageable)
         } else {
@@ -47,7 +47,7 @@ class LendListController(
         }
         
         return ResponseEntity.ok(
-            RsData.of("200", "등록한 도서 목록을 조회했습니다.", lendList)
+            RsData("200", "등록한 도서 목록을 조회했습니다.", lendList)
         )
     }
 
@@ -62,9 +62,9 @@ class LendListController(
     fun deleteLendList(
         @PathVariable userId: Long,
         @PathVariable rentId: Long
-    ): ResponseEntity<RsData<Void?>> {
+    ): ResponseEntity<RsData<Void>> {
         lendListService.deleteLendList(userId, rentId)
-        return ResponseEntity.ok(RsData.of("200", "도서 게시글을 삭제했습니다.", null))
+        return ResponseEntity.ok(RsData("200", "도서 게시글을 삭제했습니다."))
     }
 
     /**
@@ -82,8 +82,8 @@ class LendListController(
         @PathVariable userId: Long,
         @PathVariable rentId: Long,
         @RequestBody request: ReviewCreateRequestDto
-    ): ResponseEntity<RsData<ReviewResponseDto?>> {
+    ): ResponseEntity<RsData<ReviewResponseDto>> {
         val review = reviewService.createLenderReview(userId, rentId, request)
-        return ResponseEntity.ok(RsData.of("200", "리뷰를 작성했습니다.", review))
+        return ResponseEntity.ok(RsData("200", "리뷰를 작성했습니다.", review))
     }
 }
