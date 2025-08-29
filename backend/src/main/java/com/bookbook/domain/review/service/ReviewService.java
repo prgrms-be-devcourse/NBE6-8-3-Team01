@@ -3,6 +3,7 @@ package com.bookbook.domain.review.service;
 import com.bookbook.domain.rent.entity.Rent;
 import com.bookbook.domain.rent.entity.RentStatus;
 import com.bookbook.domain.rent.repository.RentRepository;
+import com.bookbook.domain.rentList.entity.RentList;
 import com.bookbook.domain.rentList.repository.RentListRepository;
 import com.bookbook.domain.review.dto.ReviewCreateRequestDto;
 import com.bookbook.domain.review.dto.ReviewResponseDto;

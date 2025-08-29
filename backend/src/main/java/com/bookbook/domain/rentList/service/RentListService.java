@@ -8,6 +8,7 @@ import com.bookbook.domain.rent.repository.RentRepository;
 import com.bookbook.domain.rentList.dto.RentListCreateRequestDto;
 import com.bookbook.domain.rentList.dto.RentListResponseDto;
 import com.bookbook.domain.rentList.dto.RentRequestDecisionDto;
+import com.bookbook.domain.rentList.entity.RentList;
 import com.bookbook.domain.rentList.entity.RentRequestStatus;
 import com.bookbook.domain.rentList.repository.RentListRepository;
 import com.bookbook.domain.user.entity.User;

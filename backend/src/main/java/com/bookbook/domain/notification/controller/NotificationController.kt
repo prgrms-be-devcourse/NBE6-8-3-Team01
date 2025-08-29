@@ -107,7 +107,7 @@ class NotificationController(
             RsData("200-1", "알림을 읽음 처리했습니다.")
         } catch (e: RuntimeException) {
             log.error("알림 읽음 처리 실패: {}", e.message)
-            RsData("400-1", e.message)
+            RsData("400-1", e.message ?: "알림 읽음 처리 중 오류가 발생했습니다.")
         }
     }
 
@@ -147,7 +147,7 @@ class NotificationController(
             RsData("200-1", "알림을 삭제했습니다.")
         } catch (e: RuntimeException) {
             log.error("알림 삭제 실패: {}", e.message)
-            RsData("400-1", e.message)
+            RsData("400-1", e.message ?: "알림 삭제 중 오류가 발생했습니다.")
         }
     }
 
@@ -183,7 +183,7 @@ class NotificationController(
             RsData("200-1", "대여 신청 상세 정보를 조회했습니다.", detail)
         } catch (e: RuntimeException) {
             log.error("대여 신청 상세 정보 조회 실패 - 알림 ID: {}, 오류: {}", id, e.message, e)
-            RsData("400-1", e.message, emptyMap())
+            RsData("400-1", e.message ?: "대여 신청 상세 정보 조회 중 오류가 발생했습니다.", emptyMap())
         }
     }
 }
