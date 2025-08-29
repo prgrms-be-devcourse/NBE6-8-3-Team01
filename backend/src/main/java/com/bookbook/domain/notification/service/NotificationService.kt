@@ -9,14 +9,15 @@ import com.bookbook.domain.rent.repository.RentRepository
 import com.bookbook.domain.rentList.entity.RentRequestStatus
 import com.bookbook.domain.rentList.repository.RentListRepository
 import com.bookbook.domain.user.entity.User
+import com.bookbook.global.exception.ServiceException
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 //08-29 유효상
 //
-//  RentList.kt 변환 완료 - reflection 코드 제거하고 직접 필드 접근으로 변경됨
-// TODO: 향후 리팩토링 필요 - 다른 도메인들이 Kotlin으로 변환되면 수정 필요한 부분들:
+// 1. RentList.kt 변환 완료 - reflection 코드 제거하고 직접 필드 접근으로 변경됨
+//  향후 리팩토링 필요 - 다른 도메인들이 Kotlin으로 변환되면 수정 필요한 부분들:
 // 2. User.java → User.kt 변환 시: 필드 접근 방식 확인
 // 3. Rent.java → Rent.kt 변환 시: 필드 접근 방식 확인
 //
@@ -48,11 +49,11 @@ class NotificationService(
     @Transactional
     fun markAsRead(notificationId: Long, user: User) {
         val notification = notificationRepository.findById(notificationId)
-            .orElseThrow { RuntimeException("존재하지 않는 알림입니다. ID: $notificationId") }
+            .orElseThrow { ServiceException("404-1", "존재하지 않는 알림입니다. ID: $notificationId") }
 
         // 본인의 알림인지 확인
         if (notification.receiver != user) {
-            throw RuntimeException("다른 사용자의 알림에 접근할 수 없습니다.")
+            throw ServiceException("403-1", "다른 사용자의 알림에 접근할 수 없습니다.")
         }
 
         notification.markAsRead()
@@ -87,11 +88,11 @@ class NotificationService(
     @Transactional
     fun deleteNotification(notificationId: Long, user: User) {
         val notification = notificationRepository.findById(notificationId)
-            .orElseThrow { RuntimeException("존재하지 않는 알림입니다. ID: $notificationId") }
+            .orElseThrow { ServiceException("404-1", "존재하지 않는 알림입니다. ID: $notificationId") }
 
         // 본인의 알림인지 확인
         if (notification.receiver != user) {
-            throw RuntimeException("다른 사용자의 알림을 삭제할 수 없습니다.")
+            throw ServiceException("403-1", "다른 사용자의 알림을 삭제할 수 없습니다.")
         }
 
         notificationRepository.delete(notification)
@@ -108,27 +109,27 @@ class NotificationService(
     @Transactional(readOnly = true)
     fun getRentRequestDetail(notificationId: Long, user: User): Map<String, Any?> {
         val notification = notificationRepository.findById(notificationId)
-            .orElseThrow { RuntimeException("존재하지 않는 알림입니다.") }
+            .orElseThrow { ServiceException("404-1", "존재하지 않는 알림입니다.") }
 
         // 본인의 알림인지 확인
         if (notification.receiver != user) {
-            throw RuntimeException("다른 사용자의 알림에 접근할 수 없습니다.")
+            throw ServiceException("403-1", "다른 사용자의 알림에 접근할 수 없습니다.")
         }
 
         // RENT_REQUEST 타입인지 확인
         if (notification.type != NotificationType.RENT_REQUEST) {
-            throw RuntimeException("대여 신청 알림이 아닙니다.")
+            throw ServiceException("400-1", "대여 신청 알림이 아닙니다.")
         }
 
         // relatedId로 Rent 정보 조회 (relatedId는 rent.getId())
         val rentId = notification.relatedId
-            ?: throw RuntimeException("알림에 연결된 대여 게시글 ID가 없습니다.")
+            ?: throw ServiceException("400-2", "알림에 연결된 대여 게시글 ID가 없습니다.")
 
         log.info("알림의 relatedId (rentId): {}", rentId)
 
         // Rent 정보 조회
         val rent = rentRepository.findById(rentId)
-            .orElseThrow { RuntimeException("대여 게시글을 찾을 수 없습니다. ID: $rentId") }
+            .orElseThrow { ServiceException("404-2", "대여 게시글을 찾을 수 없습니다. ID: $rentId") }
 
         //  수정된 부분: 특정 알림의 발송자(신청자)와 일치하는 RentList 조회
         val requester = notification.sender // 알림을 발생시킨 사용자 (신청자)
