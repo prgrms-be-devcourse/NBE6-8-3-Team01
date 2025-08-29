@@ -57,8 +57,8 @@ class UserService(
     private fun updateNotificationSchema() {
         try {
             jdbcTemplate.execute("ALTER TABLE notification DROP CONSTRAINT IF EXISTS notification_type_check")
-            jdbcTemplate.execute("ALTER TABLE notification ADD CONSTRAINT notification_type_check CHECK (type IN ('RENT_REQUEST', 'RETURN_REMINDER', 'WISHLIST_AVAILABLE', 'POST_CREATED'))")
-            println("✅ NotificationType 스키마 업데이트 완료: POST_CREATED 추가됨")
+            jdbcTemplate.execute("ALTER TABLE notification ADD CONSTRAINT notification_type_check CHECK (type IN ('RENT_REQUEST', 'RENT_APPROVED', 'RENT_REJECTED', 'WISHLIST_AVAILABLE', 'RETURN_REMINDER', 'POST_CREATED'))")
+            println("✅ NotificationType 스키마 업데이트 완료: 모든 enum 값 포함됨")
         } catch (e: Exception) {
             System.err.println("❌ NotificationType 스키마 업데이트 실패: ${e.message}")
         }
