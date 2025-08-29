@@ -94,7 +94,7 @@ public class AdminController {
         invalidateCookie(response, jwtRefreshTokenCookieName);
 
         if (currentUser != null) {
-            jwtProvider.deleteRefreshToken(currentUser.getUserId());
+            jwtProvider.deleteRefreshToken(currentUser.userId);
         }
 
         return ResponseEntity.ok(

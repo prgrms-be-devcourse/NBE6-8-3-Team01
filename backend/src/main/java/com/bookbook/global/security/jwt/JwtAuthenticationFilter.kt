@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 import java.io.IOException
 
+@Suppress("UNCHECKED_CAST")
 @Component
 class JwtAuthenticationFilter(
     private val jwtProvider: JwtProvider,
@@ -44,17 +45,18 @@ class JwtAuthenticationFilter(
                 val username = claims["username"] as String
                 val roleString = claims["role"] as String
                 val role = Role.valueOf(roleString)
-                val authorities: List<GrantedAuthority> = listOf(SimpleGrantedAuthority("ROLE_${role.name}"))
+
+                // Use Kotlin's collection types directly.
+                val authorities = listOf<GrantedAuthority>(SimpleGrantedAuthority("ROLE_${role.name}"))
+                val attributes = mapOf<String, Any>("username" to username)
 
                 val customOAuth2User = CustomOAuth2User(
-                    authorities,
-                    mapOf("username" to username),
+                    authorities, // Pass Kotlin List (which is a Collection)
+                    attributes,  // Pass Kotlin Map
                     "username",
                     username,
                     null,
-                    null,
                     userId,
-                    false,
                     true,
                     role
                 )

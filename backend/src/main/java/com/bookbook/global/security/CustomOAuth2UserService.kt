@@ -3,6 +3,7 @@ package com.bookbook.global.security
 import com.bookbook.domain.user.repository.UserRepository
 import com.bookbook.domain.user.service.UserService
 import org.slf4j.LoggerFactory
+import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest
@@ -10,8 +11,8 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserService
 import org.springframework.security.oauth2.core.user.OAuth2User
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.util.*
 
+@Suppress("UNCHECKED_CAST")
 @Service
 class CustomOAuth2UserService(
     private val userRepository: UserRepository,
@@ -43,22 +44,22 @@ class CustomOAuth2UserService(
 
         val user = userService.findOrCreateUser(username, attributes.email, attributes.nickname)
 
-        // 수정됨: isRegistrationCompleted() 메서드를 호출합니다.
         isRegistrationCompleted = user.isRegistrationCompleted()
 
         log.info("DEBUG: User processed. Username: {}, ID: {}, Nickname: {}, Email: {}, isNewUser: {}, isRegistrationCompleted: {}",
             user.username, user.id, user.nickname, user.email, isNewUser, isRegistrationCompleted)
 
+        val authorities = listOf<GrantedAuthority>(SimpleGrantedAuthority(user.role.name))
+        val userAttributes = oAuth2User.attributes
+
         return CustomOAuth2User(
-            Collections.singleton(SimpleGrantedAuthority(user.role.name)),
-            oAuth2User.attributes,
+            authorities,
+            userAttributes,
             userNameAttributeName,
             user.username,
             user.nickname,
-            user.email,
             user.id,
-            isNewUser,
-            isRegistrationCompleted,
+            user.isRegistrationCompleted(),
             user.role
         )
     }

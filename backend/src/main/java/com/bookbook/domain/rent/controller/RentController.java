@@ -26,7 +26,7 @@ public class RentController {
             @AuthenticationPrincipal CustomOAuth2User customOAuth2User
     ){
         // 실제 로그인한 사용자 ID 사용
-        Long userId = customOAuth2User.getUserId();
+        Long userId = customOAuth2User.userId;
         rentService.createRentPage(dto, userId);
     }
 
@@ -38,7 +38,7 @@ public class RentController {
             @AuthenticationPrincipal CustomOAuth2User customOAuth2User
     ){ 
         // 인증된 사용자 ID 가져오기 (비로그인 사용자는 null)
-        Long currentUserId = customOAuth2User != null ? customOAuth2User.getUserId() : null;
+        Long currentUserId = customOAuth2User != null ? customOAuth2User.userId : null;
         return rentService.getRentPage(id, currentUserId);
     }
 
@@ -51,7 +51,7 @@ public class RentController {
             @AuthenticationPrincipal CustomOAuth2User customOAuth2User
     ) {
         // 실제 로그인한 사용자 ID 사용
-        Long userId = customOAuth2User.getUserId();
+        Long userId = customOAuth2User.userId;
         rentService.editRentPage(id, dto, userId);
     }
 
