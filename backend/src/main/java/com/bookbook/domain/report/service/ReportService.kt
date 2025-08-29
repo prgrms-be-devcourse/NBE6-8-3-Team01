@@ -68,7 +68,7 @@ class ReportService(
         val reportPage = reportRepository
             .findFilteredReportHistory(pageable, status, targetUserId)
 
-        return reportPage.map(::ReportSimpleResponseDto)
+        return reportPage.map { ReportSimpleResponseDto(it) }
     }
 
     /**
@@ -105,17 +105,18 @@ class ReportService(
 
         val status = report.status
 
-        if (status == ReportStatus.PENDING) {
+        if (status == ReportStatus.PENDING)
             throw ServiceException("422-1", "해당 신고를 먼저 확인해야 합니다.")
-        }
 
-        if (status == ReportStatus.PROCESSED) {
+        if (status == ReportStatus.PROCESSED)
             throw ServiceException("409-1", "해당 신고는 이미 처리가 완료되었습니다.")
-        }
 
-        val closerAdmin = userService.getByIdOrThrow(userId)
+        val closer = userService.getByIdOrThrow(userId)
+        if (closer.isAdmin)
+            throw ServiceException("403-1", "신고를 처리할 권한이 없습니다.")
+
         // 신고 이슈를 닫은 사람을 표기할 수 있도록
-        report.markAsProcessed(closerAdmin)
+        report.markAsProcessed(closer)
     }
 
     /**

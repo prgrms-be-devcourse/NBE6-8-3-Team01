@@ -4,7 +4,6 @@ import com.bookbook.domain.user.dto.UserBaseDto;
 import com.bookbook.domain.user.dto.UserLoginRequestDto;
 import com.bookbook.domain.user.dto.response.UserDetailResponseDto;
 import com.bookbook.domain.user.entity.User;
-import com.bookbook.domain.user.enums.Role;
 import com.bookbook.domain.user.enums.UserStatus;
 import com.bookbook.domain.user.repository.UserRepository;
 import com.bookbook.global.exception.ServiceException;
@@ -41,7 +40,7 @@ public class AdminService {
 
         checkPassword(user, reqBody.getPassword());
 
-        if (user.getRole() != Role.ADMIN) {
+        if (!user.isAdmin()) {
             throw new ServiceException("401-UNAUTHORIZED", "허가되지 않은 접근입니다.");
         }
 

@@ -177,7 +177,7 @@ class UserService(
     fun getUserProfileDetails(userId: Long): UserProfileResponseDto {
         val user = getByIdOrThrow(userId)
 
-        return if (user.role == Role.ADMIN) {
+        return if (user.isAdmin) {
             UserProfileResponseDto(user, 5.0, 0)
         } else {
             val averageRating = reviewRepository.findAverageRatingByRevieweeId(userId).orElse(0.0)

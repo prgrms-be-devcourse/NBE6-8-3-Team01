@@ -39,8 +39,10 @@ class User(
     @Column(name = "rating", nullable = false)
     var rating: Float = 0.0f
 
+    @Column(name = "suspended_at", nullable = true)
     var suspendedAt: LocalDateTime? = null
 
+    @Column(name = "resumed_at", nullable = true)
     var resumedAt: LocalDateTime? = null
 
     @Enumerated(EnumType.STRING)
@@ -73,6 +75,9 @@ class User(
 
     val isSuspended: Boolean
             get() = this.userStatus == UserStatus.SUSPENDED
+
+    val isAdmin: Boolean
+        get() = this.role == Role.ADMIN
 
     // 자바 코드와의 호환성을 위한 수동 구현
     fun isRegistrationCompleted(): Boolean {
