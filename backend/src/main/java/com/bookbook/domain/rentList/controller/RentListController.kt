@@ -39,7 +39,7 @@ class RentListController(
     fun getRentListByUserId(
         @PathVariable borrowerUserId: Long,
         @RequestParam(required = false) search: String?
-    ): ResponseEntity<RsData<List<RentListResponseDto>?>> {
+    ): ResponseEntity<RsData<List<RentListResponseDto>>> {
         val rentList = if (search.isNullOrBlank()) {
             rentListService.getRentListByUserId(borrowerUserId)
         } else {
@@ -66,13 +66,13 @@ class RentListController(
     fun createRentList(
         @PathVariable borrowerUserId: Long,
         @RequestBody request: RentListCreateRequestDto
-    ): ResponseEntity<RsData<String?>> {    // 이 API는 성공/실패 여부와 메시지만 전달하고 실제 데이터는 반환하지 않으므로 data 필드가 항상 null
+    ): ResponseEntity<RsData<Void?>> {
         return try {
             rentListService.createRentList(borrowerUserId, request)
             ResponseEntity.ok(RsData("200-1", "대여 신청이 완료되었습니다."))
         } catch (e: ServiceException) {
             ResponseEntity.status(e.rsData.statusCode)
-                .body(RsData<String?>(e.rsData.resultCode, e.rsData.msg))
+                .body(RsData(e.rsData.resultCode, e.rsData.msg))
         } catch (e: Exception) {
             ResponseEntity.internalServerError()
                 .body(RsData("500-1", "대여 신청 처리 중 오류가 발생했습니다: ${e.message}"))
@@ -97,7 +97,7 @@ class RentListController(
         @PathVariable rentListId: Long,
         @RequestBody decision: RentRequestDecisionDto,
         @AuthenticationPrincipal customOAuth2User: CustomOAuth2User?
-    ): ResponseEntity<RsData<String?>> {
+    ): ResponseEntity<RsData<Void?>> {
         if (customOAuth2User?.getUserId() == null) {
             return ResponseEntity.status(401)
                 .body(RsData("401-1", "로그인 후 사용해주세요."))
@@ -112,7 +112,7 @@ class RentListController(
             ResponseEntity.ok(RsData("200-1", result))
         } catch (e: ServiceException) {
             ResponseEntity.status(e.rsData.statusCode)
-                .body(RsData<String?>(e.rsData.resultCode, e.rsData.msg))
+                .body(RsData(e.rsData.resultCode, e.rsData.msg))
         } catch (e: Exception) {
             ResponseEntity.internalServerError()
                 .body(RsData("500-1", "대여 신청 처리 중 오류가 발생했습니다: ${e.message}"))
@@ -134,7 +134,7 @@ class RentListController(
         @PathVariable borrowerUserId: Long,
         @PathVariable rentId: Long,
         @AuthenticationPrincipal customOAuth2User: CustomOAuth2User?
-    ): ResponseEntity<RsData<String?>> {
+    ): ResponseEntity<RsData<Void?>> {
         if (customOAuth2User?.getUserId() == null) {
             return ResponseEntity.status(401)
                 .body(RsData("401-1", "로그인 후 사용해주세요."))
@@ -150,7 +150,7 @@ class RentListController(
             ResponseEntity.ok(RsData("200", "도서가 성공적으로 반납되었습니다."))
         } catch (e: ServiceException) {
             ResponseEntity.status(e.rsData.statusCode)
-                .body(RsData<String?>(e.rsData.resultCode, e.rsData.msg))
+                .body(RsData(e.rsData.resultCode, e.rsData.msg))
         } catch (e: Exception) {
             ResponseEntity.internalServerError()
                 .body(RsData("500-1", "반납 처리 중 오류가 발생했습니다: ${e.message}"))
