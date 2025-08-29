@@ -28,6 +28,7 @@ public class securityConfig {
     private final CustomOAuth2UserService customOAuth2UserService;
     private final JwtProvider jwtProvider;
     private final LoginSuccessHandler loginSuccessHandler;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Value("${jwt.cookie.name}")
     private String jwtAccessTokenCookieName;
@@ -40,11 +41,6 @@ public class securityConfig {
     @Value("${frontend.main-path}")
     private String mainPath;
 
-
-    @Bean
-    public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter(jwtProvider);
-    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -108,7 +104,7 @@ public class securityConfig {
                         )
                         .successHandler(loginSuccessHandler)
                 )
-                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .logout(logout -> logout
                         .logoutRequestMatcher(request -> {
                             // 요청 URI와 메서드를 확인하여 매칭
@@ -136,7 +132,7 @@ public class securityConfig {
                             // DB에서 리프레시 토큰 무효화
                             if (authentication != null && authentication.getPrincipal() instanceof CustomOAuth2User) {
                                 CustomOAuth2User user = (CustomOAuth2User) authentication.getPrincipal();
-                                jwtProvider.deleteRefreshToken(user.getUserId());
+                                jwtProvider.deleteRefreshToken(user.userId);
                             }
 
                             response.sendRedirect(frontendBaseUrl + mainPath);

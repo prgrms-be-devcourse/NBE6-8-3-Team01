@@ -2,13 +2,12 @@ package com.bookbook.domain.rentList.controller;
  
 //08-06 유효상
 
- 
+
 import com.bookbook.domain.rentList.dto.RentRequestDecisionDto;
 import com.bookbook.domain.rentList.service.RentListService;
 import com.bookbook.domain.user.entity.User;
 import com.bookbook.domain.user.service.UserService;
 import com.bookbook.global.rsdata.RsData;
-import com.bookbook.global.security.CustomOAuth2User;
 import com.bookbook.global.security.jwt.JwtProvider;
 import io.jsonwebtoken.Claims;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -58,13 +56,6 @@ public class RentListPublicController {
                 log.warn("JWT 토큰을 찾을 수 없음");
                 return ResponseEntity.status(401)
                         .body(RsData.of("401-1", "로그인이 필요합니다. JWT 토큰이 없습니다.", "NO_TOKEN"));
-            }
-            
-            // JWT 토큰 유효성 검증
-            if (!jwtProvider.validateToken(jwt)) {
-                log.warn("JWT 토큰이 유효하지 않음");
-                return ResponseEntity.status(401)
-                        .body(RsData.of("401-2", "로그인이 필요합니다. 토큰이 만료되었거나 유효하지 않습니다.", "INVALID_TOKEN"));
             }
             
             // JWT에서 사용자 정보 추출

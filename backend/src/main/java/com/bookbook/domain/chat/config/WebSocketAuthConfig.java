@@ -1,10 +1,9 @@
 package com.bookbook.domain.chat.config;
 
-import com.bookbook.global.security.jwt.JwtProvider;
-import com.bookbook.global.security.CustomOAuth2User;
 import com.bookbook.domain.user.entity.User;
 import com.bookbook.domain.user.repository.UserRepository;
-import com.bookbook.domain.user.enums.Role;
+import com.bookbook.global.security.CustomOAuth2User;
+import com.bookbook.global.security.jwt.JwtProvider;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +48,7 @@ public class WebSocketAuthConfig implements WebSocketMessageBrokerConfigurer {
                     // 쿠키에서 JWT 토큰 추출
                     String token = extractJwtFromCookie(accessor);
                     
-                    if (token != null && jwtProvider.validateToken(token)) {
+                    if (token != null) {
                         try {
                             // JWT에서 사용자 정보 추출
                             Claims claims = jwtProvider.getAllClaimsFromToken(token);
@@ -73,9 +72,7 @@ public class WebSocketAuthConfig implements WebSocketMessageBrokerConfigurer {
                                     "id", // nameAttributeKey
                                     user.getUsername(),
                                     user.getNickname(),
-                                    user.getEmail(),
                                     user.getId(),
-                                    false, // isNewUser
                                     user.isRegistrationCompleted(),
                                     user.getRole()
                                 );
