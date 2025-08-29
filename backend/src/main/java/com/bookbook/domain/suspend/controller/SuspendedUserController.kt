@@ -72,7 +72,7 @@ class SuspendedUserController (
         @Valid @RequestBody requestDto: UserSuspendRequestDto
     ): ResponseEntity<RsData<UserDetailResponseDto>> {
         val suspendedUser = suspendedUserService.addUserAsSuspended(requestDto)
-        val userSuspendResponseDto = UserDetailResponseDto.from(suspendedUser.user)
+        val userSuspendResponseDto = UserDetailResponseDto(suspendedUser.user)
 
         return ResponseEntity.ok(
             RsData(
@@ -95,12 +95,12 @@ class SuspendedUserController (
         @PathVariable userId: Long
     ): ResponseEntity<RsData<UserDetailResponseDto>> {
         val user = suspendedUserService.resumeUser(userId)
-        val userDetailResponseDto = UserDetailResponseDto.from(user)
+        val userDetailResponseDto = UserDetailResponseDto(user)
 
         return ResponseEntity.ok(
             RsData(
                 "200-1",
-                "${userDetailResponseDto.baseResponseDto.username}님의 정지가 해지되었습니다",
+                "${userDetailResponseDto.username}님의 정지가 해지되었습니다",
                 userDetailResponseDto
             )
         )

@@ -1,9 +1,9 @@
 package com.bookbook.domain.user.service
 
 import com.bookbook.domain.review.repository.ReviewRepository
-import com.bookbook.domain.user.dto.UserProfileResponseDto
-import com.bookbook.domain.user.dto.UserResponseDto
-import com.bookbook.domain.user.dto.UserStatusResponseDto
+import com.bookbook.domain.user.dto.response.UserProfileResponseDto
+import com.bookbook.domain.user.dto.response.UserResponseDto
+import com.bookbook.domain.user.dto.response.UserStatusResponseDto
 import com.bookbook.domain.user.entity.User
 import com.bookbook.domain.user.enums.Role
 import com.bookbook.domain.user.enums.UserStatus

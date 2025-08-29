@@ -24,7 +24,7 @@ interface UserRepository : JpaRepository<User, Long> {
     )
     fun findFilteredUsers(
         pageable: Pageable?,
-        @Param("status") status: MutableList<UserStatus?>?,
+        @Param("status") status: MutableList<UserStatus>?,
         @Param("userId") userId: Long?
     ): Page<User>
 
