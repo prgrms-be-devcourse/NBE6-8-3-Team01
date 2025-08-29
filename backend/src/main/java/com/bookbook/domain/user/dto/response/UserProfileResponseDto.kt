@@ -1,4 +1,4 @@
-package com.bookbook.domain.user.dto
+package com.bookbook.domain.user.dto.response
 
 import com.bookbook.domain.user.entity.User
 
