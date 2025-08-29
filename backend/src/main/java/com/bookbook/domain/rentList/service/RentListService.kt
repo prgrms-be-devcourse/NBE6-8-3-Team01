@@ -13,6 +13,7 @@ import com.bookbook.domain.rentList.repository.RentListRepository
 import com.bookbook.domain.review.repository.ReviewRepository
 import com.bookbook.domain.user.entity.User
 import com.bookbook.domain.user.repository.UserRepository
+import com.bookbook.global.exception.ServiceException
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -84,14 +85,20 @@ class RentListService(
             rentId, borrowerUserId, RentRequestStatus.APPROVED
         )
 
-        require(rentLists.isNotEmpty()) { "진행 중인 대여 기록을 찾을 수 없습니다." }
-        require(rentLists.size == 1) { "여러 개의 진행 중인 대여 기록이 발견되었습니다. 관리자에게 문의하세요." }
+        if (rentLists.isEmpty()) {
+            throw ServiceException("404-1", "진행 중인 대여 기록을 찾을 수 없습니다.")
+        }
+        if (rentLists.size > 1) {
+            throw ServiceException("500-1", "여러 개의 진행 중인 대여 기록이 발견되었습니다. 관리자에게 문의하세요.")
+        }
 
         val rentList = rentLists.first()
         val rent = rentList.rent
 
         // 이미 반납된 상태인지 확인
-        require(rent.rentStatus != RentStatus.FINISHED) { "이미 반납된 도서입니다." }
+        if (rent.rentStatus == RentStatus.FINISHED) {
+            throw ServiceException("400-1", "이미 반납된 도서입니다.")
+        }
 
         // 반납 완료 처리
         rentList.status = RentRequestStatus.FINISHED
@@ -138,31 +145,31 @@ class RentListService(
     fun createRentList(borrowerUserId: Long, request: RentListCreateRequestDto) {
         // User 엔티티 조회
         val borrowerUser = userRepository.findById(borrowerUserId)
-            .orElseThrow { IllegalArgumentException("사용자를 찾을 수 없습니다. userId: $borrowerUserId") }
+            .orElseThrow { ServiceException("404-1", "사용자를 찾을 수 없습니다. userId: $borrowerUserId") }
         
         // Rent 엔티티 조회
         val rent = rentRepository.findById(request.rentId)
-            .orElseThrow { IllegalArgumentException("대여 게시글을 찾을 수 없습니다. rentId: ${request.rentId}") }
+            .orElseThrow { ServiceException("404-2", "대여 게시글을 찾을 수 없습니다. rentId: ${request.rentId}") }
         
         // 중복 신청 방지 로직
         val alreadyRequested = rentListRepository
             .existsByBorrowerUserIdAndRentIdAndStatus(borrowerUserId, request.rentId, RentRequestStatus.PENDING)
         
-        require(!alreadyRequested) {
+        if (alreadyRequested) {
             log.warn("중복 대여 신청 차단 - 사용자: $borrowerUserId, Rent ID: ${request.rentId}")
-            "이미 대여 신청을 하셨습니다. 승인 결과를 기다려주세요."
+            throw ServiceException("400-1", "이미 대여 신청을 하셨습니다. 승인 결과를 기다려주세요.")
         }
         
         // 자신의 책에 신청하는 것 방지
-        require(rent.lenderUserId != borrowerUserId) {
+        if (rent.lenderUserId == borrowerUserId) {
             log.warn("자신의 책 대여 신청 차단 - 사용자: $borrowerUserId, Rent ID: ${request.rentId}")
-            "자신의 책은 대여 신청할 수 없습니다."
+            throw ServiceException("400-2", "자신의 책은 대여 신청할 수 없습니다.")
         }
         
         // 이미 대여 중인 책인지 확인
-        require(rent.rentStatus != RentStatus.LOANED) {
+        if (rent.rentStatus == RentStatus.LOANED) {
             log.warn("이미 대여 중인 책 신청 차단 - Rent ID: ${request.rentId}, 상태: ${rent.rentStatus}")
-            "이미 대여 중인 책입니다."
+            throw ServiceException("400-3", "이미 대여 중인 책입니다.")
         }
         
         // 새로운 대여 기록 생성
@@ -178,7 +185,7 @@ class RentListService(
         
         // 책 소유자에게 대여 신청 알림 발송
         val lender = userRepository.findById(rent.lenderUserId!!)
-            .orElseThrow { IllegalArgumentException("책 소유자를 찾을 수 없습니다.") }
+            .orElseThrow { ServiceException("404-3", "책 소유자를 찾을 수 없습니다.") }
         
         val requestMessage = "'${rent.bookTitle}'에 대여 요청이 도착했어요!"
         notificationService.createNotification(
@@ -209,18 +216,18 @@ class RentListService(
     fun decideRentRequest(rentListId: Long, decision: RentRequestDecisionDto, currentUser: User): String {
         // 대여 신청 조회
         val rentList = rentListRepository.findById(rentListId)
-            .orElseThrow { RuntimeException("대여 신청을 찾을 수 없습니다.") }
+            .orElseThrow { ServiceException("404-1", "대여 신청을 찾을 수 없습니다.") }
         
         val rent = rentList.rent
         
         // 권한 확인: 현재 사용자가 책 소유자인지 확인
-        require(rent.lenderUserId == currentUser.id) {
-            "해당 대여 신청을 처리할 권한이 없습니다."
+        if (rent.lenderUserId != currentUser.id) {
+            throw ServiceException("403-1", "해당 대여 신청을 처리할 권한이 없습니다.")
         }
         
         // 이미 처리된 신청인지 확인
-        require(rentList.status == RentRequestStatus.PENDING) {
-            "이미 처리된 대여 신청입니다."
+        if (rentList.status != RentRequestStatus.PENDING) {
+            throw ServiceException("400-1", "이미 처리된 대여 신청입니다.")
         }
         
         val borrower = rentList.borrowerUser
