@@ -1,21 +1,17 @@
-package com.bookbook.domain.review.service;
+package com.bookbook.domain.review.service
 
-import com.bookbook.domain.rent.entity.Rent;
-import com.bookbook.domain.rent.entity.RentStatus;
-import com.bookbook.domain.rent.repository.RentRepository;
-import com.bookbook.domain.rentList.entity.RentList;
-import com.bookbook.domain.rentList.repository.RentListRepository;
-import com.bookbook.domain.review.dto.ReviewCreateRequestDto;
-import com.bookbook.domain.review.dto.ReviewResponseDto;
-import com.bookbook.domain.review.entity.Review;
-import com.bookbook.domain.review.repository.ReviewRepository;
-import com.bookbook.domain.user.entity.User;
-import com.bookbook.domain.user.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
+import com.bookbook.domain.rent.entity.Rent
+import com.bookbook.domain.rent.entity.RentStatus
+import com.bookbook.domain.rent.repository.RentRepository
+import com.bookbook.domain.rentList.repository.RentListRepository
+import com.bookbook.domain.review.dto.ReviewCreateRequestDto
+import com.bookbook.domain.review.dto.ReviewResponseDto
+import com.bookbook.domain.review.entity.Review
+import com.bookbook.domain.review.repository.ReviewRepository
+import com.bookbook.domain.user.repository.UserRepository
+import com.bookbook.global.exception.ServiceException
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 /**
  * 양방향 리뷰 관리 서비스
@@ -42,17 +38,19 @@ class ReviewService(
      * @param rentId 대여 게시글 ID
      * @param request 리뷰 생성 요청 데이터 (평점)
      * @return 생성된 리뷰 정보
-     * @throws IllegalArgumentException 게시글을 찾을 수 없거나 권한이 없는 경우
-     * @throws IllegalStateException 거래가 완료되지 않았거나 이미 리뷰를 작성한 경우
+     * @throws ServiceException 게시글을 찾을 수 없거나 권한이 없는 경우
+     * @throws ServiceException 거래가 완료되지 않았거나 이미 리뷰를 작성한 경우
      */
     @Transactional
     fun createLenderReview(lenderId: Long, rentId: Long, request: ReviewCreateRequestDto): ReviewResponseDto {
         // 대여 게시글 조회
         val rent = rentRepository.findById(rentId)
-            .orElseThrow { IllegalArgumentException("대여 게시글을 찾을 수 없습니다. rentId: $rentId") }
+            .orElseThrow { ServiceException("404-1", "대여 게시글을 찾을 수 없습니다.") }
 
         // 본인이 작성한 글인지 확인
-        require(rent.lenderUserId == lenderId) { "본인이 작성한 게시글에만 리뷰를 작성할 수 있습니다." }
+        if (rent.lenderUserId != lenderId) {
+            throw ServiceException("403-1", "본인이 작성한 게시글에만 리뷰를 작성할 수 있습니다.")
+        }
 
         // 공통 검증 로직 호출 - 중복 리뷰, 평점 유효성, 거래 완료 상태 확인
         validateReviewCreation(rent, lenderId, rentId, request.rating)
@@ -76,7 +74,7 @@ class ReviewService(
 
 
         // 대상자(대여받은 사람)의 평균 평점 업데이트
-        updateUserRating(borrowerId);
+        updateUserRating(borrowerId)
 
         // 추가 정보 조회
         val lenderNickname = userRepository.findById(lenderId)
@@ -102,14 +100,14 @@ class ReviewService(
      * @param rentId 대여 게시글 ID
      * @param request 리뷰 생성 요청 데이터 (평점)
      * @return 생성된 리뷰 정보
-     * @throws IllegalArgumentException 게시글을 찾을 수 없는 경우
-     * @throws IllegalStateException 거래가 완료되지 않았거나 이미 리뷰를 작성한 경우
+     * @throws ServiceException 게시글을 찾을 수 없는 경우
+     * @throws ServiceException 거래가 완료되지 않았거나 이미 리뷰를 작성한 경우
      */
     @Transactional
     fun createBorrowerReview(borrowerId: Long, rentId: Long, request: ReviewCreateRequestDto): ReviewResponseDto {
         // 대여 게시글 조회
         val rent = rentRepository.findById(rentId)
-            .orElseThrow { IllegalArgumentException("대여 게시글을 찾을 수 없습니다. rentId: $rentId") }
+            .orElseThrow { ServiceException("404-1", "대여 게시글을 찾을 수 없습니다.") }
 
         // 공통 검증 로직 호출
         validateReviewCreation(rent, borrowerId, rentId, request.rating)
@@ -118,7 +116,9 @@ class ReviewService(
         val isBorrower = rentListRepository.findByRentId(rentId)
             .any { it.borrowerUser.id == borrowerId }
 
-        require(isBorrower) { "해당 도서를 대여한 사용자만 리뷰를 작성할 수 있습니다." }
+        if (!isBorrower) {
+            throw ServiceException("403-1", "해당 도서를 대여한 사용자만 리뷰를 작성할 수 있습니다.")
+        }
 
         // TODO: Rent 엔티티에서 nullable이 제거되면 !! 연산자 제거
         // 리뷰 생성 (빌려간 사람이 빌려준 사람을 평가)
@@ -152,16 +152,22 @@ class ReviewService(
      */
     private fun validateReviewCreation(rent: Rent, reviewerId: Long, rentId: Long, rating: Int) {
         // 거래 완료 상태 확인 - FINISHED 상태일 때만 리뷰 작성 가능
-        check(rent.rentStatus == RentStatus.FINISHED) { "거래가 완료된 경우에만 리뷰를 작성할 수 있습니다." }
+        if (rent.rentStatus != RentStatus.FINISHED) {
+            throw ServiceException("400-1", "거래가 완료된 경우에만 리뷰를 작성할 수 있습니다.")
+        }
 
         // 중복 리뷰 방지 - 같은 사람이 같은 대여 건에 이미 리뷰 작성했는지 확인
         val existingReview = reviewRepository.findByRentIdAndReviewerId(rentId, reviewerId)
         // Optional.isPresent(): Optional에 값이 있으면 true (= 이미 리뷰 존재)
-        check(!existingReview.isPresent) { "이미 리뷰를 작성하셨습니다." }
+        if (existingReview.isPresent) {
+            throw ServiceException("409-1", "이미 리뷰를 작성하셨습니다.")
+        }
 
         // 평점 유효성 검사 - 1~5점 범위 확인
         // 비즈니스 룰: 별점은 1점(최저) ~ 5점(최고) 사이만 허용
-        require(rating in 1..5) { "별점은 1점부터 5점까지 입력 가능합니다." }
+        if (rating !in 1..5) {
+            throw ServiceException("400-2", "별점은 1점부터 5점까지 입력 가능합니다.")
+        }
     }
 
     /**
@@ -175,7 +181,7 @@ class ReviewService(
         val averageRating = reviewRepository.findAverageRatingByRevieweeId(userId)
         if (averageRating.isPresent) {
             val user = userRepository.findById(userId)
-                .orElseThrow { IllegalArgumentException("사용자를 찾을 수 없습니다. userId: $userId") }
+                .orElseThrow { ServiceException("404-1", "사용자를 찾을 수 없습니다.") }
             user.changeRating(averageRating.get().toFloat())
             userRepository.save(user)
         }
