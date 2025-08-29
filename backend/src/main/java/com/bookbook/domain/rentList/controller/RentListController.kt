@@ -65,7 +65,7 @@ class RentListController(
     fun createRentList(
         @PathVariable borrowerUserId: Long,
         @RequestBody request: RentListCreateRequestDto
-    ): ResponseEntity<RsData<String?>> {
+    ): ResponseEntity<RsData<String?>> {    // 이 API는 성공/실패 여부와 메시지만 전달하고 실제 데이터는 반환하지 않으므로 data 필드가 항상 null
         return try {
             rentListService.createRentList(borrowerUserId, request)
             ResponseEntity.ok(RsData("200-1", "대여 신청이 완료되었습니다."))
@@ -130,7 +130,7 @@ class RentListController(
         @PathVariable borrowerUserId: Long,
         @PathVariable rentId: Long,
         @AuthenticationPrincipal customOAuth2User: CustomOAuth2User?
-    ): ResponseEntity<RsData<Void?>> {
+    ): ResponseEntity<RsData<String?>> {
         if (customOAuth2User?.getUserId() == null) {
             return ResponseEntity.status(401)
                 .body(RsData("401-1", "로그인 후 사용해주세요."))
@@ -168,7 +168,7 @@ class RentListController(
         @PathVariable borrowerUserId: Long,
         @PathVariable rentId: Long,
         @RequestBody request: ReviewCreateRequestDto
-    ): ResponseEntity<RsData<ReviewResponseDto?>> {
+    ): ResponseEntity<RsData<ReviewResponseDto>> {
         val review = reviewService.createBorrowerReview(borrowerUserId, rentId, request)
         return ResponseEntity.ok(RsData("200", "리뷰를 작성했습니다.", review))
     }
