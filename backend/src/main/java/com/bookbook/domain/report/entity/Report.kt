@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor
 import java.time.LocalDateTime
 
 @Entity
-@NoArgsConstructor
 @AttributeOverride(name = "id", column = Column(name = "report_id"))
 class Report(
     reporterUser: User,
