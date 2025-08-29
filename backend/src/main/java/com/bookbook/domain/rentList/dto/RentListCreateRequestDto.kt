@@ -1,14 +1,8 @@
-package com.bookbook.domain.rentList.dto;
+package com.bookbook.domain.rentList.dto
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import java.time.LocalDateTime
 
-import java.time.LocalDateTime;
-
-@Getter
-@NoArgsConstructor
-public class RentListCreateRequestDto {
-    
-    private LocalDateTime loanDate;
-    private Long rentId;
-}
+data class RentListCreateRequestDto(
+    val loanDate: LocalDateTime,
+    val rentId: Long
+)
