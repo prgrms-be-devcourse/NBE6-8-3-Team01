@@ -2,30 +2,19 @@ package com.bookbook.domain.report.entity
 
 import com.bookbook.domain.report.enums.ReportStatus
 import com.bookbook.domain.user.entity.User
-import com.bookbook.global.entity.BaseEntity
+import com.bookbook.global.jpa.entity.BaseEntity
 import jakarta.persistence.*
 import lombok.NoArgsConstructor
-import org.springframework.data.annotation.CreatedDate
-import org.springframework.data.annotation.LastModifiedDate
 import java.time.LocalDateTime
 
 @Entity
 @NoArgsConstructor
+@AttributeOverride(name = "id", column = Column(name = "report_id"))
 class Report(
     reporterUser: User,
     targetUser: User,
     reason: String
 ) : BaseEntity() {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long? = null
-
-    @CreatedDate
-    var createdDate: LocalDateTime? = null
-
-    @LastModifiedDate
-    var modifiedDate: LocalDateTime? = null
 
     var reviewedDate: LocalDateTime? = null
 
