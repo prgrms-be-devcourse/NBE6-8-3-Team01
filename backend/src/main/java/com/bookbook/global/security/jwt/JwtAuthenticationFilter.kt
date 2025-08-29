@@ -1,6 +1,7 @@
 package com.bookbook.global.security.jwt
 
 import com.bookbook.domain.user.enums.Role
+import com.bookbook.global.exception.ServiceException
 import com.bookbook.global.security.CustomOAuth2User
 import io.jsonwebtoken.Claims
 import jakarta.servlet.FilterChain
@@ -39,20 +40,19 @@ class JwtAuthenticationFilter(
         try {
             val jwt = getJwtFromCookie(request)
 
-            if (jwt != null && jwtProvider.validateToken(jwt)) {
+            if (jwt != null) {
                 val claims: Claims = jwtProvider.getAllClaimsFromToken(jwt)
                 val userId = (claims["userId"] as Int).toLong()
                 val username = claims["username"] as String
                 val roleString = claims["role"] as String
                 val role = Role.valueOf(roleString)
 
-                // Use Kotlin's collection types directly.
                 val authorities = listOf<GrantedAuthority>(SimpleGrantedAuthority("ROLE_${role.name}"))
                 val attributes = mapOf<String, Any>("username" to username)
 
                 val customOAuth2User = CustomOAuth2User(
-                    authorities, // Pass Kotlin List (which is a Collection)
-                    attributes,  // Pass Kotlin Map
+                    authorities,
+                    attributes,
                     "username",
                     username,
                     null,
@@ -68,9 +68,13 @@ class JwtAuthenticationFilter(
 
                 SecurityContextHolder.getContext().authentication = authentication
             }
+        } catch (ex: ServiceException) {
+            log.error("Authentication failed with ServiceException: {}", ex.message)
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, ex.message)
+            return
         } catch (ex: Exception) {
             log.error("Could not set user authentication in security context", ex)
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, ex.message)
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "An unexpected error occurred.")
             return
         }
 
