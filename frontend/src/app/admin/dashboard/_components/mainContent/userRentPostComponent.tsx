@@ -176,7 +176,6 @@ export function UserRentPostComponent({ data, onRefresh }: ContentComponentProps
                     post={selectedRentPost}
                     isOpen={isModalOpen}
                     onClose={handleModalClose}
-                    onRefresh={onRefresh} // 새로고침 함수 전달
                 />
             )}
         </div>

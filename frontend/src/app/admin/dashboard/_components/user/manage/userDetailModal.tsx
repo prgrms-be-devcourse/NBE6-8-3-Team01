@@ -33,7 +33,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
   if (!isOpen || !currentUser) return null;
 
   const handleSuspendClick = () => {
-    if (currentUser.baseResponseDto.userStatus === "SUSPENDED") {
+    if (currentUser.userStatus === "SUSPENDED") {
       setConfirmAction("unsuspend");
       setShowConfirmModal(true);
     } else {
@@ -76,7 +76,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
   const suspendUser = async () => {
     try {
       const requestDto = {
-        userId: currentUser.baseResponseDto.id,
+        userId: currentUser.id,
         reason: suspendReason,
         period: getPeriodDays(suspendPeriod),
       };
@@ -85,7 +85,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
         body: JSON.stringify(requestDto),
       });
 
-      toast.success(`${currentUser.baseResponseDto.nickname}님이 정지되었습니다.`);
+      toast.success(`${currentUser.nickname}님이 정지되었습니다.`);
       setCurrentUser(data.data as UserDetailResponseDto);
 
     } catch (error) {
@@ -95,11 +95,11 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
 
   const resumeUser = async () => {
     try {
-      const userId = currentUser.baseResponseDto.id;
+      const userId = currentUser.id;
 
       const data = await doRequest(`/api/v1/admin/users/${userId}/resume`);
 
-      toast.success(`${currentUser.baseResponseDto.nickname}님의 정지가 해제되었습니다.`);
+      toast.success(`${currentUser.nickname}님의 정지가 해제되었습니다.`);
       setCurrentUser(data.data as UserDetailResponseDto);
 
     } catch (error) {
@@ -163,13 +163,13 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
   const getConfirmMessage = (): string => {
     if (confirmAction === "suspend") {
       return `정말로 ${
-        currentUser.baseResponseDto.nickname
+        currentUser.nickname
       }님을 정지하시겠습니까?\n정지일 수: ${getPeriodText(suspendPeriod)}`;
     } else if (confirmAction === "unsuspend") {
       const resumeDate = currentUser.resumedAt
         ? formatDate(currentUser.resumedAt)
         : "즉시";
-      return `정말로 ${currentUser.baseResponseDto.nickname}님의 정지를 해제하시겠습니까?\n정지 해제일: ${resumeDate}`;
+      return `정말로 ${currentUser.nickname}님의 정지를 해제하시겠습니까?\n정지 해제일: ${resumeDate}`;
     }
     return "";
   };
@@ -240,16 +240,16 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
             >
               취소
             </button>
-            {(!showSuspendForm && currentUser.baseResponseDto.role !== "ADMIN") && (
+            {(!showSuspendForm && currentUser.role !== "ADMIN") && (
               <button
                 onClick={handleSuspendClick}
                 className={`px-4 py-2 text-sm font-medium text-white border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors ${
-                  currentUser.baseResponseDto?.userStatus === "SUSPENDED"
+                  currentUser.userStatus === "SUSPENDED"
                     ? "bg-green-600 hover:bg-green-700 focus:ring-green-500"
                     : "bg-red-600 hover:bg-red-700 focus:ring-red-500"
                 }`}
               >
-                {currentUser.baseResponseDto?.userStatus === "SUSPENDED"
+                {currentUser.userStatus === "SUSPENDED"
                   ? "정지 해제"
                   : "활동 정지"}
               </button>

@@ -15,7 +15,7 @@ const UserJoinInfo: React.FC<UserJoinInfoProps> = ({ user }) => {
             가입일시
           </label>
           <p className="text-gray-900">
-            {formatDate(user.baseResponseDto.createdAt)}
+            {formatDate(user.createdAt)}
           </p>
         </div>
         <div>
@@ -23,7 +23,7 @@ const UserJoinInfo: React.FC<UserJoinInfoProps> = ({ user }) => {
             최종 수정일시
           </label>
           <p className="text-gray-900">
-            {formatDate(user.baseResponseDto.updatedAt)}
+            {formatDate(user.updatedAt)}
           </p>
         </div>
       </div>

@@ -23,7 +23,15 @@ export const getUserRole = (role : userRole) : string => {
 }
 
 export interface UserDetailResponseDto {
-  baseResponseDto: UserBaseResponseDto;
+  id: number;
+  username: string;
+  nickname?: string | "";
+  email?: string | "";
+  rating: number;
+  createdAt: string;
+  updatedAt: string;
+  userStatus: userStatus;
+  role: userRole;
   address: string;
   suspendCount: number;
   suspendedAt?: string;
@@ -32,7 +40,7 @@ export interface UserDetailResponseDto {
 
 export interface UserBaseResponseDto {
   id: number;
-  username?: string | "";
+  username: string;
   nickname?: string | "";
   email?: string | "";
   rating: number;
