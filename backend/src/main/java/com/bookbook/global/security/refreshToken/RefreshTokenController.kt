@@ -6,7 +6,6 @@ import com.bookbook.global.exception.ServiceException
 import com.bookbook.global.rsdata.RsData
 import com.bookbook.global.security.jwt.JwtProvider
 import io.jsonwebtoken.Claims
-import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.beans.factory.annotation.Value
@@ -48,38 +47,29 @@ class RefreshTokenController(
         }
 
         return try {
-            // 1. 리프레시 토큰 유효성 검사 (JWT 자체 유효성, DB 존재 및 만료 여부)
             jwtProvider.validateRefreshToken(refreshTokenValue)
 
-            // 2. 리프레시 토큰에서 사용자 ID 추출
             val claims: Claims = jwtProvider.getAllClaimsFromToken(refreshTokenValue)
             val userId: Long = (claims["userId"] as Int).toLong()
 
-            // 3. 사용자 정보 조회
             val user: User = userService.getByIdOrThrow(userId)
 
-            // 4. 새로운 Access Token 발급
             val newAccessToken = jwtProvider.generateAccessToken(user.id, user.username, user.role.name)
-
-            // 5. 새로운 Refresh Token 발급 (Rotating Refresh Token 전략)
             val newRefreshTokenValue = jwtProvider.generateRefreshToken(user.id)
 
-            // 6. 새로운 Access Token을 HTTP Only 쿠키에 담아 전송
-            val newAccessTokenCookie = Cookie(jwtAccessTokenCookieName, newAccessToken).apply {
-                isHttpOnly = true
-                secure = false
-                path = "/"
-                maxAge = jwtProvider.accessTokenValidityInSeconds
-            }
+            // JwtProvider의 헬퍼 함수를 사용해 쿠키 생성
+            val newAccessTokenCookie = jwtProvider.createJwtCookie(
+                jwtAccessTokenCookieName,
+                newAccessToken,
+                jwtProvider.accessTokenValidityInSeconds
+            )
             response.addCookie(newAccessTokenCookie)
 
-            // 7. 새로운 Refresh Token을 HTTP Only 쿠키에 담아 전송
-            val newRefreshTokenCookie = Cookie(jwtRefreshTokenCookieName, newRefreshTokenValue).apply {
-                isHttpOnly = true
-                secure = false
-                path = "/"
-                maxAge = jwtProvider.refreshTokenValidityInSeconds
-            }
+            val newRefreshTokenCookie = jwtProvider.createJwtCookie(
+                jwtRefreshTokenCookieName,
+                newRefreshTokenValue,
+                jwtProvider.refreshTokenValidityInSeconds
+            )
             response.addCookie(newRefreshTokenCookie)
 
             val rsData: RsData<Void?> = RsData(resultCode = "200-OK", msg = "새로운 액세스 토큰이 발급되었습니다.", data = null)

@@ -3,15 +3,11 @@ package com.bookbook.global.security.jwt
 import com.bookbook.global.exception.ServiceException
 import com.bookbook.global.security.refreshToken.RefreshToken
 import com.bookbook.global.security.refreshToken.RefreshTokenRepository
-import io.jsonwebtoken.Claims
-import io.jsonwebtoken.ExpiredJwtException
-import io.jsonwebtoken.Jwts
-import io.jsonwebtoken.MalformedJwtException
-import io.jsonwebtoken.SignatureAlgorithm
-import io.jsonwebtoken.UnsupportedJwtException
+import io.jsonwebtoken.*
 import io.jsonwebtoken.io.Decoders
 import io.jsonwebtoken.security.Keys
 import io.jsonwebtoken.security.SecurityException
+import jakarta.servlet.http.Cookie
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -31,7 +27,6 @@ class JwtProvider(
     private val _refreshTokenValidityInSeconds: Int,
     private val refreshTokenRepository: RefreshTokenRepository
 ) {
-
     private val key: Key by lazy {
         val keyBytes = Decoders.BASE64.decode(secretKey)
         Keys.hmacShaKeyFor(keyBytes)
@@ -47,7 +42,6 @@ class JwtProvider(
         private val log = LoggerFactory.getLogger(JwtProvider::class.java)
     }
 
-    // Access Token 생성 메서드
     fun generateAccessToken(userId: Long, username: String, role: String): String {
         val claims: MutableMap<String, Any> = HashMap()
         claims["userId"] = userId
@@ -66,7 +60,6 @@ class JwtProvider(
             .compact()
     }
 
-    // Refresh Token 생성 및 저장 메서드
     @Transactional
     fun generateRefreshToken(userId: Long): String {
         val claims: MutableMap<String, Any> = HashMap()
@@ -83,7 +76,6 @@ class JwtProvider(
             .signWith(key, SignatureAlgorithm.HS512)
             .compact()
 
-        // DB에 기존 리프레시 토큰이 있는지 확인하고 업데이트하거나 새로 저장
         val existingToken = refreshTokenRepository.findByUserId(userId)
         if (existingToken != null) {
             existingToken.updateToken(refreshTokenValue, LocalDateTime.ofInstant(validity.toInstant(), ZoneId.systemDefault()))
@@ -99,7 +91,6 @@ class JwtProvider(
         return refreshTokenValue
     }
 
-    // 토큰에서 모든 클레임(claims) 추출 및 유효성 검사를 통합
     fun getAllClaimsFromToken(token: String): Claims {
         return try {
             Jwts.parserBuilder()
@@ -125,15 +116,12 @@ class JwtProvider(
         }
     }
 
-    // Refresh Token의 유효성 검사
     @Transactional
     fun validateRefreshToken(refreshTokenValue: String) {
         try {
-            // JWT 자체의 유효성 (서명, 구조 등) 검사 - getAllClaimsFromToken이 대신 처리
             val claims = getAllClaimsFromToken(refreshTokenValue)
             val userId = (claims["userId"] as Int).toLong()
 
-            // DB에 저장된 리프레시 토큰과 일치하는지, 만료되지 않았는지 확인
             val storedRefreshToken = refreshTokenRepository.findByToken(refreshTokenValue)
             if (storedRefreshToken == null) {
                 throw ServiceException("401-REFRESH-TOKEN-NOT-FOUND", "유효하지 않은 리프레시 토큰입니다.")
@@ -156,9 +144,17 @@ class JwtProvider(
         }
     }
 
-    // 리프레시 토큰을 DB에서 삭제하는 메서드
     @Transactional
     fun deleteRefreshToken(userId: Long) {
         refreshTokenRepository.deleteByUserId(userId)
+    }
+
+    fun createJwtCookie(name: String, value: String, maxAge: Int): Cookie {
+        return Cookie(name, value).apply {
+            isHttpOnly = true
+            secure = false // 프로덕션에서는 true로 변경
+            path = "/"
+            this.maxAge = maxAge
+        }
     }
 }

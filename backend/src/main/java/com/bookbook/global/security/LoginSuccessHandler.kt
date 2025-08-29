@@ -1,7 +1,6 @@
 package com.bookbook.global.security
 
 import com.bookbook.global.security.jwt.JwtProvider
-import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.beans.factory.annotation.Value
@@ -33,35 +32,29 @@ class LoginSuccessHandler(
 
         println("DEBUG: Login success for username: ${oauth2User.username}, isRegistrationCompleted: ${oauth2User.isRegistrationCompleted}")
 
-        // 1. JWT Access Token 생성
         val accessToken = jwtProvider.generateAccessToken(
             oauth2User.userId,
             oauth2User.username,
             oauth2User.role.name
         )
 
-        // 2. JWT Refresh Token 생성 및 DB 저장
         val refreshToken = jwtProvider.generateRefreshToken(oauth2User.userId)
 
-        // 3. JWT Access Token을 HTTP Only 쿠키에 담아 전송
-        val jwtAccessTokenCookie = Cookie(jwtAccessTokenCookieName, accessToken).apply {
-            isHttpOnly = true
-            secure = false
-            path = "/"
-            maxAge = jwtProvider.accessTokenValidityInSeconds
-        }
+        // JwtProvider의 헬퍼 함수를 사용해 쿠키 생성
+        val jwtAccessTokenCookie = jwtProvider.createJwtCookie(
+            jwtAccessTokenCookieName,
+            accessToken,
+            jwtProvider.accessTokenValidityInSeconds
+        )
         response.addCookie(jwtAccessTokenCookie)
 
-        // 4. JWT Refresh Token을 HTTP Only 쿠키에 담아 전송
-        val jwtRefreshTokenCookie = Cookie(jwtRefreshTokenCookieName, refreshToken).apply {
-            isHttpOnly = true
-            secure = false
-            path = "/"
-            maxAge = jwtProvider.refreshTokenValidityInSeconds
-        }
+        val jwtRefreshTokenCookie = jwtProvider.createJwtCookie(
+            jwtRefreshTokenCookieName,
+            refreshToken,
+            jwtProvider.refreshTokenValidityInSeconds
+        )
         response.addCookie(jwtRefreshTokenCookie)
 
-        // 5. 회원가입 완료 여부에 따라 프론트엔드로 리다이렉트
         val redirectUrl = if (!oauth2User.isRegistrationCompleted) {
             "${frontendBaseUrl}${signupPath}".also {
                 println("Redirecting to signup page: $it")
