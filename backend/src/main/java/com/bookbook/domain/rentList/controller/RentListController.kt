@@ -8,6 +8,7 @@ import com.bookbook.domain.review.dto.ReviewCreateRequestDto
 import com.bookbook.domain.review.dto.ReviewResponseDto
 import com.bookbook.domain.review.service.ReviewService
 import com.bookbook.domain.user.service.UserService
+import com.bookbook.global.exception.ServiceException
 import com.bookbook.global.rsdata.RsData
 import com.bookbook.global.security.CustomOAuth2User
 import io.swagger.v3.oas.annotations.Operation
@@ -69,9 +70,9 @@ class RentListController(
         return try {
             rentListService.createRentList(borrowerUserId, request)
             ResponseEntity.ok(RsData("200-1", "대여 신청이 완료되었습니다."))
-        } catch (e: IllegalArgumentException) {
-            ResponseEntity.badRequest()
-                .body(RsData("400-1", e.message ?: "잘못된 요청입니다."))
+        } catch (e: ServiceException) {
+            ResponseEntity.status(e.rsData.statusCode)
+                .body(RsData<String?>(e.rsData.resultCode, e.rsData.msg))
         } catch (e: Exception) {
             ResponseEntity.internalServerError()
                 .body(RsData("500-1", "대여 신청 처리 중 오류가 발생했습니다: ${e.message}"))
@@ -109,9 +110,12 @@ class RentListController(
         return try {
             val result = rentListService.decideRentRequest(rentListId, decision, currentUser)
             ResponseEntity.ok(RsData("200-1", result))
-        } catch (e: RuntimeException) {
-            ResponseEntity.badRequest()
-                .body(RsData("400-1", e.message ?: "잘못된 요청입니다."))
+        } catch (e: ServiceException) {
+            ResponseEntity.status(e.rsData.statusCode)
+                .body(RsData<String?>(e.rsData.resultCode, e.rsData.msg))
+        } catch (e: Exception) {
+            ResponseEntity.internalServerError()
+                .body(RsData("500-1", "대여 신청 처리 중 오류가 발생했습니다: ${e.message}"))
         }
     }
 
@@ -144,9 +148,9 @@ class RentListController(
         return try {
             rentListService.returnBook(borrowerUserId, rentId)
             ResponseEntity.ok(RsData("200", "도서가 성공적으로 반납되었습니다."))
-        } catch (e: IllegalArgumentException) {
-            ResponseEntity.badRequest()
-                .body(RsData("400-1", e.message ?: "잘못된 요청입니다."))
+        } catch (e: ServiceException) {
+            ResponseEntity.status(e.rsData.statusCode)
+                .body(RsData<String?>(e.rsData.resultCode, e.rsData.msg))
         } catch (e: Exception) {
             ResponseEntity.internalServerError()
                 .body(RsData("500-1", "반납 처리 중 오류가 발생했습니다: ${e.message}"))
