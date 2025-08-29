@@ -1,26 +1,21 @@
-package com.bookbook.domain.user.dto.response;
+package com.bookbook.domain.user.dto.response
 
-import com.bookbook.domain.user.entity.User;
-import com.bookbook.domain.user.enums.Role;
-import com.bookbook.domain.user.enums.UserStatus;
-import lombok.Builder;
-import lombok.NonNull;
+import com.bookbook.domain.user.entity.User
+import com.bookbook.domain.user.enums.Role
+import com.bookbook.domain.user.enums.UserStatus
 
-@Builder
-public record UserLoginResponseDto (
-        @NonNull Long id,
-        @NonNull String username,
-        @NonNull String nickname,
-        @NonNull Role role,
-        @NonNull UserStatus status
-){
-    public static UserLoginResponseDto from(User user){
-        return UserLoginResponseDto.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .nickname(user.getNickname())
-                .role(user.getRole())
-                .status(user.getUserStatus())
-                .build();
-    }
+data class UserLoginResponseDto(
+    val id: Long,
+    val username: String,
+    val nickname: String,
+    val role: Role,
+    val status: UserStatus
+) {
+    constructor(user: User) : this(
+        id = user.id,
+        username = user.username,
+        nickname = user.nickname ?: "정보 없음",
+        role = user.role,
+        status = user.userStatus
+    )
 }
