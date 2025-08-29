@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional
 
 //08-29 유효상
 //
-// ✅ RentList.kt 변환 완료 - reflection 코드 제거하고 직접 필드 접근으로 변경됨
+//  RentList.kt 변환 완료 - reflection 코드 제거하고 직접 필드 접근으로 변경됨
 // TODO: 향후 리팩토링 필요 - 다른 도메인들이 Kotlin으로 변환되면 수정 필요한 부분들:
 // 2. User.java → User.kt 변환 시: 필드 접근 방식 확인
 // 3. Rent.java → Rent.kt 변환 시: 필드 접근 방식 확인
