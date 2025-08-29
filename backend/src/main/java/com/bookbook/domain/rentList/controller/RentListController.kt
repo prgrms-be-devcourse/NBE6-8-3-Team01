@@ -9,7 +9,6 @@ import com.bookbook.domain.review.dto.ReviewResponseDto
 import com.bookbook.domain.review.service.ReviewService
 import com.bookbook.domain.user.service.UserService
 import com.bookbook.global.rsdata.RsData
-import com.bookbook.global.rsdata.RsData.Companion.of
 import com.bookbook.global.security.CustomOAuth2User
 import io.swagger.v3.oas.annotations.Operation
 import org.springframework.http.ResponseEntity
@@ -47,7 +46,7 @@ class RentListController(
         }
         
         return ResponseEntity.ok(
-            of("200", "대여 도서 목록을 조회했습니다.", rentList)
+            RsData("200", "대여 도서 목록을 조회했습니다.", rentList)
         )
     }
 
@@ -69,13 +68,13 @@ class RentListController(
     ): ResponseEntity<RsData<String?>> {
         return try {
             rentListService.createRentList(borrowerUserId, request)
-            ResponseEntity.ok(of("200-1", "대여 신청이 완료되었습니다.", null))
+            ResponseEntity.ok(RsData("200-1", "대여 신청이 완료되었습니다."))
         } catch (e: IllegalArgumentException) {
             ResponseEntity.badRequest()
-                .body(RsData.of("400-1", e.message ?: "잘못된 요청입니다.", null))
+                .body(RsData("400-1", e.message ?: "잘못된 요청입니다."))
         } catch (e: Exception) {
             ResponseEntity.internalServerError()
-                .body(of("500-1", "대여 신청 처리 중 오류가 발생했습니다: ${e.message}", null))
+                .body(RsData("500-1", "대여 신청 처리 중 오류가 발생했습니다: ${e.message}"))
         }
     }
 
@@ -100,19 +99,19 @@ class RentListController(
     ): ResponseEntity<RsData<String?>> {
         if (customOAuth2User?.getUserId() == null) {
             return ResponseEntity.status(401)
-                .body(of("401-1", "로그인 후 사용해주세요.", null))
+                .body(RsData("401-1", "로그인 후 사용해주세요."))
         }
 
         val currentUser = userService.findById(customOAuth2User.getUserId())
             ?: return ResponseEntity.status(404)
-                .body(of("404-1", "사용자 정보를 찾을 수 없습니다.", null))
+                .body(RsData("404-1", "사용자 정보를 찾을 수 없습니다."))
 
         return try {
             val result = rentListService.decideRentRequest(rentListId, decision, currentUser)
-            ResponseEntity.ok(of("200-1", result, null))
+            ResponseEntity.ok(RsData("200-1", result))
         } catch (e: RuntimeException) {
             ResponseEntity.badRequest()
-                .body(RsData.of("400-1", e.message ?: "잘못된 요청입니다.", null))
+                .body(RsData("400-1", e.message ?: "잘못된 요청입니다."))
         }
     }
 
@@ -134,23 +133,23 @@ class RentListController(
     ): ResponseEntity<RsData<Void?>> {
         if (customOAuth2User?.getUserId() == null) {
             return ResponseEntity.status(401)
-                .body(of("401-1", "로그인 후 사용해주세요.", null))
+                .body(RsData("401-1", "로그인 후 사용해주세요."))
         }
 
         if (customOAuth2User.getUserId() != borrowerUserId) {
             return ResponseEntity.status(403)
-                .body(of("403-1", "본인이 대여한 도서만 반납할 수 있습니다.", null))
+                .body(RsData("403-1", "본인이 대여한 도서만 반납할 수 있습니다."))
         }
 
         return try {
             rentListService.returnBook(borrowerUserId, rentId)
-            ResponseEntity.ok(of("200", "도서가 성공적으로 반납되었습니다.", null))
+            ResponseEntity.ok(RsData("200", "도서가 성공적으로 반납되었습니다."))
         } catch (e: IllegalArgumentException) {
             ResponseEntity.badRequest()
-                .body(RsData.of("400-1", e.message ?: "잘못된 요청입니다.", null))
+                .body(RsData("400-1", e.message ?: "잘못된 요청입니다."))
         } catch (e: Exception) {
             ResponseEntity.internalServerError()
-                .body(of("500-1", "반납 처리 중 오류가 발생했습니다: ${e.message}", null))
+                .body(RsData("500-1", "반납 처리 중 오류가 발생했습니다: ${e.message}"))
         }
     }
 
@@ -171,6 +170,6 @@ class RentListController(
         @RequestBody request: ReviewCreateRequestDto
     ): ResponseEntity<RsData<ReviewResponseDto?>> {
         val review = reviewService.createBorrowerReview(borrowerUserId, rentId, request)
-        return ResponseEntity.ok(of("200", "리뷰를 작성했습니다.", review))
+        return ResponseEntity.ok(RsData("200", "리뷰를 작성했습니다.", review))
     }
 }
