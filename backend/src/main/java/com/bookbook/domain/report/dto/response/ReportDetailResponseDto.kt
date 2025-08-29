@@ -16,22 +16,15 @@ data class ReportDetailResponseDto(
     val modifiedDate: LocalDateTime,
     val reviewedDate: LocalDateTime?
 ) {
-    companion object {
-        @JvmStatic
-        fun from(report: Report): ReportDetailResponseDto {
-            val closerId = report.closer?.id
-
-            return ReportDetailResponseDto(
-                id = report.id ?: 0,
-                status = report.status,
-                reporterUserId = report.reporterUser.id ?: 0,
-                targetUserId = report.targetUser.id ?: 0,
-                closerId = closerId,
-                reason = report.reason,
-                createdDate = report.createdDate ?: LocalDateTime.MIN,
-                modifiedDate = report.modifiedDate ?: LocalDateTime.MIN,
-                reviewedDate = report.reviewedDate
-            )
-        }
-    }
+    constructor(report: Report) : this(
+        id = report.id ?: 0,
+        status = report.status,
+        reporterUserId = report.reporterUser.id ?: 0,
+        targetUserId = report.targetUser.id ?: 0,
+        closerId = report.closer?.id,
+        reason = report.reason,
+        createdDate = report.createdDate ?: LocalDateTime.MIN,
+        modifiedDate = report.modifiedDate ?: LocalDateTime.MIN,
+        reviewedDate = report.reviewedDate
+    )
 }
