@@ -9,7 +9,7 @@ import java.util.Collection;
 import java.util.Map;
 
 @Getter
-public class CustomOAuth2User extends DefaultOAuth2User {
+public class    CustomOAuth2User extends DefaultOAuth2User {
 
     private String username; // DB에 저장될 사용자 ID (ex: kakao_12345)
     private String nickname;
@@ -45,8 +45,28 @@ public class CustomOAuth2User extends DefaultOAuth2User {
         return this.username;
     }
 
+    public String getUsername() {
+        return this.username;
+    }
+
+    public String getNickname() {
+        return this.nickname;
+    }
+
+    public String getEmail() {
+        return this.email;
+    }
+
     public Long getUserId() {
         return this.userId;
+    }
+
+    public Role getRole() {
+        return this.role;
+    }
+
+    public boolean isRegistrationCompleted() {
+        return this.isRegistrationCompleted;
     }
 
 }
