@@ -1,32 +1,32 @@
-package com.bookbook.domain.rentList.repository;
-//08-06 유효상
-import com.bookbook.domain.rentList.entity.RentList;
-import com.bookbook.domain.rentList.entity.RentRequestStatus;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+package com.bookbook.domain.rentList.repository
 
-import java.util.List;
-import java.util.Optional;
+import com.bookbook.domain.rentList.entity.RentList
+import com.bookbook.domain.rentList.entity.RentRequestStatus
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.stereotype.Repository
 
 @Repository
-public interface RentListRepository extends JpaRepository<RentList, Long> {
-    
-    List<RentList> findByBorrowerUserIdOrderByCreatedDateDesc(Long borrowerUserId);
-    
-    List<RentList> findByBorrowerUserIdAndStatus(Long borrowerUserId, RentRequestStatus status);
+interface RentListRepository : JpaRepository<RentList, Long> {
+    fun findByBorrowerUserIdOrderByCreatedDateDesc(borrowerUserId: Long): List<RentList>
 
-    List<RentList> findByRentId(Long rentId);
+    fun findByRentId(rentId: Long): List<RentList>
 
-    Optional<RentList> findByBorrowerUserIdAndRentId(Long borrowerUserId, Long rentId);
-
-    List<RentList> findByRentIdAndStatus(Long rentId, RentRequestStatus status);
+    fun findByRentIdAndStatus(rentId: Long, status: RentRequestStatus): List<RentList>
 
     // 특정 신청자의 특정 책에 대한 특정 상태의 신청 조회
-    List<RentList> findByRentIdAndBorrowerUserIdAndStatus(Long rentId, Long borrowerUserId, RentRequestStatus status);
+    fun findByRentIdAndBorrowerUserIdAndStatus(
+        rentId: Long,
+        borrowerUserId: Long,
+        status: RentRequestStatus
+    ): List<RentList>
 
     // 특정 신청자의 특정 책에 대한 모든 신청 조회 (상태 무관)
-    List<RentList> findByRentIdAndBorrowerUserId(Long rentId, Long borrowerUserId);
+    fun findByRentIdAndBorrowerUserId(rentId: Long, borrowerUserId: Long): List<RentList>
 
     // 중복 신청 방지를 위한 메서드
-    boolean existsByBorrowerUserIdAndRentIdAndStatus(Long borrowerUserId, Long rentId, RentRequestStatus status);
+    fun existsByBorrowerUserIdAndRentIdAndStatus(
+        borrowerUserId: Long,
+        rentId: Long,
+        status: RentRequestStatus
+    ): Boolean
 }
