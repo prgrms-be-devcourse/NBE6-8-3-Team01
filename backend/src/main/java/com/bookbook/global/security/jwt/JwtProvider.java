@@ -96,11 +96,11 @@ public class JwtProvider {
             refreshToken.updateToken(refreshTokenValue, LocalDateTime.ofInstant(validity.toInstant(), ZoneId.systemDefault()));
         } else {
             refreshTokenRepository.save(
-                    RefreshToken.builder()
-                            .token(refreshTokenValue)
-                            .userId(userId)
-                            .expiryDate(LocalDateTime.ofInstant(validity.toInstant(), ZoneId.systemDefault()))
-                            .build()
+                    new RefreshToken(
+                            refreshTokenValue,
+                            userId,
+                            LocalDateTime.ofInstant(validity.toInstant(), ZoneId.systemDefault())
+                    )
             );
         }
         return refreshTokenValue;
@@ -152,7 +152,7 @@ public class JwtProvider {
             RefreshToken storedRefreshToken = refreshTokenRepository.findByToken(refreshTokenValue)
                     .orElseThrow(() -> new ServiceException("401-REFRESH-TOKEN-NOT-FOUND", "유효하지 않은 리프레시 토큰입니다."));
 
-            if (!storedRefreshToken.getUserId().equals(userId)) {
+            if (storedRefreshToken.getUserId() != userId.longValue()) {
                 throw new ServiceException("401-REFRESH-TOKEN-MISMATCH", "토큰 소유자가 일치하지 않습니다.");
             }
 
