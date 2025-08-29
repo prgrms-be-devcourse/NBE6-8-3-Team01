@@ -1,501 +1,486 @@
-package com.bookbook.domain.chat.service;
+// TODO: MessageType enum을 Kotlin으로 변환 후 import 수정
+// TODO: User, Rent entity들이 Kotlin으로 변환되면 프로퍼티 접근으로 변경
+package com.bookbook.domain.chat.service
 
-import com.bookbook.domain.chat.dto.*;
-import com.bookbook.domain.chat.entity.ChatMessage;
-import com.bookbook.domain.chat.entity.ChatRoom;
-import com.bookbook.domain.chat.enums.MessageType;
-import com.bookbook.domain.chat.repository.ChatMessageRepository;
-import com.bookbook.domain.chat.repository.ChatRoomRepository;
-import com.bookbook.domain.rent.entity.Rent;
-import com.bookbook.domain.rent.repository.RentRepository;
-import com.bookbook.domain.user.entity.User;
-import com.bookbook.domain.user.repository.UserRepository;
-import com.bookbook.global.exception.ServiceException;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
+import com.bookbook.domain.chat.dto.ChatRoomCreateRequest
+import com.bookbook.domain.chat.dto.ChatRoomResponse
+import com.bookbook.domain.chat.dto.MessageResponse
+import com.bookbook.domain.chat.dto.MessageSendRequest
+import com.bookbook.domain.chat.entity.ChatMessage
+import com.bookbook.domain.chat.entity.ChatRoom
+import com.bookbook.domain.chat.enums.MessageType
+import com.bookbook.domain.chat.repository.ChatMessageRepository
+import com.bookbook.domain.chat.repository.ChatRoomRepository
+import com.bookbook.domain.rent.entity.Rent
+import com.bookbook.domain.rent.repository.RentRepository
+import com.bookbook.domain.user.entity.User
+import com.bookbook.domain.user.repository.UserRepository
+import com.bookbook.global.exception.ServiceException
+import org.slf4j.LoggerFactory
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.Pageable
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDateTime
+import java.util.*
 
 @Service
-@RequiredArgsConstructor
 @Transactional(readOnly = true)
-@Slf4j
-public class ChatService {
-
-    private final ChatRoomRepository chatRoomRepository;
-    private final ChatMessageRepository chatMessageRepository;
-    private final UserRepository userRepository;
-    private final RentRepository rentRepository;
+class ChatService(
+    private val chatRoomRepository: ChatRoomRepository,
+    private val chatMessageRepository: ChatMessageRepository,
+    private val userRepository: UserRepository,
+    private val rentRepository: RentRepository
+) {
+    companion object {
+        private val log = LoggerFactory.getLogger(ChatService::class.java)
+    }
 
     @Transactional
-    public ChatRoomResponse createOrGetChatRoom(ChatRoomCreateRequest request, Long borrowerId) {
-        log.info("채팅방 생성 요청 - rentId: {}, lenderId: {}, borrowerId: {}",
-                request.getRentId(), request.getLenderId(), borrowerId);
+    fun createOrGetChatRoom(request: ChatRoomCreateRequest, borrowerId: Long): ChatRoomResponse {
+        log.info("채팅방 생성 요청 - rentId: {}, lenderId: {}, borrowerId: {}", 
+            request.rentId, request.lenderId, borrowerId)
 
         try {
-            // 입력값 검증
-            if (request.getRentId() == null || request.getLenderId() == null || borrowerId == null) {
-                log.error("필수 파라미터가 누락됨 - rentId: {}, lenderId: {}, borrowerId: {}",
-                        request.getRentId(), request.getLenderId(), borrowerId);
-                throw new ServiceException("필수 정보가 누락되었습니다.");
-            }
+            val rent = rentRepository.findById(request.rentId)
+                .orElseThrow { 
+                    log.error("존재하지 않는 대여 게시글 - rentId: {}", request.rentId)
+                    ServiceException("존재하지 않는 대여 게시글입니다.")
+                }
 
-            Rent rent = rentRepository.findById(request.getRentId())
-                    .orElseThrow(() -> {
-                        log.error("존재하지 않는 대여 게시글 - rentId: {}", request.getRentId());
-                        return new ServiceException("존재하지 않는 대여 게시글입니다.");
-                    });
+            val lender = userRepository.findById(request.lenderId)
+                .orElseThrow { 
+                    log.error("존재하지 않는 빌려주는 사용자 - lenderId: {}", request.lenderId)
+                    ServiceException("존재하지 않는 빌려주는 사용자입니다.")
+                }
 
-            User lender = userRepository.findById(request.getLenderId())
-                    .orElseThrow(() -> {
-                        log.error("존재하지 않는 빌려주는 사용자 - lenderId: {}", request.getLenderId());
-                        return new ServiceException("존재하지 않는 빌려주는 사용자입니다.");
-                    });
+            val borrower = userRepository.findById(borrowerId)
+                .orElseThrow { 
+                    log.error("존재하지 않는 빌리는 사용자 - borrowerId: {}", borrowerId)
+                    ServiceException("존재하지 않는 빌리는 사용자입니다.")
+                }
 
-            User borrower = userRepository.findById(borrowerId)
-                    .orElseThrow(() -> {
-                        log.error("존재하지 않는 빌리는 사용자 - borrowerId: {}", borrowerId);
-                        return new ServiceException("존재하지 않는 빌리는 사용자입니다.");
-                    });
-
-            if (request.getLenderId().equals(borrowerId)) {
-                log.error("자기 자신과의 채팅 시도 - userId: {}", borrowerId);
-                throw new ServiceException("자기 자신과는 채팅할 수 없습니다.");
+            if (request.lenderId == borrowerId) {
+                log.error("자기 자신과의 채팅 시도 - userId: {}", borrowerId)
+                throw ServiceException("자기 자신과는 채팅할 수 없습니다.")
             }
 
             // 기존 채팅방 조회 - 활성 채팅방만 조회
-            List<ChatRoom> existingRooms = chatRoomRepository
-                    .findByRentIdAndLenderIdAndBorrowerIdOrderByCreatedDateDesc(
-                            request.getRentId(), request.getLenderId(), borrowerId);
+            val existingRooms = chatRoomRepository
+                .findByRentIdAndLenderIdAndBorrowerIdOrderByCreatedDateDesc(
+                    request.rentId, request.lenderId, borrowerId
+                )
 
-            ChatRoom existingRoom = null;
+            var existingRoom: ChatRoom? = null
 
-            // 활성 채팅방 중에서 사용자가 나가지 않은 채팅방 찾기 또는 복구 가능한 채팅방 찾기
-            for (ChatRoom room : existingRooms) {
-                if (!room.isActive()) {
-                    continue; // 비활성 채팅방은 스킵
+            // 활성 채팅방 중에서 사용 가능한 채팅방 찾기
+            for (room in existingRooms) {
+                if (!room.isActive) {
+                    continue  // 비활성 채팅방은 스킵
                 }
 
-                boolean lenderLeft = room.hasUserLeft(request.getLenderId());
-                boolean borrowerLeft = room.hasUserLeft(borrowerId);
+                val lenderLeft = room.hasUserLeft(request.lenderId)
+                val borrowerLeft = room.hasUserLeft(borrowerId)
 
-                if (!lenderLeft && !borrowerLeft) {
-                    // 둘 다 활성 상태인 채팅방 - 이것을 우선 사용
-                    existingRoom = room;
-                    break;
-                } else if (lenderLeft || borrowerLeft) {
-                    // 한 명 또는 둘 다 나간 경우 - 나간 상태를 해제하고 채팅방 재사용
-                    log.info("나간 사용자 재참여 처리 - roomId: {}, lenderLeft: {}, borrowerLeft: {}",
-                            room.getRoomId(), lenderLeft, borrowerLeft);
-
-                    // 나간 상태 해제
-                    if (lenderLeft) {
-                        room.rejoinUser(request.getLenderId());
+                // 채팅방 사용 가능 여부 확인 및 처리
+                when {
+                    // 우선순위 1: 둘 다 활성 상태인 채팅방
+                    !lenderLeft && !borrowerLeft -> {
+                        existingRoom = room
+                        break
                     }
-                    if (borrowerLeft) {
-                        room.rejoinUser(borrowerId);
-                    }
+                    // 우선순위 2: 한 명 이상 나간 상태이지만 복구 가능한 채팅방 (기존 활성방이 없을 때만)
+                    existingRoom == null -> {
+                        log.info("나간 사용자 재참여 처리 - roomId: {}, lenderLeft: {}, borrowerLeft: {}", 
+                            room.roomId, lenderLeft, borrowerLeft)
 
-                    chatRoomRepository.save(room);
-                    existingRoom = room;
-                    break;
+                        // 나간 상태 해제
+                        if (lenderLeft) {
+                            room.rejoinUser(request.lenderId)
+                        }
+                        if (borrowerLeft) {
+                            room.rejoinUser(borrowerId)
+                        }
+
+                        chatRoomRepository.save(room)
+                        existingRoom = room
+                        break
+                    }
                 }
             }
 
             // 중복된 오래된 채팅방들 정리
-            if (existingRooms.size() > 1) {
-                log.warn("중복 채팅방 발견 및 정리 시작 - 개수: {}, rentId: {}, lenderId: {}, borrowerId: {}",
-                        existingRooms.size(), request.getRentId(), request.getLenderId(), borrowerId);
-
-                // 트랜잭션 내에서 중복 채팅방들 정리 (활성이고 모든 사용자가 있는 방 제외)
-                cleanupDuplicateChatRooms(existingRooms, existingRoom);
+            if (existingRooms.size > 1) {
+                log.warn("중복 채팅방 발견 및 정리 시작 - 개수: {}, rentId: {}, lenderId: {}, borrowerId: {}", 
+                    existingRooms.size, request.rentId, request.lenderId, borrowerId)
+                cleanupDuplicateChatRooms(existingRooms.toMutableList(), existingRoom)
             }
 
-            if (existingRoom != null) {
-                log.info("기존 활성 채팅방 발견 및 반환 - roomId: {}", existingRoom.getRoomId());
-                return buildChatRoomResponse(existingRoom, rent, lender, borrower, borrowerId);
+            existingRoom?.let {
+                log.info("기존 활성 채팅방 발견 및 반환 - roomId: {}", it.roomId)
+                return buildChatRoomResponse(it, rent, lender, borrower, borrowerId)
             }
 
             // 새 채팅방 생성
-            log.info("새 채팅방 생성 시작");
+            log.info("새 채팅방 생성 시작")
 
-            String newRoomId = UUID.randomUUID().toString();
+            val newRoomId = UUID.randomUUID().toString()
 
             // 최종 중복 체크 (동시성 문제 방지)
-            List<ChatRoom> finalCheck = chatRoomRepository
-                    .findByRentIdAndLenderIdAndBorrowerIdOrderByCreatedDateDesc(
-                            request.getRentId(), request.getLenderId(), borrowerId);
+            val finalCheck = chatRoomRepository
+                .findByRentIdAndLenderIdAndBorrowerIdOrderByCreatedDateDesc(
+                    request.rentId, request.lenderId, borrowerId
+                )
 
-            if (!finalCheck.isEmpty()) {
-                log.info("채팅방 생성 중 기존 채팅방 발견 - 기존 채팅방 사용: {}", finalCheck.get(0).getRoomId());
-                return buildChatRoomResponse(finalCheck.get(0), rent, lender, borrower, borrowerId);
+            if (finalCheck.isNotEmpty()) {
+                log.info("채팅방 생성 중 기존 채팅방 발견 - 기존 채팅방 사용: {}", finalCheck[0].roomId)
+                return buildChatRoomResponse(finalCheck[0], rent, lender, borrower, borrowerId)
             }
 
-            ChatRoom newRoom = ChatRoom.builder()
-                    .roomId(newRoomId)
-                    .rentId(request.getRentId())
-                    .lenderId(request.getLenderId())
-                    .borrowerId(borrowerId)
-                    .isActive(true)
-                    .createdDate(LocalDateTime.now())
-                    .build();
+            val newRoom = ChatRoom().apply {
+                roomId = newRoomId
+                rentId = request.rentId
+                lenderId = request.lenderId
+                this.borrowerId = borrowerId
+                isActive = true
+                createdDate = LocalDateTime.now()
+            }
 
-            ChatRoom savedRoom = chatRoomRepository.save(newRoom);
-            log.info("새 채팅방 생성 완료 - roomId: {}", savedRoom.getRoomId());
+            val savedRoom = chatRoomRepository.save(newRoom)
+            log.info("새 채팅방 생성 완료 - roomId: {}", savedRoom.roomId)
 
-            return buildChatRoomResponse(savedRoom, rent, lender, borrower, borrowerId);
-
-        } catch (ServiceException e) {
-            log.error("채팅방 생성 실패 (ServiceException) - {}", e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            log.error("채팅방 생성 중 예상치 못한 오류 발생", e);
-            throw new ServiceException("채팅방 생성 중 오류가 발생했습니다: " + e.getMessage());
+            return buildChatRoomResponse(savedRoom, rent, lender, borrower, borrowerId)
+        } catch (e: ServiceException) {
+            log.error("채팅방 생성 실패 (ServiceException) - {}", e.message)
+            throw e
+        } catch (e: Exception) {
+            log.error("채팅방 생성 중 예상치 못한 오류 발생", e)
+            throw ServiceException("채팅방 생성 중 오류가 발생했습니다: ${e.message}")
         }
     }
 
-    public Page<ChatRoomResponse> getChatRooms(Long userId, Pageable pageable) {
-        log.info("채팅방 목록 조회 - userId: {}", userId);
+    fun getChatRooms(userId: Long, pageable: Pageable): Page<ChatRoomResponse> {
+        log.info("채팅방 목록 조회 - userId: {}", userId)
 
-        Page<ChatRoom> chatRooms = chatRoomRepository.findByUserIdOrderByLastMessageTimeDesc(userId, pageable);
+        val chatRooms = chatRoomRepository.findByUserIdOrderByLastMessageTimeDesc(userId, pageable)
 
         // 나가지 않은 채팅방만 필터링하여 리스트로 변환
-        List<ChatRoomResponse> validChatRooms = chatRooms.getContent().stream()
-                .filter(room -> !room.hasUserLeft(userId)) // 나가지 않은 채팅방만
-                .map(room -> {
-                    Rent rent = rentRepository.findById(room.getRentId()).orElse(null);
-                    String bookTitle = rent != null ? rent.getBookTitle() : "알 수 없는 책";
-                    String bookImage = rent != null ? rent.getBookImage() : null;
+        val validChatRooms = chatRooms.content
+            .filter { !it.hasUserLeft(userId) }  // 나가지 않은 채팅방만
+            .mapNotNull { room ->
+                val (bookTitle, bookImage) = getRentInfo(room.rentId)
 
-                    Long otherUserId = room.getOtherUserId(userId);
-                    User otherUser = userRepository.findById(otherUserId).orElse(null);
-                    String otherUserNickname = otherUser != null ? otherUser.getNickname() : "알 수 없는 사용자";
+                val otherUserId = room.getOtherUserId(userId)
+                val otherUser = otherUserId?.let { userRepository.findById(it).orElse(null) }
+                val otherUserNickname = otherUser?.nickname ?: "알 수 없는 사용자"
 
-                    Long unreadCount = chatMessageRepository.countUnreadMessagesByRoomIdAndUserId(room.getRoomId(), userId);
+                val unreadCount = chatMessageRepository.countUnreadMessagesByRoomIdAndUserId(room.roomId, userId)
 
-                    ChatRoomResponse response = ChatRoomResponse.from(room, bookTitle, bookImage,
-                            otherUserNickname, null, unreadCount);
-                    response.setOtherUserId(otherUserId);
-
-                    return response;
-                })
-                .collect(Collectors.toList());
+                ChatRoomResponse.from(
+                    room, bookTitle, bookImage,
+                    otherUserNickname, null, unreadCount
+                ).copy(otherUserId = otherUserId)
+            }
 
         // 새로운 Page 객체 생성 (실제 결과 개수로 totalElements 조정)
-        return new PageImpl<>(validChatRooms, pageable, validChatRooms.size());
+        return PageImpl(validChatRooms, pageable, validChatRooms.size.toLong())
     }
 
-    public ChatRoomResponse getChatRoom(String roomId, Long userId) {
-        log.info("채팅방 정보 조회 - roomId: {}, userId: {}", roomId, userId);
+    fun getChatRoom(roomId: String, userId: Long): ChatRoomResponse {
+        log.info("채팅방 정보 조회 - roomId: {}, userId: {}", roomId, userId)
 
-        ChatRoom chatRoom = chatRoomRepository.findByRoomIdAndUserId(roomId, userId)
-                .orElseThrow(() -> new ServiceException("채팅방에 접근할 권한이 없습니다."));
+        val chatRoom = chatRoomRepository.findByRoomIdAndUserId(roomId, userId)
+            .orElseThrow { ServiceException("채팅방에 접근할 권한이 없습니다.") }
 
         // 사용자가 나간 상태인 경우 재참여 처리
         if (chatRoom.hasUserLeft(userId)) {
-            log.info("나간 사용자 재참여 처리 - roomId: {}, userId: {}", roomId, userId);
-            chatRoom.rejoinUser(userId);
-            chatRoomRepository.save(chatRoom);
+            log.info("나간 사용자 재참여 처리 - roomId: {}, userId: {}", roomId, userId)
+            chatRoom.rejoinUser(userId)
+            chatRoomRepository.save(chatRoom)
         }
 
-        Rent rent = rentRepository.findById(chatRoom.getRentId()).orElse(null);
-        String bookTitle = rent != null ? rent.getBookTitle() : "알 수 없는 책";
-        String bookImage = rent != null ? rent.getBookImage() : null;
+        val (bookTitle, bookImage) = getRentInfo(chatRoom.rentId)
 
-        Long otherUserId = chatRoom.getOtherUserId(userId);
-        User otherUser = userRepository.findById(otherUserId).orElse(null);
-        String otherUserNickname = otherUser != null ? otherUser.getNickname() : "알 수 없는 사용자";
+        val otherUserId = chatRoom.getOtherUserId(userId)
+        val otherUser = otherUserId?.let { userRepository.findById(it).orElse(null) }
+        val otherUserNickname = otherUser?.nickname ?: "알 수 없는 사용자"
 
-        Long unreadCount = chatMessageRepository.countUnreadMessagesByRoomIdAndUserId(roomId, userId);
+        val unreadCount = chatMessageRepository.countUnreadMessagesByRoomIdAndUserId(roomId, userId)
 
-        ChatRoomResponse response = ChatRoomResponse.from(chatRoom, bookTitle, bookImage,
-                otherUserNickname, null, unreadCount);
-        response.setOtherUserId(otherUserId);
-        response.setRentId(chatRoom.getRentId()); // rentId 설정
-
-        return response;
+        return ChatRoomResponse.from(
+            chatRoom, bookTitle, bookImage,
+            otherUserNickname, null, unreadCount
+        ).copy(
+            otherUserId = otherUserId,
+            rentId = chatRoom.rentId
+        )
     }
 
-    public Page<MessageResponse> getChatMessages(String roomId, Long userId, Pageable pageable) {
-        log.info("채팅 메시지 조회 - roomId: {}, userId: {}, page: {}, size: {}",
-                roomId, userId, pageable.getPageNumber(), pageable.getPageSize());
+    fun getChatMessages(roomId: String, userId: Long, pageable: Pageable): Page<MessageResponse> {
+        log.info("채팅 메시지 조회 - roomId: {}, userId: {}, page: {}, size: {}", 
+            roomId, userId, pageable.pageNumber, pageable.pageSize)
 
-        ChatRoom chatRoom = chatRoomRepository.findByRoomIdAndUserId(roomId, userId)
-                .orElseThrow(() -> new ServiceException("채팅방에 접근할 권한이 없습니다."));
+        val chatRoom = chatRoomRepository.findByRoomIdAndUserId(roomId, userId)
+            .orElseThrow { ServiceException("채팅방에 접근할 권한이 없습니다.") }
 
         // 사용자가 나간 시간 확인
-        LocalDateTime userLeftTime = chatRoom.getUserLeftTime(userId);
+        val userLeftTime = chatRoom.getUserLeftTime(userId)
 
-        Page<ChatMessage> messages;
-        if (userLeftTime != null) {
+        val messages = if (userLeftTime != null) {
             // 나간 시간 이후의 메시지만 조회 (나간 후 새로 온 메시지만)
-            log.info("사용자가 나간 시간 이후 메시지만 조회 - userId: {}, leftTime: {}", userId, userLeftTime);
-            messages = chatMessageRepository.findByRoomIdAndCreatedDateAfterOrderByCreatedDateDesc(
-                    roomId, userLeftTime, pageable);
+            log.info("사용자가 나간 시간 이후 메시지만 조회 - userId: {}, leftTime: {}", userId, userLeftTime)
+            chatMessageRepository.findByRoomIdAndCreatedDateAfterOrderByCreatedDateDesc(
+                roomId, userLeftTime, pageable
+            )
         } else {
             // 모든 메시지 조회
-            messages = chatMessageRepository.findByRoomIdOrderByCreatedDateDesc(roomId, pageable);
+            chatMessageRepository.findByRoomIdOrderByCreatedDateDesc(roomId, pageable)
         }
 
-        return messages.map(message -> {
+        return messages.map { message ->
             // 시스템 메시지 처리 (senderId가 0인 경우)
-            if (message.getSenderId() == 0) {
-                return MessageResponse.from(message, "시스템", null, false);
+            if (message.senderId == 0L) {
+                return@map MessageResponse.from(message, "시스템", null, false)
             }
 
-            User sender = userRepository.findById(message.getSenderId()).orElse(null);
-            String senderNickname = sender != null ? sender.getNickname() : "알 수 없는 사용자";
+            val sender = userRepository.findById(message.senderId).orElse(null)
+            val senderNickname = sender?.nickname ?: "알 수 없는 사용자"
 
             // isMine 계산: 현재 사용자의 ID와 메시지 발신자 ID가 같은지 확인
-            boolean isMine = message.getSenderId().equals(userId);
-
-            return MessageResponse.from(message, senderNickname, null, isMine);
-        });
+            val isMine = message.senderId == userId
+            MessageResponse.from(message, senderNickname, null, isMine)
+        }
     }
 
     @Transactional
-    public MessageResponse sendMessage(MessageSendRequest request, Long senderId) {
-        log.info("메시지 전송 - roomId: {}, senderId: {}", request.getRoomId(), senderId);
+    fun sendMessage(request: MessageSendRequest, senderId: Long): MessageResponse {
+        log.info("메시지 전송 - roomId: {}, senderId: {}", request.roomId, senderId)
 
-        ChatRoom chatRoom = chatRoomRepository.findByRoomIdAndUserId(request.getRoomId(), senderId)
-                .orElseThrow(() -> new ServiceException("채팅방에 접근할 권한이 없습니다."));
+        val chatRoom = chatRoomRepository.findByRoomIdAndUserId(request.roomId, senderId)
+            .orElseThrow { ServiceException("채팅방에 접근할 권한이 없습니다.") }
 
         // 채팅방에 메시지가 있는지 확인 (첫 번째 메시지인지 체크)
-        boolean isFirstMessage = chatMessageRepository.countByRoomId(request.getRoomId()) == 0L;
+        val isFirstMessage = chatMessageRepository.countByRoomId(request.roomId) == 0L
 
         // 첫 번째 메시지인 경우 시스템 메시지 생성
         if (isFirstMessage) {
             try {
-                Rent rent = rentRepository.findById(chatRoom.getRentId()).orElse(null);
-                if (rent != null) {
-                    String systemMessage = String.format("📚 '%s' 책에 대한 채팅방이 생성되었습니다.", rent.getBookTitle());
-                    createSystemMessage(request.getRoomId(), systemMessage);
+                val rent = rentRepository.findById(chatRoom.rentId).orElse(null)
+                rent?.let {
+                    val systemMessage = "📚 '${it.bookTitle}' 책에 대한 채팅방이 생성되었습니다."
+                    createSystemMessage(request.roomId, systemMessage)
                 }
-            } catch (Exception e) {
-                log.warn("시스템 메시지 생성 실패 - roomId: {}", request.getRoomId(), e);
+            } catch (e: Exception) {
+                log.warn("시스템 메시지 생성 실패 - roomId: {}", request.roomId, e)
             }
         }
 
-        ChatMessage message = ChatMessage.builder()
-                .roomId(request.getRoomId())
-                .senderId(senderId)
-                .content(request.getContent())
-                .messageType(request.getMessageType())
-                .isRead(false)
-                .createdDate(LocalDateTime.now())
-                .build();
+        val message = createChatMessage(request.roomId, senderId, request.content, request.messageType)
 
-        chatMessageRepository.save(message);
+        chatMessageRepository.save(message)
 
-        chatRoom.updateLastMessage(request.getContent(), LocalDateTime.now());
-        chatRoomRepository.save(chatRoom);
+        chatRoom.updateLastMessage(request.content, LocalDateTime.now())
+        chatRoomRepository.save(chatRoom)
 
-        User sender = userRepository.findById(senderId).orElse(null);
-        String senderNickname = sender != null ? sender.getNickname() : "알 수 없는 사용자";
+        val sender = userRepository.findById(senderId).orElse(null)
+        val senderNickname = sender?.nickname ?: "알 수 없는 사용자"
 
         // 메시지를 보낸 사람이므로 항상 isMine = true
-        MessageResponse response = MessageResponse.from(message, senderNickname, null, true);
+        val response = MessageResponse.from(message, senderNickname, null, true)
 
-        log.info("메시지 전송 완료 - messageId: {}, senderId: {}", message.getId(), senderId);
-        return response;
+        log.info("메시지 전송 완료 - messageId: {}, senderId: {}", message.id, senderId)
+        return response
     }
 
     @Transactional
-    public void markMessagesAsRead(String roomId, Long userId) {
-        log.info("메시지 읽음 처리 - roomId: {}, userId: {}", roomId, userId);
+    fun markMessagesAsRead(roomId: String, userId: Long) {
+        log.info("메시지 읽음 처리 - roomId: {}, userId: {}", roomId, userId)
 
         chatRoomRepository.findByRoomIdAndUserId(roomId, userId)
-                .orElseThrow(() -> new ServiceException("채팅방에 접근할 권한이 없습니다."));
+            .orElseThrow { ServiceException("채팅방에 접근할 권한이 없습니다.") }
 
-        Integer updatedCount = chatMessageRepository.markAllMessagesAsReadInRoom(roomId, userId);
-        log.info("읽음 처리 완료 - 업데이트된 메시지 수: {}", updatedCount);
+        val updatedCount = chatMessageRepository.markAllMessagesAsReadInRoom(roomId, userId)
+        log.info("읽음 처리 완료 - 업데이트된 메시지 수: {}", updatedCount)
     }
 
-    public Long getUnreadMessageCount(Long userId) {
+    fun getUnreadMessageCount(userId: Long): Long {
         // 사용자가 참여한 모든 채팅방 중 나가지 않은 채팅방에서만 읽지 않은 메시지 카운트
-        List<ChatRoom> userChatRooms = chatRoomRepository.findByLenderIdOrBorrowerId(userId, userId);
+        val userChatRooms = chatRoomRepository.findByLenderIdOrBorrowerId(userId, userId)
 
-        long totalUnreadCount = 0;
-
-        for (ChatRoom chatRoom : userChatRooms) {
-            // 사용자가 나간 채팅방은 제외
-            if (chatRoom.hasUserLeft(userId)) {
-                continue;
+        return userChatRooms
+            .filter { !it.hasUserLeft(userId) }  // 사용자가 나간 채팅방은 제외
+            .sumOf { chatRoom ->
+                // 해당 채팅방의 읽지 않은 메시지 수 조회
+                chatMessageRepository.countUnreadMessagesByRoomIdAndUserId(chatRoom.roomId, userId)
             }
-
-            // 해당 채팅방의 읽지 않은 메시지 수 조회
-            Long roomUnreadCount = chatMessageRepository.countUnreadMessagesByRoomIdAndUserId(chatRoom.getRoomId(), userId);
-            totalUnreadCount += roomUnreadCount;
-        }
-
-        return totalUnreadCount;
     }
 
     @Transactional
-    public void leaveChatRoom(String roomId, Long userId) {
-        log.info("채팅방 나가기 시작 - roomId: {}, userId: {}", roomId, userId);
+    fun leaveChatRoom(roomId: String, userId: Long) {
+        log.info("채팅방 나가기 시작 - roomId: {}, userId: {}", roomId, userId)
 
         // 채팅방 존재 여부 및 권한 확인
-        ChatRoom chatRoom = chatRoomRepository.findByRoomIdAndUserId(roomId, userId)
-                .orElseThrow(() -> {
-                    log.error("채팅방 접근 권한 없음 - roomId: {}, userId: {}", roomId, userId);
-                    return new ServiceException("채팅방에 접근할 권한이 없습니다.");
-                });
+        val chatRoom = chatRoomRepository.findByRoomIdAndUserId(roomId, userId)
+            .orElseThrow {
+                log.error("채팅방 접근 권한 없음 - roomId: {}, userId: {}", roomId, userId)
+                ServiceException("채팅방에 접근할 권한이 없습니다.")
+            }
 
         try {
             // 이미 나간 상태인지 확인
             if (chatRoom.hasUserLeft(userId)) {
-                log.warn("이미 나간 채팅방 - roomId: {}, userId: {}", roomId, userId);
-                return; // 이미 나간 상태면 그대로 종료
+                log.warn("이미 나간 채팅방 - roomId: {}, userId: {}", roomId, userId)
+                return  // 이미 나간 상태면 그대로 종료
             }
 
             // 채팅방을 나가기 전에 모든 읽지 않은 메시지를 읽음 처리
-            Integer markedAsReadCount = chatMessageRepository.markAllMessagesAsReadInRoom(roomId, userId);
-            log.info("채팅방 나가기 - 읽음 처리된 메시지 수: {}", markedAsReadCount);
+            val markedAsReadCount = chatMessageRepository.markAllMessagesAsReadInRoom(roomId, userId)
+            log.info("채팅방 나가기 - 읽음 처리된 메시지 수: {}", markedAsReadCount)
 
             // 상대방에게 나가기 알림 메시지 전송
-            User leavingUser = userRepository.findById(userId).orElse(null);
-            String leavingUserNickname = leavingUser != null ? leavingUser.getNickname() : "사용자";
-            String leaveMessage = String.format("💔 %s님이 채팅방을 나갔습니다.", leavingUserNickname);
+            val leavingUser = userRepository.findById(userId).orElse(null)
+            val leavingUserNickname = leavingUser?.nickname ?: "사용자"
+            val leaveMessage = "💔 ${leavingUserNickname}님이 채팅방을 나갔습니다."
 
             // 시스템 메시지 생성 (실패해도 나가기는 진행)
             try {
-                createSystemMessage(roomId, leaveMessage);
-            } catch (Exception e) {
-                log.warn("시스템 메시지 생성 실패 - roomId: {}", roomId, e);
+                createSystemMessage(roomId, leaveMessage)
+            } catch (e: Exception) {
+                log.warn("시스템 메시지 생성 실패 - roomId: {}", roomId, e)
             }
 
             // 해당 사용자만 "나가기" 표시 (채팅방은 유지)
-            chatRoom.markUserAsLeft(userId);
-            ChatRoom savedRoom = chatRoomRepository.save(chatRoom);
+            chatRoom.markUserAsLeft(userId)
+            val savedRoom = chatRoomRepository.save(chatRoom)
 
-            log.info("사용자 채팅방 나가기 완료 - roomId: {}, userId: {}, isEmpty: {}",
-                    roomId, userId, savedRoom.isEmpty());
-
-        } catch (Exception e) {
-            log.error("채팅방 나가기 중 오류 발생 - roomId: {}, userId: {}", roomId, userId, e);
-            throw new ServiceException("채팅방 나가기 중 오류가 발생했습니다: " + e.getMessage());
+            log.info("사용자 채팅방 나가기 완료 - roomId: {}, userId: {}, isEmpty: {}", 
+                roomId, userId, savedRoom.isEmpty)
+        } catch (e: Exception) {
+            log.error("채팅방 나가기 중 오류 발생 - roomId: {}, userId: {}", roomId, userId, e)
+            throw ServiceException("채팅방 나가기 중 오류가 발생했습니다: ${e.message}")
         }
     }
 
     @Transactional
-    public void createSystemMessage(String roomId, String content) {
-        ChatMessage systemMessage = ChatMessage.builder()
-                .roomId(roomId)
-                .senderId(0L)
-                .content(content)
-                .messageType(MessageType.SYSTEM)
-                .isRead(false)
-                .createdDate(LocalDateTime.now())
-                .build();
+    fun createSystemMessage(roomId: String, content: String) {
+        saveSystemMessageAndUpdateRoom(roomId, content)
+    }
 
-        chatMessageRepository.save(systemMessage);
+    @Suppress("unused") // 향후 북카드 메시지 기능에서 사용 예정
+    @Transactional
+    fun createBookCardMessage(
+        roomId: String,
+        rentId: Long,
+        bookTitle: String,
+        bookImage: String?,
+        message: String
+    ) {
+        val jsonContent = """
+            {"type":"BOOK_CARD","rentId":$rentId,"bookTitle":"$bookTitle","bookImage":"${bookImage ?: ""}","message":"$message"}
+        """.trimIndent()
 
-        ChatRoom chatRoom = chatRoomRepository.findByRoomId(roomId).orElse(null);
-        if (chatRoom != null) {
-            chatRoom.updateLastMessage(content, LocalDateTime.now());
-            chatRoomRepository.save(chatRoom);
+        saveSystemMessageAndUpdateRoom(roomId, jsonContent)
+    }
+
+    private fun buildChatRoomResponse(
+        room: ChatRoom,
+        rent: Rent,
+        lender: User,
+        borrower: User,
+        currentUserId: Long
+    ): ChatRoomResponse {
+        val isCurrentUserLender = room.lenderId == currentUserId
+        val otherUser = if (isCurrentUserLender) borrower else lender
+        val otherUserId = otherUser.id
+
+        val unreadCount = chatMessageRepository.countUnreadMessagesByRoomIdAndUserId(room.roomId, currentUserId)
+
+        return ChatRoomResponse.from(
+            room,
+            rent.bookTitle,
+            rent.bookImage,
+            otherUser.nickname,
+            null,
+            unreadCount
+        ).copy(otherUserId = otherUserId)
+    }
+
+    private fun saveSystemMessageAndUpdateRoom(roomId: String, content: String, messageType: MessageType = MessageType.SYSTEM) {
+        val systemMessage = createChatMessage(roomId, 0L, content, messageType)
+        chatMessageRepository.save(systemMessage)
+
+        val chatRoom = chatRoomRepository.findByRoomId(roomId).orElse(null)
+        chatRoom?.let {
+            val displayMessage = if (messageType == MessageType.SYSTEM && content.startsWith("{")) {
+                // JSON 형태의 메시지인 경우 message 부분만 추출하여 표시
+                content.substringAfter("\"message\":\"").substringBefore("\"}")
+            } else {
+                content
+            }
+            it.updateLastMessage(displayMessage, LocalDateTime.now())
+            chatRoomRepository.save(it)
         }
     }
 
-    @Transactional
-    public void createBookCardMessage(String roomId, Long rentId, String bookTitle, String bookImage, String message) {
-        String jsonContent = String.format(
-                "{\"type\":\"BOOK_CARD\",\"rentId\":%d,\"bookTitle\":\"%s\",\"bookImage\":\"%s\",\"message\":\"%s\"}",
-                rentId, bookTitle, bookImage != null ? bookImage : "", message
-        );
-
-        ChatMessage systemMessage = ChatMessage.builder()
-                .roomId(roomId)
-                .senderId(0L)
-                .content(jsonContent)
-                .messageType(MessageType.SYSTEM)
-                .isRead(false)
-                .createdDate(LocalDateTime.now())
-                .build();
-
-        chatMessageRepository.save(systemMessage);
-
-        ChatRoom chatRoom = chatRoomRepository.findByRoomId(roomId).orElse(null);
-        if (chatRoom != null) {
-            chatRoom.updateLastMessage(message, LocalDateTime.now());
-            chatRoomRepository.save(chatRoom);
+    private fun createChatMessage(roomId: String, senderId: Long, content: String, messageType: MessageType): ChatMessage {
+        return ChatMessage().apply {
+            this.roomId = roomId
+            this.senderId = senderId
+            this.content = content
+            this.messageType = messageType
+            this.isRead = false
+            this.createdDate = LocalDateTime.now()
         }
     }
 
-    private ChatRoomResponse buildChatRoomResponse(ChatRoom room, Rent rent, User lender, User borrower, Long currentUserId) {
-        boolean isCurrentUserLender = room.getLenderId().equals(currentUserId);
-        User otherUser = isCurrentUserLender ? borrower : lender;
-        Long otherUserId = otherUser.getId();
-
-        Long unreadCount = chatMessageRepository.countUnreadMessagesByRoomIdAndUserId(room.getRoomId(), currentUserId);
-
-        ChatRoomResponse response = ChatRoomResponse.from(
-                room,
-                rent.getBookTitle(),
-                rent.getBookImage(),
-                otherUser.getNickname(),
-                null,
-                unreadCount
-        );
-
-        response.setOtherUserId(otherUserId);
-        return response;
+    private fun getRentInfo(rentId: Long): Pair<String, String?> {
+        val rent = rentRepository.findById(rentId).orElse(null)
+        val bookTitle = rent?.bookTitle ?: "알 수 없는 책"
+        val bookImage = rent?.bookImage
+        return Pair(bookTitle, bookImage)
     }
-
-    /**
-     * 중복 채팅방 정리 (사용 중인 방은 보호하고 나머지 삭제)
-     */
     @Transactional
-    public void cleanupDuplicateChatRooms(List<ChatRoom> duplicateRooms, ChatRoom protectedRoom) {
-        if (duplicateRooms.size() <= 1) {
-            return; // 중복이 없으면 처리할 필요 없음
+    fun cleanupDuplicateChatRooms(duplicateRooms: MutableList<ChatRoom>, protectedRoom: ChatRoom?) {
+        if (duplicateRooms.size <= 1) {
+            return  // 중복이 없으면 처리할 필요 없음
         }
 
         try {
-            for (ChatRoom duplicateRoom : duplicateRooms) {
+            for (duplicateRoom in duplicateRooms) {
                 // 보호할 채팅방은 건드리지 않음
-                if (protectedRoom != null && duplicateRoom.getId() != null && duplicateRoom.getId().equals(protectedRoom.getId())) {
-                    continue;
+                if (protectedRoom != null && duplicateRoom.id == protectedRoom.id) {
+                    continue
                 }
 
                 // 활성이고 사용자가 모두 있는 방도 보호
-                if (duplicateRoom.isActive() &&
-                        !duplicateRoom.hasUserLeft(duplicateRoom.getLenderId()) &&
-                        !duplicateRoom.hasUserLeft(duplicateRoom.getBorrowerId())) {
-                    continue;
+                if (duplicateRoom.isActive && 
+                    !duplicateRoom.hasUserLeft(duplicateRoom.lenderId) && 
+                    !duplicateRoom.hasUserLeft(duplicateRoom.borrowerId)) {
+                    continue
                 }
 
-                log.info("중복 채팅방 정리 중 - roomId: {}, createdDate: {}, active: {}",
-                        duplicateRoom.getRoomId(), duplicateRoom.getCreatedDate(), duplicateRoom.isActive());
+                log.info("중복 채팅방 정리 중 - roomId: {}, createdDate: {}, active: {}", 
+                    duplicateRoom.roomId, duplicateRoom.createdDate, duplicateRoom.isActive)
 
                 try {
                     // 1. 관련 메시지들 먼저 삭제
-                    Integer deletedMessages = chatMessageRepository.deleteByRoomId(duplicateRoom.getRoomId());
-                    log.info("채팅방 메시지 삭제 완료 - roomId: {}, 삭제된 메시지 수: {}",
-                            duplicateRoom.getRoomId(), deletedMessages);
+                    val deletedMessages = chatMessageRepository.deleteByRoomId(duplicateRoom.roomId)
+                    log.info("채팅방 메시지 삭제 완료 - roomId: {}, 삭제된 메시지 수: {}", 
+                        duplicateRoom.roomId, deletedMessages)
 
                     // 2. 채팅방 삭제
-                    chatRoomRepository.delete(duplicateRoom);
-                    log.info("중복 채팅방 삭제 완료 - roomId: {}", duplicateRoom.getRoomId());
-
-                } catch (Exception e) {
-                    log.error("개별 채팅방 삭제 실패 - roomId: {}", duplicateRoom.getRoomId(), e);
+                    chatRoomRepository.delete(duplicateRoom)
+                    log.info("중복 채팅방 삭제 완료 - roomId: {}", duplicateRoom.roomId)
+                } catch (e: Exception) {
+                    log.error("개별 채팅방 삭제 실패 - roomId: {}", duplicateRoom.roomId, e)
                     // 개별 실패는 전체 프로세스를 중단시키지 않음
                 }
             }
 
-            log.info("중복 채팅방 정리 완료");
-
-        } catch (Exception e) {
-            log.error("중복 채팅방 정리 중 전체 오류 발생", e);
+            log.info("중복 채팅방 정리 완료")
+        } catch (e: Exception) {
+            log.error("중복 채팅방 정리 중 전체 오류 발생", e)
             // 정리 실패해도 채팅방 생성은 진행
         }
     }
