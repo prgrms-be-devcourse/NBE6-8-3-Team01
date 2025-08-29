@@ -11,16 +11,11 @@ data class ReportSimpleResponseDto(
     val targetUserId: Long,
     val createdDate: LocalDateTime
 ) {
-    companion object {
-        @JvmStatic
-        fun from(report: Report): ReportSimpleResponseDto {
-            return ReportSimpleResponseDto(
-                id = report.id ?: 0,
-                status = report.status,
-                reporterUserId = report.reporterUser.id ?: 0,
-                targetUserId = report.targetUser.id ?: 0,
-                createdDate = report.createdDate ?: LocalDateTime.MIN
-            )
-        }
-    }
+    constructor(report: Report) : this(
+        id = report.id ?: 0,
+        status = report.status,
+        reporterUserId = report.reporterUser.id ?: 0,
+        targetUserId = report.targetUser.id ?: 0,
+        createdDate = report.createdDate ?: LocalDateTime.MIN
+    )
 }

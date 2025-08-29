@@ -5,7 +5,6 @@ import com.bookbook.domain.report.dto.response.ReportSimpleResponseDto
 import com.bookbook.domain.report.entity.Report
 import com.bookbook.domain.report.enums.ReportStatus
 import com.bookbook.domain.report.repository.ReportRepository
-import com.bookbook.domain.user.entity.User
 import com.bookbook.domain.user.repository.UserRepository
 import com.bookbook.domain.user.service.UserService
 import com.bookbook.global.exception.ServiceException
@@ -69,7 +68,7 @@ class ReportService(
         val reportPage = reportRepository
             .findFilteredReportHistory(pageable, status, targetUserId)
 
-        return reportPage.map(ReportSimpleResponseDto::from)
+        return reportPage.map(::ReportSimpleResponseDto)
     }
 
     /**
@@ -88,7 +87,7 @@ class ReportService(
             report.markAsReviewed()
         }
 
-        return ReportDetailResponseDto.from(report)
+        return ReportDetailResponseDto(report)
     }
 
     /**
