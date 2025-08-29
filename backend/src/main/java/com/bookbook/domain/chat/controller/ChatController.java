@@ -30,8 +30,8 @@ public class ChatController {
             @Valid @RequestBody ChatRoomCreateRequest request,
             @AuthenticationPrincipal CustomOAuth2User user) {
         
-        log.info("채팅방 생성 요청 - userId: {}, rentId: {}, lenderId: {}", 
-                user.getUserId(), request.getRentId(), request.getLenderId());
+        log.info("채팅방 생성 요청 - userId: {}, rentId: {}, lenderId: {}",
+                user.userId, request.getRentId(), request.getLenderId());
         
         try {
             // 입력 검증
@@ -47,13 +47,13 @@ public class ChatController {
                         .body(RsData.of("400", "빌려주는 사용자 ID가 필요합니다.", null));
             }
             
-            if (user.getUserId() == null) {
+            if (user == null) {
                 log.warn("채팅방 생성 실패 - 사용자 인증 정보 없음");
                 return ResponseEntity.status(401)
                         .body(RsData.of("401", "로그인이 필요합니다.", null));
             }
             
-            ChatRoomResponse response = chatService.createOrGetChatRoom(request, user.getUserId());
+            ChatRoomResponse response = chatService.createOrGetChatRoom(request, user.userId);
             
             log.info("채팅방 생성/조회 성공 - roomId: {}", response.getRoomId());
             return ResponseEntity.ok(RsData.of("200", "채팅방이 생성되었습니다.", response));
@@ -79,11 +79,11 @@ public class ChatController {
             @RequestParam(defaultValue = "20") int size,
             @AuthenticationPrincipal CustomOAuth2User user) {
         
-        log.info("채팅방 목록 조회 - userId: {}, page: {}, size: {}", user.getUserId(), page, size);
+        log.info("채팅방 목록 조회 - userId: {}, page: {}, size: {}", user.userId, page, size);
         
         try {
             Pageable pageable = PageRequest.of(page, size);
-            Page<ChatRoomResponse> chatRooms = chatService.getChatRooms(user.getUserId(), pageable);
+            Page<ChatRoomResponse> chatRooms = chatService.getChatRooms(user.userId, pageable);
             
             return ResponseEntity.ok(RsData.of("200", "채팅방 목록을 조회했습니다.", chatRooms));
         } catch (Exception e) {
@@ -101,10 +101,10 @@ public class ChatController {
             @PathVariable String roomId,
             @AuthenticationPrincipal CustomOAuth2User user) {
         
-        log.info("채팅방 정보 조회 - roomId: {}, userId: {}", roomId, user.getUserId());
+        log.info("채팅방 정보 조회 - roomId: {}, userId: {}", roomId, user.userId);
         
         try {
-            ChatRoomResponse chatRoom = chatService.getChatRoom(roomId, user.getUserId());
+            ChatRoomResponse chatRoom = chatService.getChatRoom(roomId, user.userId);
             return ResponseEntity.ok(RsData.of("200", "채팅방 정보를 조회했습니다.", chatRoom));
         } catch (Exception e) {
             log.error("채팅방 정보 조회 실패", e);
@@ -128,11 +128,11 @@ public class ChatController {
             @AuthenticationPrincipal CustomOAuth2User user) {
         
         log.info("채팅 메시지 조회 - roomId: {}, userId: {}, page: {}, size: {}", 
-                roomId, user.getUserId(), page, size);
+                roomId, user.userId, page, size);
         
         try {
             Pageable pageable = PageRequest.of(page, size);
-            Page<MessageResponse> messages = chatService.getChatMessages(roomId, user.getUserId(), pageable);
+            Page<MessageResponse> messages = chatService.getChatMessages(roomId, user.userId, pageable);
             
             return ResponseEntity.ok(RsData.of("200", "채팅 메시지를 조회했습니다.", messages));
         } catch (Exception e) {
@@ -155,10 +155,10 @@ public class ChatController {
             @AuthenticationPrincipal CustomOAuth2User user) {
         
         log.info("메시지 전송 - roomId: {}, userId: {}, messageType: {}", 
-                request.getRoomId(), user.getUserId(), request.getMessageType());
+                request.getRoomId(), user.userId, request.getMessageType());
         
         try {
-            MessageResponse response = chatService.sendMessage(request, user.getUserId());
+            MessageResponse response = chatService.sendMessage(request, user.userId);
             
             return ResponseEntity.ok(RsData.of("200", "메시지가 전송되었습니다.", response));
         } catch (Exception e) {
@@ -180,10 +180,10 @@ public class ChatController {
             @PathVariable String roomId,
             @AuthenticationPrincipal CustomOAuth2User user) {
         
-        log.info("메시지 읽음 처리 - roomId: {}, userId: {}", roomId, user.getUserId());
+        log.info("메시지 읽음 처리 - roomId: {}, userId: {}", roomId, user.userId);
         
         try {
-            chatService.markMessagesAsRead(roomId, user.getUserId());
+            chatService.markMessagesAsRead(roomId, user.userId);
             return ResponseEntity.ok(RsData.of("200", "메시지를 읽음 처리했습니다.", null));
         } catch (Exception e) {
             log.error("메시지 읽음 처리 실패", e);
@@ -203,10 +203,10 @@ public class ChatController {
     public ResponseEntity<RsData<Long>> getUnreadMessageCount(
             @AuthenticationPrincipal CustomOAuth2User user) {
         
-        log.info("읽지 않은 메시지 개수 조회 - userId: {}", user.getUserId());
+        log.info("읽지 않은 메시지 개수 조회 - userId: {}", user.userId);
         
         try {
-            long unreadCount = chatService.getUnreadMessageCount(user.getUserId());
+            long unreadCount = chatService.getUnreadMessageCount(user.userId);
             return ResponseEntity.ok(RsData.of("200", "읽지 않은 메시지 개수를 조회했습니다.", unreadCount));
         } catch (Exception e) {
             log.error("읽지 않은 메시지 개수 조회 실패", e);
@@ -223,10 +223,10 @@ public class ChatController {
             @PathVariable String roomId,
             @AuthenticationPrincipal CustomOAuth2User user) {
         
-        log.info("채팅방 나가기 요청 - roomId: {}, userId: {}", roomId, user.getUserId());
+        log.info("채팅방 나가기 요청 - roomId: {}, userId: {}", roomId, user.userId);
         
         try {
-            chatService.leaveChatRoom(roomId, user.getUserId());
+            chatService.leaveChatRoom(roomId, user.userId);
             return ResponseEntity.ok(RsData.of("200", "채팅방을 나갔습니다.", null));
         } catch (Exception e) {
             log.error("채팅방 나가기 실패", e);

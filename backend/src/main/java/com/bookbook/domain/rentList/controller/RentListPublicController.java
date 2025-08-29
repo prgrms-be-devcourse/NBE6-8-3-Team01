@@ -2,13 +2,12 @@ package com.bookbook.domain.rentList.controller;
  
 //08-06 유효상
 
- 
+
 import com.bookbook.domain.rentList.dto.RentRequestDecisionDto;
 import com.bookbook.domain.rentList.service.RentListService;
 import com.bookbook.domain.user.entity.User;
 import com.bookbook.domain.user.service.UserService;
 import com.bookbook.global.rsdata.RsData;
-import com.bookbook.global.security.CustomOAuth2User;
 import com.bookbook.global.security.jwt.JwtProvider;
 import io.jsonwebtoken.Claims;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 /**

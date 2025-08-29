@@ -35,7 +35,7 @@ public class WebSocketChatController {
             }
             
             CustomOAuth2User user = (CustomOAuth2User) auth.getPrincipal();
-            Long userId = user.getUserId();
+            Long userId = user.userId;
             
             log.info("WebSocket 메시지 전송 - roomId: {}, userId: {}", request.getRoomId(), userId);
             
@@ -68,12 +68,12 @@ public class WebSocketChatController {
             CustomOAuth2User user = (CustomOAuth2User) auth.getPrincipal();
             
             log.info("WebSocket 사용자 입장 - roomId: {}, userId: {}, nickname: {}", 
-                    roomId, user.getUserId(), user.getNickname());
+                    roomId, user.userId, user.nickname);
             
             // 세션에 사용자 정보 저장
-            headerAccessor.getSessionAttributes().put("userId", user.getUserId().intValue());
+            headerAccessor.getSessionAttributes().put("userId", user.userId);
             headerAccessor.getSessionAttributes().put("roomId", roomId);
-            headerAccessor.getSessionAttributes().put("nickname", user.getNickname());
+            headerAccessor.getSessionAttributes().put("nickname", user.nickname);
             
         } catch (Exception e) {
             log.error("WebSocket 사용자 입장 실패", e);
@@ -94,7 +94,7 @@ public class WebSocketChatController {
             }
             
             CustomOAuth2User user = (CustomOAuth2User) auth.getPrincipal();
-            Long userId = user.getUserId();
+            Long userId = user.userId;
             
             log.info("WebSocket 읽음 처리 - roomId: {}, userId: {}", roomId, userId);
             
@@ -103,7 +103,7 @@ public class WebSocketChatController {
             
             // 읽음 처리 알림을 채팅방에 브로드캐스트 (선택사항)
             messagingTemplate.convertAndSend("/topic/chat/" + roomId + "/read", 
-                    "사용자 " + user.getNickname() + "이(가) 메시지를 읽었습니다.");
+                    "사용자 " + user.nickname + "이(가) 메시지를 읽었습니다.");
             
         } catch (Exception e) {
             log.error("WebSocket 읽음 처리 실패", e);

@@ -33,7 +33,7 @@ class UserController(
         @Validated @RequestBody signupRequest: UserCreateRequestDto,
         @AuthenticationPrincipal customOAuth2User: CustomOAuth2User?
     ): ResponseEntity<RsData<Void>> {
-        val userId = customOAuth2User?.getUserId()
+        val userId = customOAuth2User?.userId
             ?: throw ServiceException("401-AUTH-INVALID", "로그인 정보가 유효하지 않습니다.")
         if (userId == -1L) {
             throw ServiceException("401-AUTH-INVALID", "로그인 정보가 유효하지 않습니다.")
@@ -45,7 +45,7 @@ class UserController(
 
     @GetMapping("/me")
     fun getCurrentUser(@AuthenticationPrincipal customOAuth2User: CustomOAuth2User?): ResponseEntity<RsData<UserResponseDto>> {
-        val userId = customOAuth2User?.getUserId()
+        val userId = customOAuth2User?.userId
             ?: throw ServiceException("401-AUTH-INVALID", "로그인된 사용자가 없습니다.")
         val userDetails = userService.getUserDetails(userId)
         val rsData = RsData("200-OK", "사용자 정보 조회 성공", userDetails)
@@ -54,7 +54,7 @@ class UserController(
 
     @GetMapping("/status")
     fun getCurrentUserStatus(@AuthenticationPrincipal customOAuth2User: CustomOAuth2User?): ResponseEntity<RsData<UserStatusResponseDto>> {
-        val userId = customOAuth2User?.getUserId()
+        val userId = customOAuth2User?.userId
             ?: throw ServiceException("401-AUTH-INVALID", "로그인된 사용자가 없습니다.")
         val userDetails = userService.getUserStatus(userId)
         val rsData = RsData("200-OK", "사용자 정보 조회 성공", userDetails)
@@ -63,14 +63,14 @@ class UserController(
 
     @GetMapping("/isAuthenticated")
     fun isAuthenticated(@AuthenticationPrincipal customOAuth2User: CustomOAuth2User?): ResponseEntity<RsData<Boolean>> {
-        val authenticated = customOAuth2User?.getUserId() != null && customOAuth2User.getUserId() != -1L
+        val authenticated = customOAuth2User?.userId != null && customOAuth2User.userId != -1L
         val rsData = RsData("200-OK", "인증 여부 확인 완료", authenticated)
         return ResponseEntity.status(rsData.statusCode).body(rsData)
     }
 
     @DeleteMapping("/me")
     fun deactivateUser(@AuthenticationPrincipal customOAuth2User: CustomOAuth2User?): ResponseEntity<RsData<Void>> {
-        val userId = customOAuth2User?.getUserId()
+        val userId = customOAuth2User?.userId
             ?: throw ServiceException("401-AUTH-INVALID", "로그인 정보가 유효하지 않습니다.")
         userService.deactivateUser(userId)
         val rsData = RsData<Void>(resultCode = "200-OK", msg = "회원 탈퇴가 성공적으로 처리되었습니다.", data = null)
@@ -82,7 +82,7 @@ class UserController(
         @Valid @RequestBody updateRequest: UserUpdateRequestDto,
         @AuthenticationPrincipal customOAuth2User: CustomOAuth2User?
     ): ResponseEntity<RsData<Void>> {
-        val userId = customOAuth2User?.getUserId()
+        val userId = customOAuth2User?.userId
             ?: throw ServiceException("401-AUTH-INVALID", "로그인 정보가 유효하지 않습니다.")
         if (userId == -1L) {
             throw ServiceException("401-AUTH-INVALID", "로그인 정보가 유효하지 않습니다.")

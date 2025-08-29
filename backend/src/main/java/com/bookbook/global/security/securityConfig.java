@@ -132,7 +132,7 @@ public class securityConfig {
                             // DB에서 리프레시 토큰 무효화
                             if (authentication != null && authentication.getPrincipal() instanceof CustomOAuth2User) {
                                 CustomOAuth2User user = (CustomOAuth2User) authentication.getPrincipal();
-                                jwtProvider.deleteRefreshToken(user.getUserId());
+                                jwtProvider.deleteRefreshToken(user.userId);
                             }
 
                             response.sendRedirect(frontendBaseUrl + mainPath);

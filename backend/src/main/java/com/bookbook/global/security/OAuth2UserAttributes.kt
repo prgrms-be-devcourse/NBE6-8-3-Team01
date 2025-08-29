@@ -8,8 +8,6 @@ data class OAuth2UserAttributes(
     val id: String
 ) {
     companion object {
-        // registrationId에 따라 다른 파싱 로직 적용
-        @JvmStatic
         fun of(registrationId: String, userNameAttributeName: String, attributes: Map<String, Any>): OAuth2UserAttributes {
             return when (registrationId) {
                 "naver" -> ofNaver(userNameAttributeName, attributes)
@@ -28,6 +26,7 @@ data class OAuth2UserAttributes(
             )
         }
 
+        @Suppress("UNCHECKED_CAST")
         private fun ofNaver(userNameAttributeName: String, attributes: Map<String, Any>): OAuth2UserAttributes {
             val response = attributes[userNameAttributeName] as? Map<String, Any> ?: emptyMap()
             return OAuth2UserAttributes(
@@ -39,6 +38,7 @@ data class OAuth2UserAttributes(
             )
         }
 
+        @Suppress("UNCHECKED_CAST")
         private fun ofKakao(userNameAttributeName: String, attributes: Map<String, Any>): OAuth2UserAttributes {
             val kakaoAccount = attributes["kakao_account"] as? Map<String, Any>
             val profile = kakaoAccount?.get("profile") as? Map<String, Any> ?: emptyMap()

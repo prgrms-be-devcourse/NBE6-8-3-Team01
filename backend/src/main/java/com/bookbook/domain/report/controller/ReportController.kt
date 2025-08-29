@@ -26,7 +26,7 @@ class ReportController(
         @Valid @RequestBody requestDto: ReportRequestDto,
         @AuthenticationPrincipal customOAuth2User: CustomOAuth2User?
     ): ResponseEntity<RsData<Void>> {
-        if (customOAuth2User == null || customOAuth2User.userId == null || customOAuth2User.userId == -1L) {
+        if (customOAuth2User == null || customOAuth2User.userId == -1L) {
             throw ServiceException("401-AUTH-INVALID", "로그인 정보가 유효하지 않습니다.")
         }
         val reporterUserId = customOAuth2User.userId
