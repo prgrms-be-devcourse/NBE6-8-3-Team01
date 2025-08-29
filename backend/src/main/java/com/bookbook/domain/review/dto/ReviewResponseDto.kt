@@ -1,44 +1,38 @@
-package com.bookbook.domain.review.dto;
+package com.bookbook.domain.review.dto
 
-import com.bookbook.domain.review.entity.Review;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import com.bookbook.domain.review.entity.Review
+import java.time.LocalDateTime
 
-import java.time.LocalDateTime;
-
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-public class ReviewResponseDto {
-    
-    private long id;
-    private Long rentId;
-    private Long reviewerId;
-    private Long revieweeId;
-    private String reviewerNickname;
-    private String revieweeNickname;
-    private String bookTitle;
-    private String bookImage;
-    private Integer rating;
-    private String reviewType;
-    private LocalDateTime createdDate;
-
-
-    public static ReviewResponseDto from(Review review, String reviewerNickname, String revieweeNickname,
-                                         String bookTitle, String bookImage) {
-        return new ReviewResponseDto(
-                review.getId(),
-                review.getRentId(),
-                review.getReviewerId(),
-                review.getRevieweeId(),
-                reviewerNickname,
-                revieweeNickname,
-                bookTitle,
-                bookImage,
-                review.getRating(),
-                review.getReviewType(),
-                review.getCreatedDate()
-        );
-    }
+data class ReviewResponseDto(
+    val id: Long,
+    val rentId: Long,
+    val reviewerId: Long,
+    val revieweeId: Long,
+    val reviewerNickname: String?,
+    val revieweeNickname: String?,
+    val bookTitle: String?,
+    val bookImage: String?,
+    val rating: Int,
+    val reviewType: String,
+    val createdDate: LocalDateTime?
+) {
+    constructor(
+        review: Review,
+        reviewerNickname: String?,
+        revieweeNickname: String?,
+        bookTitle: String?,
+        bookImage: String?
+    ) : this(
+        id = review.id,
+        rentId = review.rentId,
+        reviewerId = review.reviewerId,
+        revieweeId = review.revieweeId,
+        reviewerNickname = reviewerNickname,
+        revieweeNickname = revieweeNickname,
+        bookTitle = bookTitle,
+        bookImage = bookImage,
+        rating = review.rating,
+        reviewType = review.reviewType,
+        createdDate = review.createdDate
+    )
 }
