@@ -10,10 +10,10 @@ data class RsData<T>(
     val resultCode: String,
     
     @JsonProperty("msg")
-    val msg: String?,
+    val msg: String,
     
     @JsonProperty("data")
-    val data: T?
+    val data: T? = null
 ) {
     @get:JsonProperty("statusCode")
     val statusCode: Int
@@ -28,10 +28,9 @@ data class RsData<T>(
 
     companion object {
         @JvmStatic
-        fun <T> of(resultCode: String, msg: String?, data: T?): RsData<T?> = RsData(resultCode, msg, data)
+        fun <T> of(resultCode: String, msg: String, data: T?): RsData<T?> = RsData(resultCode, msg, data)
 
         @JvmStatic
-        fun <T> of(resultCode: String, msg: String?): RsData<T?> =
-            RsData(resultCode, msg, null)
+        fun <T> of(resultCode: String, msg: String): RsData<T?> = RsData(resultCode, msg, null)
     }
 }

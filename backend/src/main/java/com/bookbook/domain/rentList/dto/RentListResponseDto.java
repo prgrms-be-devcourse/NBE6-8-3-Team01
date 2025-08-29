@@ -1,6 +1,5 @@
 package com.bookbook.domain.rentList.dto;
 
-import com.bookbook.domain.rentList.entity.RentList;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

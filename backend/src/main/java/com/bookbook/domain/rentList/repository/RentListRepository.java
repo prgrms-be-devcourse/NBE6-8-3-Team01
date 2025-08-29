@@ -1,6 +1,5 @@
 package com.bookbook.domain.rentList.repository;
 //08-06 유효상
-import com.bookbook.domain.rentList.entity.RentList;
 import com.bookbook.domain.rentList.entity.RentRequestStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

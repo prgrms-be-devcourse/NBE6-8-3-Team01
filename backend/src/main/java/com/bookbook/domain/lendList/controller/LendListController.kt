@@ -1,0 +1,89 @@
+package com.bookbook.domain.lendList.controller
+
+import com.bookbook.domain.lendList.dto.LendListResponseDto
+import com.bookbook.domain.lendList.service.LendListService
+import com.bookbook.domain.review.dto.ReviewCreateRequestDto
+import com.bookbook.domain.review.dto.ReviewResponseDto
+import com.bookbook.domain.review.service.ReviewService
+import com.bookbook.global.rsdata.RsData
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
+import org.springframework.data.web.PageableDefault
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.*
+
+/**
+ * 내가 등록한 도서 목록 관리 컨트롤러
+ *
+ * 사용자가 등록한 도서 게시글의 조회, 삭제 및 대여자가 대여받은 사람에게 리뷰를 작성하는 기능을 제공합니다.
+ */
+@RestController
+@RequestMapping("/api/v1/user/{userId}/lendlist")
+class LendListController(
+    private val lendListService: LendListService,
+    private val reviewService: ReviewService
+) {
+
+    /**
+     * 내가 등록한 도서 목록 조회 (검색 기능 포함)
+     *
+     * @param userId 사용자 ID
+     * @param search 검색어 (선택사항, 책 제목/저자/출판사/게시글 제목에서 검색)
+     * @param pageable 페이징 정보 (기본: 10개씩, 생성일 역순)
+     * @return 등록한 도서 게시글 목록
+     */
+    @GetMapping
+    fun getLendListByUserId(
+        @PathVariable userId: Long,
+        @RequestParam(required = false) search: String?,
+        @PageableDefault(size = 10, sort = ["createdDate"], direction = Sort.Direction.DESC) 
+        pageable: Pageable
+    ): ResponseEntity<RsData<Page<LendListResponseDto>>> {
+        val lendList = if (!search.isNullOrBlank()) {
+            lendListService.getLendListByUserIdAndSearch(userId, search, pageable)
+        } else {
+            lendListService.getLendListByUserId(userId, pageable)
+        }
+        
+        return ResponseEntity.ok(
+            RsData("200", "등록한 도서 목록을 조회했습니다.", lendList)
+        )
+    }
+
+    /**
+     * 내가 등록한 도서 게시글 삭제
+     *
+     * @param userId 사용자 ID (작성자 확인용)
+     * @param rentId 삭제할 도서 게시글 ID
+     * @return 204 No Content
+     */
+    @DeleteMapping("/{rentId}")
+    fun deleteLendList(
+        @PathVariable userId: Long,
+        @PathVariable rentId: Long
+    ): ResponseEntity<RsData<Void>> {
+        lendListService.deleteLendList(userId, rentId)
+        return ResponseEntity.ok(RsData("200", "도서 게시글을 삭제했습니다."))
+    }
+
+    /**
+     * 대여자가 대여받은 사람에게 리뷰 작성
+     *
+     * 거래 완료 후 도서를 빌려준 사람이 빌려간 사람을 평가하는 기능입니다.
+     *
+     * @param userId 대여자(리뷰 작성자) ID
+     * @param rentId 대여 게시글 ID
+     * @param request 리뷰 생성 요청 데이터 (평점 등)
+     * @return 생성된 리뷰 정보
+     */
+    @PostMapping("/{rentId}/review")
+    fun createLenderReview(
+        @PathVariable userId: Long,
+        @PathVariable rentId: Long,
+        @RequestBody request: ReviewCreateRequestDto
+    ): ResponseEntity<RsData<ReviewResponseDto>> {
+        val review = reviewService.createLenderReview(userId, rentId, request)
+        return ResponseEntity.ok(RsData("200", "리뷰를 작성했습니다.", review))
+    }
+}
