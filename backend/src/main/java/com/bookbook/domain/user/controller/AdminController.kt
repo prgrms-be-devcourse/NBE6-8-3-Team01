@@ -1,45 +1,40 @@
-package com.bookbook.domain.user.controller;
+package com.bookbook.domain.user.controller
 
-import com.bookbook.domain.user.dto.UserBaseDto;
-import com.bookbook.domain.user.dto.UserLoginRequestDto;
-import com.bookbook.domain.user.dto.response.UserDetailResponseDto;
-import com.bookbook.domain.user.dto.response.UserLoginResponseDto;
-import com.bookbook.domain.user.entity.User;
-import com.bookbook.domain.user.enums.UserStatus;
-import com.bookbook.domain.user.service.AdminService;
-import com.bookbook.global.rsdata.RsData;
-import com.bookbook.global.security.CustomOAuth2User;
-import com.bookbook.global.security.jwt.JwtProvider;
-import com.bookbook.global.jpa.dto.response.PageResponseDto;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import com.bookbook.domain.user.dto.request.UserLoginRequestDto
+import com.bookbook.domain.user.dto.response.UserDetailResponseDto
+import com.bookbook.domain.user.dto.response.UserLoginResponseDto
+import com.bookbook.domain.user.dto.response.UserSimpleResponseDto
+import com.bookbook.domain.user.enums.UserStatus
+import com.bookbook.domain.user.service.AdminService
+import com.bookbook.global.jpa.dto.response.PageResponseDto
+import com.bookbook.global.rsdata.RsData
+import com.bookbook.global.security.CustomOAuth2User
+import com.bookbook.global.security.jwt.JwtProvider
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.servlet.http.Cookie
+import jakarta.servlet.http.HttpServletResponse
+import jakarta.validation.Valid
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Pageable
+import org.springframework.http.ResponseEntity
+import org.springframework.security.core.annotation.AuthenticationPrincipal
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/api/v1/admin")
-@RequiredArgsConstructor
 @Tag(name = "AdminController", description = "어드민 전용 컨트롤러")
-public class AdminController {
-    private final AdminService adminService;
-    private final JwtProvider jwtProvider;
+class AdminController (
+    private val adminService: AdminService,
+    private val jwtProvider: JwtProvider,
 
-    @Value("${jwt.cookie.name}")
-    private String jwtAccessTokenCookieName;
+    @param:Value("\${jwt.cookie.name}")
+    private val jwtAccessTokenCookieName: String,
 
-    @Value("${jwt.cookie.refresh-name}")
-    private String jwtRefreshTokenCookieName;
+    @param:Value("\${jwt.cookie.refresh-name}")
+    private val jwtRefreshTokenCookieName: String
+){
 
     /**
      * 입력된 아이미와 비밀번호로 로그인을 진행합니다.
@@ -51,30 +46,31 @@ public class AdminController {
      */
     @PostMapping("/login")
     @Operation(summary = "어드민 로그인")
-    public ResponseEntity<RsData<UserLoginResponseDto>> adminLogin(
-            @Valid @RequestBody UserLoginRequestDto requestDto,
-            HttpServletResponse response
-    ) {
-        User admin = adminService.login(requestDto);
+    fun adminLogin(
+        @RequestBody requestDto: @Valid UserLoginRequestDto,
+        response: HttpServletResponse
+    ): ResponseEntity<RsData<UserLoginResponseDto>> {
+        val admin = adminService.login(requestDto.username, requestDto.password)
 
-        String accessToken = jwtProvider.generateAccessToken(
-                admin.getId(),
-                admin.getUsername(),
-                admin.getRole().toString()
-        );
-        String refreshToken = jwtProvider.generateRefreshToken(admin.getId());
+        val accessToken = jwtProvider.generateAccessToken(
+            admin.id,
+            admin.username,
+            admin.role.toString()
+        )
+        val refreshToken = jwtProvider.generateRefreshToken(admin.id)
 
-        setCookie(response, jwtAccessTokenCookieName, accessToken, jwtProvider.getAccessTokenValidityInSeconds());
-        setCookie(response, jwtRefreshTokenCookieName, refreshToken, jwtProvider.getRefreshTokenValidityInSeconds());
+        setCookie(response, jwtAccessTokenCookieName, accessToken, jwtProvider.accessTokenValidityInSeconds)
+        setCookie(response, jwtRefreshTokenCookieName, refreshToken, jwtProvider.refreshTokenValidityInSeconds)
 
-        UserLoginResponseDto userLoginResponseDto = UserLoginResponseDto.from(admin);
+        val userLoginResponseDto = UserLoginResponseDto(admin)
 
         return ResponseEntity.ok(
-                RsData.of(
-                    "200-1",
-                    "관리자 %s님이 로그인하였습니다.".formatted(admin.getUsername()),
-                    userLoginResponseDto
-        ));
+            RsData(
+                "200-1",
+                "관리자 ${admin.username}님이 로그인하였습니다.",
+                userLoginResponseDto
+            )
+        )
     }
 
     /**
@@ -86,20 +82,20 @@ public class AdminController {
      */
     @DeleteMapping("/logout")
     @Operation(summary = "어드민 로그아웃")
-    public ResponseEntity<RsData<Void>> adminLogout(
-            @AuthenticationPrincipal CustomOAuth2User currentUser,
-            HttpServletResponse response
-    ) {
-        invalidateCookie(response, jwtAccessTokenCookieName);
-        invalidateCookie(response, jwtRefreshTokenCookieName);
+    fun adminLogout(
+        @AuthenticationPrincipal currentUser: CustomOAuth2User?,
+        response: HttpServletResponse
+    ): ResponseEntity<RsData<Void>> {
+        invalidateCookie(response, jwtAccessTokenCookieName)
+        invalidateCookie(response, jwtRefreshTokenCookieName)
 
-        if (currentUser != null) {
-            jwtProvider.deleteRefreshToken(currentUser.userId);
+        currentUser?.let {
+            jwtProvider.deleteRefreshToken(currentUser.userId)
         }
 
         return ResponseEntity.ok(
-                RsData.of("200-1", "로그아웃을 정상적으로 완료했습니다.")
-        );
+            RsData("200-1", "로그아웃을 정상적으로 완료했습니다.")
+        )
     }
 
     /**
@@ -110,23 +106,25 @@ public class AdminController {
      */
     @GetMapping("/users/{userId}")
     @Operation(summary = "유저 상세 정보 조회")
-    public ResponseEntity<RsData<UserDetailResponseDto>> getUserDetail(
-            @PathVariable Long userId
-    ) {
-        UserDetailResponseDto specificUserInfo = adminService.getSpecificUserInfo(userId);
+    fun getUserDetail(
+        @PathVariable userId: Long
+    ): ResponseEntity<RsData<UserDetailResponseDto>> {
+        val userInfo = adminService.getSpecificUserInfo(userId)
 
         return ResponseEntity.ok(
-                RsData.of(
-                        "200-1",
-                        "%s 유저의 정보를 찾았습니다.".formatted(specificUserInfo.baseResponseDto().nickname()),
-                        specificUserInfo
-                ));
+            RsData(
+                "200-1",
+                "유저 \"${userInfo.nickname}\"님의 정보를 찾았습니다.",
+                userInfo
+            )
+        )
     }
 
     /**
      * 유저 목록을 가져옵니다.
      *
-     * <p>페이지 번호와 사이즈의 조합, 그리고 신고 처리 상태와
+     *
+     * 페이지 번호와 사이즈의 조합, 그리고 신고 처리 상태와
      * 신고 대상자 ID를 기반으로 필터링된 페이지를 가져올 수 있습니다.
      *
      * @param page 페이지 번호
@@ -137,24 +135,24 @@ public class AdminController {
      */
     @GetMapping("/users")
     @Operation(summary = "유저 목록 조회")
-    public ResponseEntity<RsData<PageResponseDto<UserBaseDto>>> getFilteredUsers(
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "10") Integer size,
-            @RequestParam(required = false) List<UserStatus> status,
-            @RequestParam(required = false) Long userId
-    ) {
-        Pageable pageable = PageRequest.of(page - 1, size);
+    fun getFilteredUsers(
+        @RequestParam(defaultValue = "1") page: Int,
+        @RequestParam(defaultValue = "10") size: Int,
+        @RequestParam(required = false) status: MutableList<UserStatus>?,
+        @RequestParam(required = false) userId: Long?
+    ): ResponseEntity<RsData<PageResponseDto<UserSimpleResponseDto>>> {
+        val pageable: Pageable = PageRequest.of(page - 1, size)
 
-        Page<UserBaseDto> userPage = adminService.getFilteredUsers(pageable, status, userId);
-        PageResponseDto<UserBaseDto> response = new PageResponseDto<>(userPage);
+        val userPage= adminService.getFilteredUsers(pageable, status, userId)
+        val response = PageResponseDto(userPage)
 
         return ResponseEntity.ok(
-                RsData.of(
-                        "200-1",
-                        "해당 조건에 맞는 %d명의 유저를 찾았습니다.".formatted(userPage.getTotalElements()),
-                        response
-                )
-        );
+            RsData(
+                "200-1",
+                "해당 조건에 맞는 ${response.pageInfo.totalElements}명의 유저를 찾았습니다.",
+                response
+            )
+        )
     }
 
     /**
@@ -165,18 +163,20 @@ public class AdminController {
      * @param token 토큰 값
      * @param maxAge 토큰 유효 기간(초)
      */
-    private void setCookie(
-            HttpServletResponse response,
-            String tokenName,
-            String token,
-            Integer maxAge
+    private fun setCookie(
+        response: HttpServletResponse,
+        tokenName: String,
+        token: String?,
+        maxAge: Int
     ) {
-        Cookie cookie = new Cookie(tokenName, token);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(false);
-        cookie.setPath("/");
-        cookie.setMaxAge(maxAge);
-        response.addCookie(cookie);
+        val cookie = Cookie(tokenName, token).apply {
+            isHttpOnly = true
+            secure = false
+            path = "/"
+            this.maxAge = maxAge
+        }
+
+        response.addCookie(cookie)
     }
 
     /**
@@ -186,12 +186,7 @@ public class AdminController {
      * @param response 응답 정보
      * @param tokenName 토큰 명
      */
-    private void invalidateCookie(HttpServletResponse response, String tokenName) {
-        Cookie cookie = new Cookie(tokenName, null);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(false);
-        cookie.setPath("/");
-        cookie.setMaxAge(0);
-        response.addCookie(cookie);
+    private fun invalidateCookie(response: HttpServletResponse, tokenName: String) {
+        setCookie(response, tokenName, null, 0)
     }
 }
