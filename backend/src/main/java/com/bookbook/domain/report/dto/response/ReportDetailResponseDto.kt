@@ -17,7 +17,6 @@ data class ReportDetailResponseDto(
     val reviewedDate: LocalDateTime?
 ) {
     companion object {
-        @JvmStatic
         fun from(report: Report): ReportDetailResponseDto {
             val closerId = report.closer?.id
 

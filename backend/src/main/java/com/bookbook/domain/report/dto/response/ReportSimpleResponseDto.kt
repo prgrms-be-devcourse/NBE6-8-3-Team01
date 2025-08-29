@@ -12,7 +12,6 @@ data class ReportSimpleResponseDto(
     val createdDate: LocalDateTime
 ) {
     companion object {
-        @JvmStatic
         fun from(report: Report): ReportSimpleResponseDto {
             return ReportSimpleResponseDto(
                 id = report.id ?: 0,
