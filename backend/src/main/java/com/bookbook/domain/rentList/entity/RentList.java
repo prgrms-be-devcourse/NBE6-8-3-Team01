@@ -15,17 +15,17 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 public class RentList extends BaseEntity {
-    
+
     private LocalDateTime loanDate;
     private LocalDateTime returnDate;
-    
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RentRequestStatus status = RentRequestStatus.PENDING;
-    
+
     @ManyToOne
     private User borrowerUser;
-    
+
     @ManyToOne
     private Rent rent;
 }

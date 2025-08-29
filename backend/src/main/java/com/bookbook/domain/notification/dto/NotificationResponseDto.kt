@@ -57,10 +57,10 @@ data class NotificationResponseDto(
 
         // 이미지 URL 포맷팅 - 디버깅 로그 추가
         private fun formatImageUrl(imageUrl: String?): String {
-            println("🖼️ formatImageUrl 호출 - 원본 URL: $imageUrl")
+            println("️ formatImageUrl 호출 - 원본 URL: $imageUrl")
 
             if (imageUrl.isNullOrBlank()) {
-                println("❌ 이미지 URL이 null 또는 빈 문자열")
+                println(" 이미지 URL이 null 또는 빈 문자열")
                 return "" // 빈 문자열로 반환 - 프론트엔드에서 placeholder 처리
             }
 
@@ -68,25 +68,25 @@ data class NotificationResponseDto(
             val result = when {
                 // 이미 완전한 URL인 경우 그대로 반환
                 trimmedUrl.startsWith("http://") || trimmedUrl.startsWith("https://") -> {
-                    println("✅ 완전한 URL - 그대로 사용: $trimmedUrl")
+                    println(" 완전한 URL - 그대로 사용: $trimmedUrl")
                     trimmedUrl
                 }
 
                 trimmedUrl.startsWith("/") -> {
                     val url = "http://localhost:8080$trimmedUrl"
-                    println("🔧 절대경로 변환: $url")
+                    println(" 절대경로 변환: $url")
                     url
                 }
 
                 trimmedUrl.startsWith("uploads/") -> {
                     val url = "http://localhost:8080/$trimmedUrl"
-                    println("🔧 uploads 경로 변환: $url")
+                    println(" uploads 경로 변환: $url")
                     url
                 }
 
                 else -> {
                     val url = "http://localhost:8080/uploads/$trimmedUrl"
-                    println("🔧 파일명만 있음 - uploads 폴더에서 찾기: $url")
+                    println(" 파일명만 있음 - uploads 폴더에서 찾기: $url")
                     url
                 }
             }

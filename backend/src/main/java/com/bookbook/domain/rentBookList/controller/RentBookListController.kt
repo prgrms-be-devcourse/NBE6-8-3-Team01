@@ -45,7 +45,7 @@ class RentBookListController(
             )
         )
 
-        return RsData.of("200-1", "대여 가능한 책 목록을 조회했습니다.", response)
+        return RsData("200-1", "대여 가능한 책 목록을 조회했습니다.", data = response)
     }
 
     @GetMapping("/{rentId}")
@@ -57,7 +57,7 @@ class RentBookListController(
 
         val bookDetail = rentBookListService.getBookDetail(rentId)
 
-        return RsData.of("200-3", "책 상세 정보를 조회했습니다.", bookDetail)
+        return RsData("200-3", "책 상세 정보를 조회했습니다.", data = bookDetail)
     }
 
     @PostMapping("/{rentId}/request")
@@ -70,7 +70,7 @@ class RentBookListController(
 
         rentBookListService.requestRent(rentId, requestDto.message)
 
-        return RsData.of("200-1", "대여 신청이 완료되었습니다.")
+        return RsData("200-1", "대여 신청이 완료되었습니다.", data = null)
     }
 
     @GetMapping("/regions")
@@ -80,7 +80,7 @@ class RentBookListController(
 
         val regions = rentBookListService.getRegions()
 
-        return RsData.of("200-1", "지역 목록을 조회했습니다.", regions)
+        return RsData("200-1", "지역 목록을 조회했습니다.", data = regions)
     }
 
     @GetMapping("/categories")
@@ -90,6 +90,6 @@ class RentBookListController(
 
         val categories = rentBookListService.getCategories()
 
-        return RsData.of("200-1", "카테고리 목록을 조회했습니다.", categories)
+        return RsData("200-1", "카테고리 목록을 조회했습니다.", data = categories)
     }
 }

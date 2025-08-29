@@ -14,6 +14,12 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 //08-29 유효상
+//
+// TODO: 이후 리팩토링 필요 - 다른 도메인들이 Kotlin으로 변환되면 수정 필요한 부분들:
+// 1. RentList.java → RentList.kt 변환 시: Reflection 코드 제거하고 직접 필드 접근으로 변경
+// 2. User.java → User.kt 변환 시: 필드 접근 방식 확인
+// 3. Rent.java → Rent.kt 변환 시: 필드 접근 방식 확인
+//
 @Service
 class NotificationService(
     private val notificationRepository: NotificationRepository,
@@ -124,7 +130,7 @@ class NotificationService(
         val rent = rentRepository.findById(rentId)
             .orElseThrow { RuntimeException("대여 게시글을 찾을 수 없습니다. ID: $rentId") }
 
-        // 📝 수정된 부분: 특정 알림의 발송자(신청자)와 일치하는 RentList 조회
+        //  수정된 부분: 특정 알림의 발송자(신청자)와 일치하는 RentList 조회
         val requester = notification.sender // 알림을 발생시킨 사용자 (신청자)
 
         val detail = mutableMapOf<String, Any?>().apply {
@@ -134,7 +140,7 @@ class NotificationService(
             put("rentStatus", rent.rentStatus?.description)
         }
 
-        // 🆕 처리 가능 여부 추가
+        //  처리 가능 여부 추가
         var isProcessable = true
         var processStatus = "PENDING"
 
@@ -146,21 +152,24 @@ class NotificationService(
             if (requesterRentLists.isNotEmpty()) {
                 // 가장 최근 신청의 상태 확인
                 val latestRentList = requesterRentLists.last()
-                // Lombok getter methods are not recognized in Kotlin, using reflection or alternative approach
+                
                 detail["rentListId"] = latestRentList.id
                 detail["requesterNickname"] = requester.nickname
                 detail["requestDate"] = latestRentList.createdDate
-                // TODO: loanDate and returnDate access needs Java interop fix
-                detail["loanDate"] = null // latestRentList.loanDate 
-                detail["returnDate"] = null // latestRentList.returnDate
+                
+                // TODO: [다른 팀원 파트] RentList.java가 Kotlin으로 변환되면 아래 코드들을 수정 필요
+                // 현재: Java + Lombok이라서 Kotlin에서 직접 접근 불가
+                // 변환 후: 직접 필드 접근 가능 (latestRentList.loanDate, latestRentList.returnDate, latestRentList.status)
+                detail["loanDate"] = null // 임시: latestRentList.loanDate 접근 불가
+                detail["returnDate"] = null // 임시: latestRentList.returnDate 접근 불가
 
-                // 🆕 처리 상태 확인 - using reflection to get status
+                //  처리 상태 확인 - Reflection으로 Java Lombok 필드 접근 (임시방편)
                 val status = try {
                     val statusField = latestRentList.javaClass.getDeclaredField("status")
                     statusField.isAccessible = true
                     statusField.get(latestRentList) as RentRequestStatus
                 } catch (e: Exception) {
-                    log.error("Failed to access status field: {}", e.message)
+                    log.error("RentList status 필드 접근 실패 (Reflection): {}", e.message)
                     RentRequestStatus.PENDING
                 }
                 when (status) {
@@ -175,7 +184,7 @@ class NotificationService(
                     }
 
                     else -> {
-                        // 🆕 PENDING 상태여도 책이 이미 대여 중이면 처리 불가
+                        //  PENDING 상태여도 책이 이미 대여 중이면 처리 불가
                         if (rent.rentStatus == RentStatus.LOANED) {
                             isProcessable = false
                             processStatus = "BOOK_ALREADY_LOANED" // 다른 사람에게 대여됨
@@ -211,7 +220,7 @@ class NotificationService(
             processStatus = "NO_SENDER"
         }
 
-        // 🆕 처리 가능 여부 정보 추가
+        //  처리 가능 여부 정보 추가
         detail["isProcessable"] = isProcessable
         detail["processStatus"] = processStatus
 

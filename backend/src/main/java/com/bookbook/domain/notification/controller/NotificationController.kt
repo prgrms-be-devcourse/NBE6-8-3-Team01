@@ -31,12 +31,12 @@ class NotificationController(
         // 로그인하지 않은 경우
         if (customOAuth2User == null) {
             log.warn("customOAuth2User가 null입니다.")
-            return RsData("401-1", "로그인 후 사용해주세요.", null)
+            return RsData("401-1", "로그인 후 사용해주세요.", data = null)
         }
 
         if (customOAuth2User.userId == null) {
             log.warn("customOAuth2User.getUserId()가 null입니다.")
-            return RsData("401-1", "로그인 후 사용해주세요.", null)
+            return RsData("401-1", "로그인 후 사용해주세요.", data = null)
         }
 
         log.info(
@@ -49,7 +49,7 @@ class NotificationController(
             val user = userService.findById(customOAuth2User.userId)
             if (user == null) {
                 log.error("사용자 ID {}에 해당하는 사용자를 찾을 수 없습니다.", customOAuth2User.userId)
-                return RsData("404-1", "사용자 정보를 찾을 수 없습니다.", null)
+                return RsData("404-1", "사용자 정보를 찾을 수 없습니다.", data = null)
             }
 
             log.info("사용자 조회 성공: {}", user.nickname)
@@ -57,7 +57,7 @@ class NotificationController(
             val notifications = notificationService.getNotificationsByUser(user)
             log.info("알림 조회 성공: {} 개의 알림 반환", notifications.size)
 
-            val response: RsData<List<NotificationResponseDto>?> = RsData("200-1", "알림 목록을 조회했습니다.", notifications)
+            val response: RsData<List<NotificationResponseDto>?> = RsData("200-1", "알림 목록을 조회했습니다.", data = notifications)
             log.info(
                 "응답 데이터 생성 완료: resultCode={}, dataSize={}",
                 response.resultCode,
@@ -67,7 +67,7 @@ class NotificationController(
             response
         } catch (e: Exception) {
             log.error("알림 조회 중 오류 발생: {}", e.message, e)
-            RsData("500-1", "알림 조회 중 오류가 발생했습니다.", null)
+            RsData("500-1", "알림 조회 중 오류가 발생했습니다.", data = null)
         }
     }
 
@@ -78,14 +78,14 @@ class NotificationController(
         @AuthenticationPrincipal customOAuth2User: CustomOAuth2User?
     ): RsData<Long?> {
         if (customOAuth2User?.userId == null) {
-            return RsData("401-1", "로그인 후 사용해주세요.", null)
+            return RsData("401-1", "로그인 후 사용해주세요.", data = null)
         }
 
         val user = userService.findById(customOAuth2User.userId)
-            ?: return RsData("404-1", "사용자 정보를 찾을 수 없습니다.", null)
+            ?: return RsData("404-1", "사용자 정보를 찾을 수 없습니다.", data = null)
 
         val count = notificationService.getUnreadCount(user)
-        return RsData("200-1", "읽지 않은 알림 개수를 조회했습니다.", count)
+        return RsData("200-1", "읽지 않은 알림 개수를 조회했습니다.", data = count)
     }
 
     @Transactional
@@ -96,18 +96,18 @@ class NotificationController(
         @AuthenticationPrincipal customOAuth2User: CustomOAuth2User?
     ): RsData<Void?> {
         if (customOAuth2User?.userId == null) {
-            return RsData("401-1", "로그인 후 사용해주세요.", null)
+            return RsData("401-1", "로그인 후 사용해주세요.", data = null)
         }
 
         val user = userService.findById(customOAuth2User.userId)
-            ?: return RsData("404-1", "사용자 정보를 찾을 수 없습니다.", null)
+            ?: return RsData("404-1", "사용자 정보를 찾을 수 없습니다.", data = null)
 
         return try {
             notificationService.markAsRead(id, user)
-            RsData.of("200-1", "알림을 읽음 처리했습니다.")
+            RsData("200-1", "알림을 읽음 처리했습니다.", data = null)
         } catch (e: RuntimeException) {
             log.error("알림 읽음 처리 실패: {}", e.message)
-            RsData.of("400-1", e.message)
+            RsData("400-1", e.message, data = null)
         }
     }
 
@@ -118,14 +118,14 @@ class NotificationController(
         @AuthenticationPrincipal customOAuth2User: CustomOAuth2User?
     ): RsData<Void?> {
         if (customOAuth2User?.userId == null) {
-            return RsData("401-1", "로그인 후 사용해주세요.", null)
+            return RsData("401-1", "로그인 후 사용해주세요.", data = null)
         }
 
         val user = userService.findById(customOAuth2User.userId)
-            ?: return RsData("404-1", "사용자 정보를 찾을 수 없습니다.", null)
+            ?: return RsData("404-1", "사용자 정보를 찾을 수 없습니다.", data = null)
 
         notificationService.markAllAsRead(user)
-        return RsData.of("200-1", "모든 알림을 읽음 처리했습니다.")
+        return RsData("200-1", "모든 알림을 읽음 처리했습니다.", data = null)
     }
 
     @Transactional
@@ -136,18 +136,18 @@ class NotificationController(
         @AuthenticationPrincipal customOAuth2User: CustomOAuth2User?
     ): RsData<Void?> {
         if (customOAuth2User?.userId == null) {
-            return RsData("401-1", "로그인 후 사용해주세요.", null)
+            return RsData("401-1", "로그인 후 사용해주세요.", data = null)
         }
 
         val user = userService.findById(customOAuth2User.userId)
-            ?: return RsData("404-1", "사용자 정보를 찾을 수 없습니다.", null)
+            ?: return RsData("404-1", "사용자 정보를 찾을 수 없습니다.", data = null)
 
         return try {
             notificationService.deleteNotification(id, user)
-            RsData.of("200-1", "알림을 삭제했습니다.")
+            RsData("200-1", "알림을 삭제했습니다.", data = null)
         } catch (e: RuntimeException) {
             log.error("알림 삭제 실패: {}", e.message)
-            RsData.of("400-1", e.message)
+            RsData("400-1", e.message, data = null)
         }
     }
 
@@ -163,27 +163,27 @@ class NotificationController(
     fun getRentRequestDetail(
         @PathVariable id: Long,
         @AuthenticationPrincipal customOAuth2User: CustomOAuth2User?
-    ): RsData<Map<String, Any?>?> {
+    ): RsData<Map<String, Any?>> {
         log.info("===== 대여 신청 상세 정보 조회 API 호출 - 알림 ID: {} =====", id)
 
         if (customOAuth2User?.userId == null) {
             log.warn("인증되지 않은 사용자의 접근 시도")
-            return RsData("401-1", "로그인 후 사용해주세요.", null)
+            return RsData("401-1", "로그인 후 사용해주세요.", data = emptyMap())
         }
 
         val user = userService.findById(customOAuth2User.userId)
         if (user == null) {
             log.error("사용자 ID {}에 해당하는 사용자를 찾을 수 없습니다.", customOAuth2User.userId)
-            return RsData("404-1", "사용자 정보를 찾을 수 없습니다.", null)
+            return RsData("404-1", "사용자 정보를 찾을 수 없습니다.", data = emptyMap())
         }
 
         return try {
             val detail = notificationService.getRentRequestDetail(id, user)
             log.info("대여 신청 상세 정보 조회 성공 - 알림 ID: {}, 응답 데이터: {}", id, detail)
-            RsData.of("200-1", "대여 신청 상세 정보를 조회했습니다.", detail)
+            RsData("200-1", "대여 신청 상세 정보를 조회했습니다.", data = detail)
         } catch (e: RuntimeException) {
             log.error("대여 신청 상세 정보 조회 실패 - 알림 ID: {}, 오류: {}", id, e.message, e)
-            RsData.of("400-1", e.message, null)
+            RsData("400-1", e.message, data = emptyMap())
         }
     }
 }
