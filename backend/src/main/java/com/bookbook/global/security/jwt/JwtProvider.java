@@ -18,7 +18,6 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 @Slf4j
 @Component
@@ -89,11 +88,10 @@ public class JwtProvider {
                 .signWith(getSigningKey(), SignatureAlgorithm.HS512)
                 .compact();
 
-        // DB에 기존 리프레시 토큰이 있는지 확인하고 업데이트하거나 새로 저장
-        Optional<RefreshToken> existingToken = refreshTokenRepository.findByUserId(userId);
-        if (existingToken.isPresent()) {
-            RefreshToken refreshToken = existingToken.get();
-            refreshToken.updateToken(refreshTokenValue, LocalDateTime.ofInstant(validity.toInstant(), ZoneId.systemDefault()));
+        // 기존 리프레시 토큰이 있는지 확인
+        RefreshToken existingToken = refreshTokenRepository.findByUserId(userId);
+        if (existingToken != null) {
+            existingToken.updateToken(refreshTokenValue, LocalDateTime.ofInstant(validity.toInstant(), ZoneId.systemDefault()));
         } else {
             refreshTokenRepository.save(
                     new RefreshToken(
@@ -149,8 +147,10 @@ public class JwtProvider {
             Long userId = claims.get("userId", Long.class);
 
             // DB에 저장된 리프레시 토큰과 일치하는지, 만료되지 않았는지 확인
-            RefreshToken storedRefreshToken = refreshTokenRepository.findByToken(refreshTokenValue)
-                    .orElseThrow(() -> new ServiceException("401-REFRESH-TOKEN-NOT-FOUND", "유효하지 않은 리프레시 토큰입니다."));
+            RefreshToken storedRefreshToken = refreshTokenRepository.findByToken(refreshTokenValue);
+            if (storedRefreshToken == null) {
+                throw new ServiceException("401-REFRESH-TOKEN-NOT-FOUND", "유효하지 않은 리프레시 토큰입니다.");
+            }
 
             if (storedRefreshToken.getUserId() != userId.longValue()) {
                 throw new ServiceException("401-REFRESH-TOKEN-MISMATCH", "토큰 소유자가 일치하지 않습니다.");
