@@ -1,52 +1,49 @@
-package com.bookbook.domain.rentList.dto;
+package com.bookbook.domain.rentList.dto
 
-import com.bookbook.domain.rentList.entity.RentList;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+import com.bookbook.domain.rentList.entity.RentList
+import java.time.LocalDateTime
 
-import java.time.LocalDateTime;
-
-@Getter
-@AllArgsConstructor
-public class RentListResponseDto {
-    
-    private Long id;
-    private LocalDateTime loanDate;
-    private LocalDateTime returnDate;
-    private Long borrowerUserId;
-    private Long rentId;
-    private String title;
-    private String bookTitle;
-    private String author;
-    private String publisher;
-    private String bookCondition;
-    private String bookImage;
-    private String rentStatus;
-    private String address;
-    private String lenderNickname;
-    private LocalDateTime createdDate;
-    private LocalDateTime modifiedDate;
-    private boolean hasReview;
-
-    public static RentListResponseDto from(RentList rentList, String lenderNickname, boolean hasReview) {
-        return new RentListResponseDto(
-                rentList.getId(),
-                rentList.getLoanDate(),
-                rentList.getReturnDate(),
-                rentList.getBorrowerUser().getId(),
-                rentList.getRent().getId(),
-                rentList.getRent().getTitle(),
-                rentList.getRent().getBookTitle(),
-                rentList.getRent().getAuthor(),
-                rentList.getRent().getPublisher(),
-                rentList.getRent().getBookCondition(),
-                rentList.getRent().getBookImage(),
-                rentList.getStatus().name(),
-                rentList.getRent().getAddress(),
-                lenderNickname,
-                rentList.getCreatedDate(),
-                rentList.getModifiedDate(),
-                hasReview
-        );
-    }
+data class RentListResponseDto(
+    // Rent 엔티티에서 모든 필드들이 nullable인 상태임
+    val id: Long,
+    val loanDate: LocalDateTime,
+    val returnDate: LocalDateTime,
+    val borrowerUserId: Long,
+    val rentId: Long,
+    val title: String?,
+    val bookTitle: String?,
+    val author: String?,
+    val publisher: String?,
+    val bookCondition: String?,
+    val bookImage: String?,
+    val rentStatus: String,
+    val address: String?,
+    val lenderNickname: String?,
+    val createdDate: LocalDateTime,
+    val modifiedDate: LocalDateTime,
+    val hasReview: Boolean
+) {
+    constructor(
+        rentList: RentList, 
+        lenderNickname: String?, 
+        hasReview: Boolean
+    ) : this(
+        id = rentList.id,
+        loanDate = rentList.loanDate,
+        returnDate = rentList.returnDate,
+        borrowerUserId = rentList.borrowerUser.id,
+        rentId = rentList.rent.id,
+        title = rentList.rent.title,
+        bookTitle = rentList.rent.bookTitle,
+        author = rentList.rent.author,
+        publisher = rentList.rent.publisher,
+        bookCondition = rentList.rent.bookCondition,
+        bookImage = rentList.rent.bookImage,
+        rentStatus = rentList.status.name,
+        address = rentList.rent.address,
+        lenderNickname = lenderNickname,
+        createdDate = rentList.createdDate,
+        modifiedDate = rentList.modifiedDate,
+        hasReview = hasReview
+    )
 }
