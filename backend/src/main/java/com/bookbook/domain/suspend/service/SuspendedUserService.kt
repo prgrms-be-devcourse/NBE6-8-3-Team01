@@ -30,7 +30,8 @@ class SuspendedUserService(
      */
     @Transactional
     fun addUserAsSuspended(requestDto: UserSuspendRequestDto): SuspendedUser {
-        val user = userService.getByIdOrThrow(requestDto.userId)
+        val user = userService.findById(requestDto.userId)
+            ?: throw ServiceException("404-1", "해당 유저는 존재하지 않습니다")
 
         // 현재 정지 중인지 확인하고 정지 중이면 중단
         checkUserIsSuspended(user)
@@ -68,7 +69,8 @@ class SuspendedUserService(
      */
     @Transactional
     fun resumeUser(userId: Long): User {
-        val user = userService.getByIdOrThrow(userId)
+        val user = userService.findById(userId)
+            ?: throw ServiceException("404-1", "존재하지 않는 사용자입니다.")
 
         checkUserIsActive(user)
 
@@ -84,9 +86,8 @@ class SuspendedUserService(
      * @throws ServiceException (409) 해당 유저가 이미 활동 중일 때
      */
     private fun checkUserIsActive(user: User) {
-        if (user.userStatus == UserStatus.ACTIVE) {
+        if (user.userStatus == UserStatus.ACTIVE)
             throw ServiceException("409-1", "해당 유저의 정지가 이미 해제되어 있습니다")
-        }
     }
 
     /**
@@ -96,8 +97,7 @@ class SuspendedUserService(
      * @throws ServiceException (409) 해당 유저가 이미 정지되어 있을 때
      */
     private fun checkUserIsSuspended(user: User) {
-        if (user.isSuspended) {
+        if (user.isSuspended)
             throw ServiceException("409-1", "이 유저는 이미 정지 중입니다.")
-        }
     }
 }
