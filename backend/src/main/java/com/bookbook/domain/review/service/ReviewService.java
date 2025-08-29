@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -53,7 +54,7 @@ public class ReviewService {
                 .orElseThrow(() -> new IllegalArgumentException("대여 게시글을 찾을 수 없습니다. rentId: " + rentId));
         
         // 본인이 작성한 글인지 확인
-        if (!rent.getLenderUserId().equals(lenderId)) {
+        if (!Objects.equals(rent.getLenderUserId(), lenderId)) {
             throw new IllegalArgumentException("본인이 작성한 게시글에만 리뷰를 작성할 수 있습니다.");
         }
 
@@ -119,7 +120,7 @@ public class ReviewService {
         // 본인이 해당 도서를 대여했는지 확인
         boolean isBorrower = rentListRepository.findByRentId(rentId)
                 .stream()
-                .anyMatch(rl -> rl.getBorrowerUser().getId() == borrowerId);
+                .anyMatch(rl -> Objects.equals(rl.getBorrowerUser().getId(), borrowerId));
 
         if (!isBorrower) {
             throw new IllegalArgumentException("해당 도서를 대여한 사용자만 리뷰를 작성할 수 있습니다.");
