@@ -8,16 +8,16 @@ import java.time.LocalDateTime
 
 @Entity
 class RentList(
-    @ManyToOne
-    var borrowerUser: User? = null,
-    
-    @ManyToOne
-    var rent: Rent? = null,
-    
-    var loanDate: LocalDateTime? = null,
-    var returnDate: LocalDateTime? = null,
+    var loanDate: LocalDateTime,
+    var returnDate: LocalDateTime,
     
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     var status: RentRequestStatus = RentRequestStatus.PENDING
-) : BaseEntity()
+) : BaseEntity() {
+    
+    @ManyToOne
+    lateinit var borrowerUser: User
+    
+    @ManyToOne  
+    lateinit var rent: Rent
+}
