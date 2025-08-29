@@ -36,15 +36,15 @@ class ReportService(
             throw ServiceException("400-REPORT-SELF", "자기 자신을 신고할 수 없습니다.")
         }
 
-        val reporterUser = userRepository.findById(reporterUserId)
+        userRepository.findById(reporterUserId)
             .orElseThrow { ServiceException("404-USER-NOT-FOUND", "신고한 사용자를 찾을 수 없습니다.") }
 
-        val targetUser = userRepository.findById(targetUserId)
+        userRepository.findById(targetUserId)
             .orElseThrow { ServiceException("404-USER-NOT-FOUND", "신고 대상 사용자를 찾을 수 없습니다.") }
 
         val report = Report(
-            reporterUser,
-            targetUser,
+            reporterUserId,
+            targetUserId,
             reason
         )
 
