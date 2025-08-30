@@ -1,6 +1,6 @@
 package com.bookbook.domain.rent.service
 
-import com.bookbook.domain.rent.dto.BookSearchResponseDto
+import com.bookbook.domain.rent.dto.response.BookSearchResponseDto
 import com.bookbook.global.exception.ServiceException
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
@@ -17,7 +17,7 @@ class BookSearchService {
 
     private val restTemplate = RestTemplate()
     private val objectMapper = ObjectMapper()
-    
+
     companion object {
         private val log = LoggerFactory.getLogger(BookSearchService::class.java)
     }

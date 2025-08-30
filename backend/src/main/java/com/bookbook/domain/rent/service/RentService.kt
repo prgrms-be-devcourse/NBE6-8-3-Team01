@@ -2,11 +2,10 @@ package com.bookbook.domain.rent.service
 
 import com.bookbook.domain.notification.enums.NotificationType
 import com.bookbook.domain.notification.service.NotificationService
-import com.bookbook.domain.rent.dto.RentAvailableResponseDto
-import com.bookbook.domain.rent.dto.RentRequestDto
-import com.bookbook.domain.rent.dto.RentResponseDto
-import com.bookbook.domain.rent.dto.request.ChangeRentStatusRequestDto
+import com.bookbook.domain.rent.dto.request.RentRequestDto
+import com.bookbook.domain.rent.dto.response.RentAvailableResponseDto
 import com.bookbook.domain.rent.dto.response.RentDetailResponseDto
+import com.bookbook.domain.rent.dto.response.RentResponseDto
 import com.bookbook.domain.rent.dto.response.RentSimpleResponseDto
 import com.bookbook.domain.rent.entity.Rent
 import com.bookbook.domain.rent.entity.RentStatus
