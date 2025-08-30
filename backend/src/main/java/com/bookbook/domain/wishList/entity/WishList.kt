@@ -8,12 +8,11 @@ import jakarta.persistence.*
 
 @Entity
 class WishList(
-    // TODO: Rent 도메인이 코틀린으로 마이그레이션되면 된 후에 non-null로 변경
-    @ManyToOne
-    var user: User? = null, // 찜한 사용자 (위시리스트의 주인)
+    @ManyToOne(fetch = FetchType.LAZY)
+    val user: User,
 
-    @ManyToOne
-    var rent: Rent? = null, // 찜한 도서 (대여 게시글)
+    @ManyToOne(fetch = FetchType.LAZY)
+    val rent: Rent,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
