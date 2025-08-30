@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonFormat
 import java.time.LocalDateTime
 
 data class ChatRoomResponse(
-    val id: Long?,
+    val id: Long,
     val roomId: String,
     val rentId: Long,
     val bookTitle: String?,

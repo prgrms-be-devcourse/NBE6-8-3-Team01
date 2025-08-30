@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import java.time.LocalDateTime
 
 data class MessageResponse(
-    val id: Long?,
+    val id: Long,
     val roomId: String,
     val senderId: Long,
     val senderNickname: String?,

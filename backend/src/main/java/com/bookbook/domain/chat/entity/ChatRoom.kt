@@ -1,16 +1,12 @@
 package com.bookbook.domain.chat.entity
 
-import com.bookbook.global.entity.BaseEntity
+import com.bookbook.global.jpa.entity.BaseEntity
 import jakarta.persistence.*
 import java.time.LocalDateTime
 
 @Entity
 @Table(name = "chat_room")
 class ChatRoom : BaseEntity() {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long? = null
-
     @Column(unique = true, nullable = false)
     var roomId: String = ""
 
@@ -35,9 +31,6 @@ class ChatRoom : BaseEntity() {
     var lastMessageTime: LocalDateTime? = null
 
     var lastMessage: String? = null
-
-    @Column(nullable = false)
-    var createdDate: LocalDateTime = LocalDateTime.now()
 
     // 채팅방이 특정 사용자에게 속하는지 확인
     fun belongsToUser(userId: Long?): Boolean {

@@ -1,17 +1,13 @@
 package com.bookbook.domain.chat.entity
 
 import com.bookbook.domain.chat.enums.MessageType
-import com.bookbook.global.entity.BaseEntity
+import com.bookbook.global.jpa.entity.BaseEntity
 import jakarta.persistence.*
 import java.time.LocalDateTime
 
 @Entity
 @Table(name = "chat_message")
 class ChatMessage : BaseEntity() {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long? = null
-
     @Column(nullable = false)
     var roomId: String = ""
 
@@ -29,9 +25,6 @@ class ChatMessage : BaseEntity() {
     var isRead: Boolean = false
 
     var readTime: LocalDateTime? = null
-
-    @Column(nullable = false)
-    var createdDate: LocalDateTime = LocalDateTime.now()
 
     // 메시지 읽음 처리
     fun markAsRead() {
