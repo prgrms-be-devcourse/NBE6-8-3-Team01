@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/bookbook/rent", "/api/v1/bookbook/rent") // 기존 경로와 API 경로 모두 지원
 @CrossOrigin(origins = ["http://localhost:3000"]) // 프론트엔드 CORS 허용
-class RentControllerKt(
+class RentController(
     private val rentService: RentService
 ) {
 
