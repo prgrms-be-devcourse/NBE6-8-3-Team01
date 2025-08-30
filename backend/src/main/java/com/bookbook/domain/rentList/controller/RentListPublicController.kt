@@ -46,9 +46,9 @@ class RentListPublicController(
     ): ResponseEntity<RsData<String?>> {
         log.info(
             "===== Public 대여 신청 수락/거절 API 호출 - RentList ID: {}, 결정: {} =====",
-            rentListId, if (decision.isApproved()) "수락" else "거절"
+            rentListId, if (decision.approved) "수락" else "거절"
         )
-        log.info("===== 디버깅: decision.isApproved() 값: {} =====", decision.isApproved())
+        log.info("===== 디버깅: decision.approved 값: {} =====", decision.approved)
         log.info("===== 디버깅: decision.rejectionReason 값: {} =====", decision.rejectionReason)
 
         return try {
