@@ -232,7 +232,7 @@ class RentListService(
         
         val borrower = rentList.borrowerUser
         
-        return if (decision.isApproved) {
+        return if (decision.approved) {
             // 수락 처리
             rentList.status = RentRequestStatus.APPROVED
             rent.rentStatus = RentStatus.LOANED

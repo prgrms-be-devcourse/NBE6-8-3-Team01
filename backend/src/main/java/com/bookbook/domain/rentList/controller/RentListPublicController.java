@@ -48,6 +48,8 @@ public class RentListPublicController {
     ) {
         log.info("===== Public 대여 신청 수락/거절 API 호출 - RentList ID: {}, 결정: {} =====", 
                 rentListId, decision.isApproved() ? "수락" : "거절");
+        log.info("===== 디버깅: decision.isApproved() 값: {} =====", decision.isApproved());
+        log.info("===== 디버깅: decision.getRejectionReason() 값: {} =====", decision.getRejectionReason());
         
         try {
             // JWT 토큰 추출
