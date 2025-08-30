@@ -26,7 +26,7 @@ class RentBookListController(
         @RequestParam(required = false) region: String?,
         @RequestParam(required = false) category: String?,
         @RequestParam(required = false) search: String?
-    ): RsData<Map<String, Any>?> {
+    ): RsData<PageResponseDto<RentBookListResponseDto>?> {
         log.debug(
             "대여 가능한 책 목록 조회 - page: {}, size: {}, region: {}, category: {}, search: {}",
             page, size, region, category, search
@@ -36,19 +36,7 @@ class RentBookListController(
             page - 1, size, region, category, search
         )
 
-        // PageResponseDto를 사용하여 일관된 페이징 처리
-        val pageResponseDto = PageResponseDto(bookPage)
-
-        // 프론트엔드와의 호환성을 위해 기존 구조로 변환
-        val response = mapOf(
-            "books" to pageResponseDto.content,
-            "pagination" to mapOf(
-                "currentPage" to page,
-                "totalPages" to pageResponseDto.pageInfo.totalPages,
-                "totalElements" to pageResponseDto.pageInfo.totalElements,
-                "size" to size
-            )
-        )
+        val response = PageResponseDto(bookPage)
 
         return RsData("200-1", "대여 가능한 책 목록을 조회했습니다.", response)
     }
