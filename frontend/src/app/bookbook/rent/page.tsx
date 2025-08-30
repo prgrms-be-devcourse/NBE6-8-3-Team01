@@ -12,11 +12,12 @@ type FilterOptions = {
   searchKeyword: string;
 };
 
-// ✅ 페이지네이션 정보 타입
-type PaginationInfo = {
+// ✅ PageInfo 타입 (백엔드 PageResponseDto.PageInfo와 동일)
+type PageInfo = {
   currentPage: number;
   totalPages: number;
   totalElements: number;
+  currentPageElements: number;
   size: number;
 };
 
@@ -39,13 +40,13 @@ type Book = {
   modifiedDate?: string;   // 수정일
 };
 
-// ✅ API 응답 타입
+// ✅ 백엔드 PageResponseDto 구조에 맞춘 API 응답 타입
 type BooksApiResponse = {
   resultCode: string;
   msg: string;
   data: {
-    books: Book[];
-    pagination: PaginationInfo;
+    content: Book[];      // 기존 books → content로 변경
+    pageInfo: PageInfo;   // 기존 pagination → pageInfo로 변경
   };
   success: boolean;
 };
@@ -53,10 +54,11 @@ type BooksApiResponse = {
 export default function RentPage() {
   const router = useRouter(); // Next.js 라우터 추가
   const [books, setBooks] = useState<Book[]>([]);
-  const [pagination, setPagination] = useState<PaginationInfo>({
+  const [pageInfo, setPageInfo] = useState<PageInfo>({
     currentPage: 1,
     totalPages: 1,
     totalElements: 0,
+    currentPageElements: 0,
     size: 4 // 세로 레이아웃에 맞게 4개로 변경
   });
   const [loading, setLoading] = useState(false);
@@ -78,7 +80,7 @@ export default function RentPage() {
       // URL 파라미터 구성
       const params = new URLSearchParams({
         page: page.toString(),
-        size: pagination.size.toString(),
+        size: pageInfo.size.toString(),
         ...(filters.region !== 'all' && { region: filters.region }),
         ...(filters.category !== 'all' && { category: filters.category }),
         ...(filters.searchKeyword && { search: filters.searchKeyword })
@@ -101,7 +103,13 @@ export default function RentPage() {
         if (response.status === 404) {
           console.log('검색 결과 없음');
           setBooks([]);
-          setPagination(prev => ({ ...prev, currentPage: page, totalPages: 1, totalElements: 0 }));
+          setPageInfo(prev => ({ 
+            ...prev, 
+            currentPage: page, 
+            totalPages: 1, 
+            totalElements: 0,
+            currentPageElements: 0
+          }));
           return;
         }
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -111,16 +119,24 @@ export default function RentPage() {
       console.log('책 목록 API 응답 데이터:', data);
 
       if (data.success || data.resultCode?.startsWith('200')) {
-        setBooks(data.data?.books || []);
-        setPagination(data.data?.pagination || {
+        // ✅ PageResponseDto 구조에 맞게 수정
+        setBooks(data.data?.content || []);
+        setPageInfo(data.data?.pageInfo || {
           currentPage: page,
           totalPages: 1,
-          totalElements: data.data?.books?.length || 0,
-          size: pagination.size
+          totalElements: data.data?.content?.length || 0,
+          currentPageElements: data.data?.content?.length || 0,
+          size: pageInfo.size
         });
       } else {
         setBooks([]);
-        setPagination(prev => ({ ...prev, currentPage: page, totalPages: 1, totalElements: 0 }));
+        setPageInfo(prev => ({ 
+          ...prev, 
+          currentPage: page, 
+          totalPages: 1, 
+          totalElements: 0,
+          currentPageElements: 0
+        }));
       }
     } catch (err) {
       console.error('책 목록 조회 에러:', err);
@@ -131,7 +147,13 @@ export default function RentPage() {
         // API 연동 시도는 성공으로 간주하고 빈 데이터 처리
         console.log('API 연동 시도 완료, 빈 데이터로 처리');
         setBooks([]);
-        setPagination(prev => ({ ...prev, currentPage: page, totalPages: 1, totalElements: 0 }));
+        setPageInfo(prev => ({ 
+          ...prev, 
+          currentPage: page, 
+          totalPages: 1, 
+          totalElements: 0,
+          currentPageElements: 0
+        }));
       }
     } finally {
       setLoading(false);
@@ -149,7 +171,7 @@ export default function RentPage() {
 
   // 📄 페이지 변경 핸들러
   const handlePageChange = (page: number) => {
-    if (page < 1 || page > pagination.totalPages || loading) return;
+    if (page < 1 || page > pageInfo.totalPages || loading) return;
     console.log('페이지 변경:', page);
     fetchBooks(currentFilters, page);
   };
@@ -192,7 +214,7 @@ export default function RentPage() {
 
   // 개선된 페이지네이션 번호 생성 (5개씩 그룹)
   const generatePageNumbers = () => {
-    const { currentPage, totalPages } = pagination;
+    const { currentPage, totalPages } = pageInfo;
     const pageNumbers: number[] = [];
     
     // 현재 페이지가 속한 그룹 계산 (1-5, 6-10, 11-15...)
@@ -214,7 +236,7 @@ export default function RentPage() {
         <h1 className="text-3xl font-bold mb-2">📚 책 빌리러가기</h1>
         {!loading && (
           <p className="text-gray-600">
-            총 <span className="font-semibold text-blue-600">{pagination.totalElements}권</span>의 책이 있습니다.
+            총 <span className="font-semibold text-blue-600">{pageInfo.totalElements}권</span>의 책이 있습니다.
             {currentFilters.searchKeyword && (
               <span className="ml-2">
                 &quot;<span className="font-semibold">{currentFilters.searchKeyword}</span>&quot; 검색 결과
@@ -242,7 +264,7 @@ export default function RentPage() {
           <div className="flex flex-col items-center py-20 space-y-4">
             <div className="text-lg text-red-600 text-center">{error}</div>
             <button 
-              onClick={() => fetchBooks(currentFilters, pagination.currentPage)}
+              onClick={() => fetchBooks(currentFilters, pageInfo.currentPage)}
               className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
             >
               다시 시도
@@ -340,14 +362,14 @@ export default function RentPage() {
       </div>
 
       {/* 📄 개선된 페이지네이션 - 첫 페이지/마지막 페이지 이동 */}
-      {!loading && !error && pagination.totalPages > 1 && (
+      {!loading && !error && pageInfo.totalPages > 1 && (
         <div className="flex justify-center items-center gap-2 mt-12">
           {/* << (첫 페이지로) */}
           <button
             onClick={() => handlePageChange(1)}
-            disabled={pagination.currentPage === 1}
+            disabled={pageInfo.currentPage === 1}
             className={`w-12 h-10 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${
-              pagination.currentPage === 1
+              pageInfo.currentPage === 1
                 ? 'text-gray-300 cursor-not-allowed'
                 : 'text-gray-600 hover:bg-gray-100'
             }`}
@@ -358,10 +380,10 @@ export default function RentPage() {
 
           {/* < (이전 페이지) */}
           <button
-            onClick={() => handlePageChange(pagination.currentPage - 1)}
-            disabled={pagination.currentPage === 1}
+            onClick={() => handlePageChange(pageInfo.currentPage - 1)}
+            disabled={pageInfo.currentPage === 1}
             className={`w-10 h-10 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${
-              pagination.currentPage === 1
+              pageInfo.currentPage === 1
                 ? 'text-gray-300 cursor-not-allowed'
                 : 'text-gray-600 hover:bg-gray-100'
             }`}
@@ -376,7 +398,7 @@ export default function RentPage() {
               key={num}
               onClick={() => handlePageChange(num)}
               className={`w-10 h-10 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${
-                num === pagination.currentPage
+                num === pageInfo.currentPage
                   ? 'bg-blue-600 text-white'
                   : 'text-gray-600 hover:bg-gray-100'
               }`}
@@ -388,10 +410,10 @@ export default function RentPage() {
 
           {/* > (다음 페이지) */}
           <button
-            onClick={() => handlePageChange(pagination.currentPage + 1)}
-            disabled={pagination.currentPage === pagination.totalPages}
+            onClick={() => handlePageChange(pageInfo.currentPage + 1)}
+            disabled={pageInfo.currentPage === pageInfo.totalPages}
             className={`w-10 h-10 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${
-              pagination.currentPage === pagination.totalPages
+              pageInfo.currentPage === pageInfo.totalPages
                 ? 'text-gray-300 cursor-not-allowed'
                 : 'text-gray-600 hover:bg-gray-100'
             }`}
@@ -402,10 +424,10 @@ export default function RentPage() {
 
           {/* >> (마지막 페이지로) */}
           <button
-            onClick={() => handlePageChange(pagination.totalPages)}
-            disabled={pagination.currentPage === pagination.totalPages}
+            onClick={() => handlePageChange(pageInfo.totalPages)}
+            disabled={pageInfo.currentPage === pageInfo.totalPages}
             className={`w-12 h-10 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${
-              pagination.currentPage === pagination.totalPages
+              pageInfo.currentPage === pageInfo.totalPages
                 ? 'text-gray-300 cursor-not-allowed'
                 : 'text-gray-600 hover:bg-gray-100'
             }`}
@@ -419,8 +441,8 @@ export default function RentPage() {
       {/* 📊 페이지 정보 */}
       {!loading && !error && books.length > 0 && (
         <div className="text-center text-sm text-gray-500 mt-6">
-          {pagination.currentPage} / {pagination.totalPages} 페이지 
-          (총 {pagination.totalElements}권)
+          {pageInfo.currentPage} / {pageInfo.totalPages} 페이지 
+          (총 {pageInfo.totalElements}권)
         </div>
       )}
     </main>
