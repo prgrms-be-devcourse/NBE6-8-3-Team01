@@ -1,5 +1,3 @@
-// TODO: MessageType enum을 Kotlin으로 변환 후 import 경로 확인 필요
-// TODO: ChatMessage entity getter 메서드들이 Kotlin으로 변환되면 프로퍼티 접근으로 변경 필요
 package com.bookbook.domain.chat.dto
 
 import com.bookbook.domain.chat.entity.ChatMessage

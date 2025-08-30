@@ -1,5 +1,3 @@
-// TODO: MessageType enum을 Kotlin으로 변환 후 import 수정
-// TODO: User, Rent entity들이 Kotlin으로 변환되면 프로퍼티 접근으로 변경
 package com.bookbook.domain.chat.service
 
 import com.bookbook.domain.chat.dto.ChatRoomCreateRequest

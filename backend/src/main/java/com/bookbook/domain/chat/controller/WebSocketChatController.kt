@@ -1,4 +1,4 @@
-// CustomOAuth2User를 Kotlin으로 변환되면 프로퍼티 접근으로 변경
+// 08-30 CustomOAuth2User를 Kotlin으로 변환되어 프로퍼티 접근으로 변경
 package com.bookbook.domain.chat.controller
 
 import com.bookbook.domain.chat.dto.MessageSendRequest

@@ -1,4 +1,3 @@
-// TODO: User entity, CustomOAuth2User, JwtProvider를 Kotlin으로 변환되면 프로퍼티 접근으로 변경
 package com.bookbook.domain.chat.config
 
 import com.bookbook.domain.user.repository.UserRepository

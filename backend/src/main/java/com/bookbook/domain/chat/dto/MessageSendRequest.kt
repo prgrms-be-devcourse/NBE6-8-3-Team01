@@ -1,4 +1,3 @@
-// TODO: MessageType enum을 Kotlin으로 변환 후 import 경로 확인 필요
 package com.bookbook.domain.chat.dto
 
 import com.bookbook.domain.chat.enums.MessageType
