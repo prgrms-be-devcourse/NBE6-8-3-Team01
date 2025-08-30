@@ -3,6 +3,7 @@ package com.bookbook.domain.rentBookList.controller
 import com.bookbook.domain.rentBookList.dto.RentBookListResponseDto
 import com.bookbook.domain.rentBookList.dto.RentRequestDto
 import com.bookbook.domain.rentBookList.service.RentBookListService
+import com.bookbook.global.jpa.dto.response.PageResponseDto
 import com.bookbook.global.rsdata.RsData
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -35,12 +36,16 @@ class RentBookListController(
             page - 1, size, region, category, search
         )
 
+        // PageResponseDto를 사용하여 일관된 페이징 처리
+        val pageResponseDto = PageResponseDto(bookPage)
+
+        // 프론트엔드와의 호환성을 위해 기존 구조로 변환
         val response = mapOf(
-            "books" to bookPage.content,
+            "books" to pageResponseDto.content,
             "pagination" to mapOf(
                 "currentPage" to page,
-                "totalPages" to bookPage.totalPages,
-                "totalElements" to bookPage.totalElements,
+                "totalPages" to pageResponseDto.pageInfo.totalPages,
+                "totalElements" to pageResponseDto.pageInfo.totalElements,
                 "size" to size
             )
         )
