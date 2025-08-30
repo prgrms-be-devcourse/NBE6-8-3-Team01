@@ -32,8 +32,8 @@ class WishListService(
     fun getWishListByUserId(userId: Long): List<WishListResponseDto> {
         return wishListRepository.findByUserIdAndStatusOrderByCreatedDateDesc(userId, WishListStatus.ACTIVE)
             .map { wishList ->
-                // TODO: Rent 도메인이 코틀린으로 마이그레이션되면 실제 lenderNickname 조회
-                val lenderNickname = "임시 사용자" // userRepository.findById(wishList.rent.lenderUserId)?.nickname ?: "알 수 없음"
+                val lenderUser = userRepository.findById(wishList.rent.lenderUserId).orElse(null)
+                val lenderNickname = lenderUser?.nickname ?: "알 수 없음"
                 WishListResponseDto(wishList, lenderNickname)
             }
     }
@@ -50,7 +50,8 @@ class WishListService(
         
         if (searchKeyword.isBlank()) {
             return wishLists.map { wishList ->
-                val lenderNickname = "임시 사용자"
+                val lenderUser = userRepository.findById(wishList.rent.lenderUserId).orElse(null)
+                val lenderNickname = lenderUser?.nickname ?: "알 수 없음"
                 WishListResponseDto(wishList, lenderNickname)
             }
         }
@@ -58,19 +59,14 @@ class WishListService(
         val searchLower = searchKeyword.lowercase().trim()
 
         return wishLists.filter { wishList ->
-            // TODO: Rent 도메인이 코틀린으로 마이그레이션되면 실제 검색 로직 적용
-            true // 임시로 모든 항목 반환
-            /*
             val rent = wishList.rent
-            rent?.let {
-                it.bookTitle.lowercase().contains(searchLower) ||
-                it.author.lowercase().contains(searchLower) ||
-                it.publisher.lowercase().contains(searchLower) ||
-                it.title.lowercase().contains(searchLower)
-            } ?: false
-            */
+            rent.bookTitle.lowercase().contains(searchLower) ||
+            rent.author.lowercase().contains(searchLower) ||
+            rent.publisher.lowercase().contains(searchLower) ||
+            rent.title.lowercase().contains(searchLower)
         }.map { wishList ->
-            val lenderNickname = "임시 사용자"
+            val lenderUser = userRepository.findById(wishList.rent.lenderUserId).orElse(null)
+            val lenderNickname = lenderUser?.nickname ?: "알 수 없음"
             WishListResponseDto(wishList, lenderNickname)
         }
     }
@@ -92,22 +88,23 @@ class WishListService(
         require(existingWishList == null) { "이미 찜한 게시글입니다." }
 
         // 사용자 조회
-        val user = userRepository.findById(userId)
-            .orElseThrow { IllegalArgumentException("사용자를 찾을 수 없습니다.") }
+        val user = userRepository.findById(userId).orElse(null)
+            ?: throw IllegalArgumentException("사용자를 찾을 수 없습니다.")
 
         // 대여 게시글 존재 여부 확인
-        val rent = rentRepository.findById(request.rentId)
-            .orElseThrow { IllegalArgumentException("대여 게시글을 찾을 수 없습니다.") }
+        val rent = rentRepository.findById(request.rentId).orElse(null)
+            ?: throw IllegalArgumentException("대여 게시글을 찾을 수 없습니다.")
 
         // 찜 목록 생성
-        val wishList = WishList().apply {
-            this.user = user
-            this.rent = rent
-        }
+        val wishList = WishList(
+            user = user,
+            rent = rent
+        )
 
         // 저장 및 반환
         val savedWishList = wishListRepository.save(wishList)
-        val lenderNickname = "임시 사용자" // TODO: Rent 도메인 마이그레이션 후 실제 값 사용
+        val lenderUser = userRepository.findById(rent.lenderUserId).orElse(null)
+        val lenderNickname = lenderUser?.nickname ?: "알 수 없음"
         
         return WishListResponseDto(savedWishList, lenderNickname)
     }
