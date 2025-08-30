@@ -53,9 +53,9 @@ class WishListController(
     fun addWishList(
         @PathVariable userId: Long,
         @RequestBody request: WishListCreateRequestDto
-    ): ResponseEntity<RsData<WishListResponseDto?>> {
+    ): ResponseEntity<RsData<WishListResponseDto>> {
         val response = wishListService.addWishList(userId, request)
-        return ResponseEntity.ok(RsData.of("200", "찜 목록에 추가했습니다.", response))
+        return ResponseEntity.ok(RsData("200", "찜 목록에 추가했습니다.", response))
     }
 
     /**
@@ -71,8 +71,8 @@ class WishListController(
     fun deleteWishList(
         @PathVariable userId: Long,
         @PathVariable rentId: Long
-    ): ResponseEntity<RsData<Unit?>> {
+    ): ResponseEntity<RsData<Unit>> {
         wishListService.deleteWishList(userId, rentId)
-        return ResponseEntity.ok(RsData.of("200", "찜 목록에서 삭제했습니다."))
+        return ResponseEntity.ok(RsData("200", "찜 목록에서 삭제했습니다.", Unit))
     }
 }
