@@ -7,6 +7,7 @@ import com.bookbook.domain.wishList.dto.WishListResponseDto
 import com.bookbook.domain.wishList.entity.WishList
 import com.bookbook.domain.wishList.enums.WishListStatus
 import com.bookbook.domain.wishList.repository.WishListRepository
+import com.bookbook.global.exception.ServiceException
 import org.springframework.stereotype.Service
 
 /**
@@ -85,15 +86,17 @@ class WishListService(
     fun addWishList(userId: Long, request: WishListCreateRequestDto): WishListResponseDto {
         // 중복 체크 로직 (ACTIVE 상태인 것만 체크)
         val existingWishList = wishListRepository.findByUserIdAndRentIdAndStatus(userId, request.rentId, WishListStatus.ACTIVE)
-        require(existingWishList == null) { "이미 찜한 게시글입니다." }
+        if (existingWishList != null) {
+            throw ServiceException("409", "이미 찜한 게시글입니다.")
+        }
 
         // 사용자 조회
         val user = userRepository.findById(userId).orElse(null)
-            ?: throw IllegalArgumentException("사용자를 찾을 수 없습니다.")
+            ?: throw ServiceException("404", "사용자를 찾을 수 없습니다.")
 
         // 대여 게시글 존재 여부 확인
         val rent = rentRepository.findById(request.rentId).orElse(null)
-            ?: throw IllegalArgumentException("대여 게시글을 찾을 수 없습니다.")
+            ?: throw ServiceException("404", "대여 게시글을 찾을 수 없습니다.")
 
         // 찜 목록 생성
         val wishList = WishList(
@@ -121,7 +124,7 @@ class WishListService(
     fun deleteWishList(userId: Long, rentId: Long) {
         // ACTIVE 상태인 찜 목록 조회 - 삭제된 것은 대상에서 제외
         val wishList = wishListRepository.findByUserIdAndRentIdAndStatus(userId, rentId, WishListStatus.ACTIVE)
-            ?: throw IllegalArgumentException("찜하지 않은 게시글입니다.")
+            ?: throw ServiceException("404", "찜하지 않은 게시글입니다.")
 
         // Soft Delete 실행 - 실제 삭제가 아닌 상태만 변경
         // 데이터는 남겨두고 DELETED 상태로 변경하여 조회에서만 제외
