@@ -421,13 +421,12 @@ class ChatService(
     }
 
     private fun createChatMessage(roomId: String, senderId: Long, content: String, messageType: MessageType): ChatMessage {
-        return ChatMessage().apply {
-            this.roomId = roomId
-            this.senderId = senderId
-            this.content = content
-            this.messageType = messageType
-            this.isRead = false
-        }
+        return ChatMessage(
+            roomId = roomId,
+            senderId = senderId,
+            content = content,
+            messageType = messageType
+        )
     }
 
     private fun getRentInfo(rentId: Long): Pair<String, String?> {
