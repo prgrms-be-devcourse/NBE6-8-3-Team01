@@ -2,6 +2,7 @@ import '../globals.css';
 import Bottom from '../components/Bottom';
 import ClientLayout from './ClientLayout';
 import { Suspense } from 'react';
+import { ToastContainer } from 'react-toastify';
 
 export default function RootLayout({
   children,

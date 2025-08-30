@@ -11,6 +11,7 @@ interface NotificationApiResponse {
     message: string;
     time: string;
     read: boolean;
+    processed: boolean;  // 추가: 처리 완료 여부
     bookTitle: string;
     detailMessage: string;
     imageUrl: string;
@@ -179,6 +180,7 @@ type Notification = {
   message: string;
   time: string;
   read: boolean;
+  processed: boolean;  // 추가: 처리 완료 여부
   bookTitle: string;
   detailMessage: string;
   imageUrl: string;
@@ -197,7 +199,6 @@ export default function NotificationPage() {
   const [rentRequestDetail, setRentRequestDetail] = useState<RentRequestDetail | null>(null);
   const [isProcessingDecision, setIsProcessingDecision] = useState(false);
   const [imageLoadStates, setImageLoadStates] = useState<{[key: number]: 'loading' | 'loaded' | 'error'}>({});
-  const [processedNotifications, setProcessedNotifications] = useState<Set<number>>(new Set());
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -305,12 +306,6 @@ export default function NotificationPage() {
         setSelectedId(null);
         setRentRequestDetail(null);
       }
-      
-      setProcessedNotifications(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(notificationId);
-        return newSet;
-      });
     } catch (error) {
       alert('알림 삭제에 실패했습니다. 다시 시도해주세요.');
     }
@@ -326,6 +321,7 @@ export default function NotificationPage() {
       const actionText = approved ? '수락' : '거절';
       alert(`대여 신청을 ${actionText}했습니다!`);
       
+      // 알림 목록을 다시 로드하여 processed 상태 반영
       await loadNotifications();
       
       setSelectedId(null);
@@ -339,12 +335,24 @@ export default function NotificationPage() {
     }
   };
 
-  const isNotificationProcessable = (notificationId: number): boolean => {
-    if (rentRequestDetail && selectedId === notificationId) {
+  // 수정된 처리 가능 여부 확인 함수
+  const isNotificationProcessable = (notification: Notification): boolean => {
+    // RENT_REQUEST 타입이 아니면 처리 불가
+    if (notification.type !== 'RENT_REQUEST') {
+      return false;
+    }
+    
+    // 이미 처리된 알림이면 처리 불가
+    if (notification.processed) {
+      return false;
+    }
+    
+    // 상세 정보가 있으면 그 정보를 우선 사용
+    if (rentRequestDetail && selectedId === notification.id) {
       return rentRequestDetail.isProcessable;
     }
     
-    return !processedNotifications.has(notificationId);
+    return true;
   };
 
   const getImageUrl = (imageUrl: string | undefined | null): string => {
@@ -543,6 +551,10 @@ export default function NotificationPage() {
                     {!item.read && (
                       <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
                     )}
+                    {/* 처리 완료된 RENT_REQUEST 알림 표시 */}
+                    {item.type === 'RENT_REQUEST' && item.processed && (
+                      <div className="w-2 h-2 bg-gray-400 rounded-full mt-2 flex-shrink-0" title="처리 완료된 알림"></div>
+                    )}
                     <p
                       className={`text-sm flex-1 ${
                         selectedId === item.id
@@ -632,9 +644,10 @@ export default function NotificationPage() {
                         </div>
                       </div>
                       
-                      {item.type === 'RENT_REQUEST' && rentRequestDetail && (
+                      {item.type === 'RENT_REQUEST' && (
                         <div className="pt-4 border-t border-gray-100">
-                          {isNotificationProcessable(item.id) ? (
+                          {isNotificationProcessable(item) ? (
+                            // 처리 가능한 경우: 수락/거절 버튼 표시
                             <>
                               <div className="max-w-sm">
                                 <div className="flex space-x-2">
@@ -678,20 +691,22 @@ export default function NotificationPage() {
                               </div>
                             </>
                           ) : (
+                            // 처리 완료된 경우: 상태 표시만
                             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
                               <div className="flex items-center justify-center space-x-2 mb-2">
                                 <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
                                 <span className="text-gray-600 font-medium">
-                                  {rentRequestDetail.processStatus === 'APPROVED' ? '수락 완료' :
-                                   rentRequestDetail.processStatus === 'REJECTED' ? '거절 완료' : 
-                                   rentRequestDetail.processStatus === 'BOOK_ALREADY_LOANED' ? '이미 대여됨' : '처리 완료'}
+                                  {rentRequestDetail?.processStatus === 'APPROVED' ? '수락 완료' :
+                                   rentRequestDetail?.processStatus === 'REJECTED' ? '거절 완료' : 
+                                   rentRequestDetail?.processStatus === 'BOOK_ALREADY_LOANED' ? '이미 대여됨' : 
+                                   item.processed ? '처리 완료' : '처리 완료'}
                                 </span>
                               </div>
                               <p className="text-xs text-gray-500">
-                                {rentRequestDetail.processStatus === 'APPROVED' ? '이 대여 신청을 수락했습니다.' :
-                                 rentRequestDetail.processStatus === 'REJECTED' ? '이 대여 신청을 거절했습니다.' :
-                                 rentRequestDetail.processStatus === 'BOOK_ALREADY_LOANED' ? '이 책은 다른 사용자에게 대여되었습니다.' :
-                                 '이 대여 신청은 이미 처리되었습니다.'}
+                                {rentRequestDetail?.processStatus === 'APPROVED' ? '이 대여 신청을 수락했습니다.' :
+                                 rentRequestDetail?.processStatus === 'REJECTED' ? '이 대여 신청을 거절했습니다.' :
+                                 rentRequestDetail?.processStatus === 'BOOK_ALREADY_LOANED' ? '이 책은 다른 사용자에게 대여되었습니다.' :
+                                 item.processed ? '이 대여 신청은 이미 처리되었습니다.' : '이 대여 신청은 이미 처리되었습니다.'}
                               </p>
                             </div>
                           )}
