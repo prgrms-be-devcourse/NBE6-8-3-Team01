@@ -1,7 +1,9 @@
 package com.bookbook.domain.rent.service
 
 import com.bookbook.domain.rent.dto.BookSearchResponseDto
+import com.bookbook.global.exception.ServiceException
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
@@ -15,6 +17,10 @@ class BookSearchService {
 
     private val restTemplate = RestTemplate()
     private val objectMapper = ObjectMapper()
+    
+    companion object {
+        private val log = LoggerFactory.getLogger(BookSearchService::class.java)
+    }
 
     // 알라딘 API를 호출해 책을 검색하고 결과를 리스트로 반환.
     fun searchBooks(query: String, start: Int): List<BookSearchResponseDto> {
@@ -65,8 +71,8 @@ class BookSearchService {
                 }
             }
         } catch (e: Exception) {
-            e.printStackTrace() // 스택 트레이스 출력
-            throw RuntimeException("알라딘 API 응답 파싱 중 오류 발생: ${e.message}", e) // 더 명확한 메시지
+            log.error("알라딘 API 응답 파싱 중 오류 발생", e)
+            throw ServiceException("알라딘 API 응답 파싱 중 오류 발생: ${e.message}")
         }
         return books
     }

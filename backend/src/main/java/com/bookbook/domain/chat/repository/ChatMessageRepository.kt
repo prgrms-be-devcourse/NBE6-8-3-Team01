@@ -1,0 +1,72 @@
+package com.bookbook.domain.chat.repository
+
+import com.bookbook.domain.chat.entity.ChatMessage
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
+import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
+import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
+
+@Repository
+interface ChatMessageRepository : JpaRepository<ChatMessage, Long> {
+    // 채팅방별 메시지 목록 조회 (최신순)
+    fun findByRoomIdOrderByCreatedDateDesc(roomId: String, pageable: Pageable): Page<ChatMessage>
+
+    // 특정 시간 이후의 채팅방 메시지 목록 조회 (최신순)
+    fun findByRoomIdAndCreatedDateAfterOrderByCreatedDateDesc(
+        roomId: String,
+        createdDate: LocalDateTime,
+        pageable: Pageable
+    ): Page<ChatMessage>
+
+    // 특정 채팅방의 메시지 개수
+    fun countByRoomId(roomId: String): Long
+
+    // 특정 사용자의 읽지 않은 메시지 개수 (전체) - 시스템 메시지 제외
+    @Query(
+        """SELECT COUNT(cm) FROM ChatMessage cm 
+           JOIN ChatRoom cr ON cm.roomId = cr.roomId 
+           WHERE (cr.lenderId = :userId OR cr.borrowerId = :userId) 
+           AND cm.senderId != :userId 
+           AND cm.senderId != 0 
+           AND cm.isRead = false"""
+    )
+    fun countUnreadMessagesByUserId(@Param("userId") userId: Long): Long
+
+    // 특정 채팅방에서 특정 사용자의 읽지 않은 메시지 개수 - 시스템 메시지 제외
+    @Query(
+        """SELECT COUNT(cm) FROM ChatMessage cm 
+           WHERE cm.roomId = :roomId 
+           AND cm.senderId != :userId 
+           AND cm.senderId != 0 
+           AND cm.isRead = false"""
+    )
+    fun countUnreadMessagesByRoomIdAndUserId(@Param("roomId") roomId: String, @Param("userId") userId: Long): Long
+
+    // 특정 채팅방의 특정 사용자가 받은 메시지를 모두 읽음 처리
+    @Modifying
+    @Query(
+        """UPDATE ChatMessage cm SET cm.isRead = true, cm.readTime = CURRENT_TIMESTAMP 
+           WHERE cm.roomId = :roomId 
+           AND cm.senderId != :userId 
+           AND cm.isRead = false"""
+    )
+    fun markAllMessagesAsReadInRoom(@Param("roomId") roomId: String, @Param("userId") userId: Long): Int
+
+    // 채팅방의 마지막 메시지 조회
+    @Query(
+        """SELECT cm FROM ChatMessage cm 
+           WHERE cm.roomId = :roomId 
+           ORDER BY cm.createdDate DESC 
+           LIMIT 1"""
+    )
+    fun findLastMessageByRoomId(@Param("roomId") roomId: String): ChatMessage?
+
+    // 특정 채팅방의 모든 메시지 삭제
+    @Modifying
+    @Query("DELETE FROM ChatMessage cm WHERE cm.roomId = :roomId")
+    fun deleteByRoomId(@Param("roomId") roomId: String): Int
+}
