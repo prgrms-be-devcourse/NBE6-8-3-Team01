@@ -142,7 +142,6 @@ class ChatService(
                 lenderId = request.lenderId
                 this.borrowerId = borrowerId
                 isActive = true
-                createdDate = LocalDateTime.now()
             }
 
             val savedRoom = chatRoomRepository.save(newRoom)
@@ -428,7 +427,6 @@ class ChatService(
             this.content = content
             this.messageType = messageType
             this.isRead = false
-            this.createdDate = LocalDateTime.now()
         }
     }
 

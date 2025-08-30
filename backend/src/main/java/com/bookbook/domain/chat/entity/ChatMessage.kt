@@ -33,7 +33,7 @@ class ChatMessage : BaseEntity() {
     }
 
     // 내가 보낸 메시지인지 확인
-    fun isSentBy(userId: Int?): Boolean {
-        return userId?.let { senderId == it.toLong() } ?: false
+    fun isSentBy(userId: Long?): Boolean {
+        return userId?.let { senderId == it } ?: false
     }
 }
