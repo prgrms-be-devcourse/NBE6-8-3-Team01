@@ -16,5 +16,5 @@ class WishList(
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    val status: WishListStatus = WishListStatus.ACTIVE
+    var status: WishListStatus = WishListStatus.ACTIVE
 ) : BaseEntity()
