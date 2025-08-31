@@ -7,12 +7,19 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
-import java.time.LocalDateTime
 import java.util.*
 
 interface UserRepository : JpaRepository<User, Long> {
     fun findByUsername(username: String): Optional<User>
-    fun findAllByUserStatusAndResumedAtBefore(userStatus: UserStatus, now: LocalDateTime): MutableList<User>
+
+    @Query("""
+        SELECT u FROM User u WHERE 
+        u.userStatus = com.bookbook.domain.user.enums.UserStatus.SUSPENDED AND 
+        u.resumedAt IS NOT NULL AND
+        u.resumedAt <= NOW() ORDER BY 
+        u.resumedAt ASC LIMIT 100
+    """)
+    fun findAllPossibleResumedUsers(): List<User>
 
     @Query(
         """
