@@ -10,9 +10,6 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import lombok.RequiredArgsConstructor
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.PageRequest
-import org.springframework.data.domain.Pageable
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
@@ -47,15 +44,13 @@ class SuspendedUserController (
         @RequestParam(defaultValue = "10") size: Int,
         @RequestParam(required = false) userId: Long?
     ): ResponseEntity<RsData<PageResponseDto<UserSuspendResponseDto>>> {
-        val pageable: Pageable = PageRequest.of(page - 1, size)
+        val histories = suspendedUserService.getSuspendedHistoryPage(page, size, userId)
 
-        val historyPage: Page<UserSuspendResponseDto> =
-            suspendedUserService.getSuspendedHistoryPage(pageable, userId)
-        val response = PageResponseDto(historyPage)
+        val response =  PageResponseDto(histories)
 
         return ResponseEntity.ok(RsData(
             "200-1",
-            "${historyPage.totalElements}개의 정지 이력을 발견했습니다",
+            "${histories.totalElements}개의 정지 이력을 발견했습니다.",
             response
         ))
     }
@@ -72,12 +67,13 @@ class SuspendedUserController (
         @Valid @RequestBody requestDto: UserSuspendRequestDto
     ): ResponseEntity<RsData<UserDetailResponseDto>> {
         val suspendedUser = suspendedUserService.addUserAsSuspended(requestDto)
+
         val userSuspendResponseDto = UserDetailResponseDto(suspendedUser.user)
 
         return ResponseEntity.ok(
             RsData(
                 "200-1",
-                "${suspendedUser.user.username}님을 정지하였습니다",
+                "${suspendedUser.user.username}님을 정지하였습니다.",
                 userSuspendResponseDto
             )
         )
@@ -100,7 +96,7 @@ class SuspendedUserController (
         return ResponseEntity.ok(
             RsData(
                 "200-1",
-                "${userDetailResponseDto.username}님의 정지가 해지되었습니다",
+                "${userDetailResponseDto.username}님의 정지가 해제되었습니다.",
                 userDetailResponseDto
             )
         )
