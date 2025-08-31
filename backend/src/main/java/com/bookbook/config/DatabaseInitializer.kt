@@ -7,7 +7,7 @@ import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.stereotype.Component
 
-//08-06 유효상
+//08-31 유효상
 
 /**
  * 데이터베이스 초기화 및 제약조건 업데이트 컴포넌트
@@ -79,6 +79,39 @@ class DatabaseInitializer(
         } catch (e: Exception) {
             log.error("알림 타입 제약조건 업데이트 실패: ${e.message}", e)
             // 애플리케이션 시작을 중단하지 않고 계속 진행
+        }
+
+        // isProcessed 컬럼 초기화
+        updateNotificationProcessedColumn()
+    }
+
+    private fun updateNotificationProcessedColumn() {
+        try {
+            log.info("===== 알림 isProcessed 컬럼 업데이트 시작 =====")
+
+            // 1. isProcessed 컬럼이 존재하는지 확인
+            val columnExists = try {
+                jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'NOTIFICATION' AND COLUMN_NAME = 'IS_PROCESSED'",
+                    Int::class.java
+                ) ?: 0 > 0
+            } catch (e: Exception) {
+                false
+            }
+
+            if (!columnExists) {
+                // 2. 컬럼이 없으면 기본값 false로 추가
+                jdbcTemplate.execute("ALTER TABLE notification ADD COLUMN is_processed BOOLEAN DEFAULT FALSE")
+                log.info("isProcessed 컬럼 추가 완료")
+            }
+
+            // 3. 기존 데이터의 isProcessed 값을 false로 설정
+            val updatedCount = jdbcTemplate.update("UPDATE notification SET is_processed = FALSE WHERE is_processed IS NULL")
+            log.info("기존 알림 데이터 isProcessed 값 설정 완료: $updatedCount 건")
+
+            log.info("===== 알림 isProcessed 컬럼 업데이트 완료 =====")
+        } catch (e: Exception) {
+            log.error("isProcessed 컬럼 업데이트 실패: ${e.message}", e)
         }
     }
 }

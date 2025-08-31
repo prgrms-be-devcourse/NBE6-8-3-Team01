@@ -44,6 +44,9 @@ class Notification() : BaseEntity() {
     var isRead: Boolean = false
         protected set // 읽음 여부
 
+    var isProcessed: Boolean = false
+        protected set // 처리 완료 여부 (수락/거절 완료 시 true)
+
     @CreatedDate
     var createAt: LocalDateTime? = null
         protected set
@@ -71,11 +74,17 @@ class Notification() : BaseEntity() {
         this.bookImageUrl = bookImageUrl
         this.relatedId = relatedId
         this.isRead = false
+        this.isProcessed = false
     }
 
     // 읽음 처리 - 예외 없이 자연스럽게 처리
     fun markAsRead() {
         this.isRead = true
+    }
+
+    // 처리 완료 표시 (수락/거절 완료 시)
+    fun markAsProcessed() {
+        this.isProcessed = true
     }
 
     companion object {

@@ -21,6 +21,9 @@ data class NotificationResponseDto(
     @JsonProperty("read")
     val read: Boolean = false,
 
+    @JsonProperty("processed")
+    val processed: Boolean = false,
+
     @JsonProperty("bookTitle")
     val bookTitle: String?,
 
@@ -46,6 +49,7 @@ data class NotificationResponseDto(
                 message = notification.title, // enum에서 가져온 기본 메시지
                 time = formatTime(notification.createAt),
                 read = notification.isRead,
+                processed = notification.isProcessed, // 처리 완료 여부 추가
                 bookTitle = notification.bookTitle ?: "",
                 detailMessage = notification.message ?: "", // 상세 메시지
                 imageUrl = formatImageUrl(notification.bookImageUrl), // 이미지 URL 포맷팅

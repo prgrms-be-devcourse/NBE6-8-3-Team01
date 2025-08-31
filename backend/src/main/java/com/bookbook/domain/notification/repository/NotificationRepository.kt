@@ -1,6 +1,7 @@
 package com.bookbook.domain.notification.repository
 
 import com.bookbook.domain.notification.entity.Notification
+import com.bookbook.domain.notification.enums.NotificationType
 import com.bookbook.domain.user.entity.User
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
@@ -22,4 +23,7 @@ interface NotificationRepository : JpaRepository<Notification, Long> {
     @Modifying
     @Query("UPDATE Notification n SET n.isRead = true WHERE n.receiver = :receiver AND n.isRead = false")
     fun markAllAsReadByReceiver(@Param("receiver") receiver: User)
+
+    // 특정 수신자, 타입, 관련 ID로 알림 조회
+    fun findByReceiverAndTypeAndRelatedId(receiver: User, type: NotificationType, relatedId: Long): List<Notification>
 }
