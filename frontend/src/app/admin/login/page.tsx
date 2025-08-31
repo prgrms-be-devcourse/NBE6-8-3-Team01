@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Lock, User, Eye, EyeOff, BookOpen, AlertTriangle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuthContext, UserLoginResponseDto } from "@/app/admin/global/hooks/useAuth";
-import { UnauthorizedModal } from "../adminGuard";
 import { toast } from "react-toastify";
 
 /*
@@ -17,7 +16,6 @@ export default function AdminLoginPage() {
     const router = useRouter();
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
-    const [showUnauthorizedModal, setShowUnauthorizedModal] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -74,7 +72,6 @@ export default function AdminLoginPage() {
             }
 
             if (data.statusCode === 401) {
-                setShowUnauthorizedModal(true);
                 return;
             }
 
@@ -212,7 +209,6 @@ export default function AdminLoginPage() {
                     </div>
                 </div>
             </div>
-            {showUnauthorizedModal && <UnauthorizedModal />}
         </>
     );
 }
