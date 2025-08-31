@@ -2,11 +2,10 @@ package com.bookbook.domain.rent.service
 
 import com.bookbook.domain.notification.enums.NotificationType
 import com.bookbook.domain.notification.service.NotificationService
-import com.bookbook.domain.rent.dto.RentAvailableResponseDto
-import com.bookbook.domain.rent.dto.RentRequestDto
-import com.bookbook.domain.rent.dto.RentResponseDto
-import com.bookbook.domain.rent.dto.request.ChangeRentStatusRequestDto
+import com.bookbook.domain.rent.dto.request.RentRequestDto
+import com.bookbook.domain.rent.dto.response.RentAvailableResponseDto
 import com.bookbook.domain.rent.dto.response.RentDetailResponseDto
+import com.bookbook.domain.rent.dto.response.RentResponseDto
 import com.bookbook.domain.rent.dto.response.RentSimpleResponseDto
 import com.bookbook.domain.rent.entity.Rent
 import com.bookbook.domain.rent.entity.RentStatus
@@ -94,7 +93,7 @@ class RentService(
             .orElseThrow { ServiceException("404-2", "해당 대여글을 찾을 수 없습니다.") }
 
         // ID로 대여자 정보 조회
-        val rentUser = userRepository.findById(rent.lenderUserId!!)
+        val rentUser = userRepository.findById(rent.lenderUserId)
             .orElseThrow { ServiceException("404-3", "해당 대여자를 찾을 수 없습니다.") }
 
         // 대여자가 작성한 글 갯수 조회
@@ -146,9 +145,7 @@ class RentService(
             .orElseThrow { ServiceException("404-2", "해당 대여글을 찾을 수 없습니다.") }
 
         // 글 작성자와 현재 로그인한 사용자가 일치하는지 확인
-        if (rent.lenderUserId != userId) {
-            throw ServiceException("403", "해당 대여글을 수정할 권한이 없습니다.")
-        }
+        isSameAuthor(userId, rent.lenderUserId )
 
         // Rent 엔티티 업데이트 (Kotlin의 mutable properties 활용)
         rent.apply {
@@ -262,41 +259,49 @@ class RentService(
         userId: Long?
     ): Page<RentSimpleResponseDto> {
         return rentRepository.findFilteredRentHistory(pageable, status, userId)
-            .map(RentSimpleResponseDto::from)
+            .map{ RentSimpleResponseDto(it) }
     }
 
     /**
      * 대여 게시글의 상태를 변경합니다.
      *
      * @param rentId 대여 게시글 ID
-     * @param requestDto 대여 게시글 상태 요청 본문
+     * @param newStatus 대여 게시글 상태 요청 본문
      * @return 수정된 대여 게시글 상세 정보
      */
     @Transactional
-    fun modifyRentPageStatus(rentId: Long, requestDto: ChangeRentStatusRequestDto): RentDetailResponseDto {
+    fun modifyRentPageStatus(rentId: Long, newStatus: RentStatus): RentDetailResponseDto {
         val rent = rentRepository.findById(rentId)
             .orElseThrow { ServiceException("404-2", "해당 대여글을 찾을 수 없습니다.") }
 
         checkRentPostIsDeleted(rent)
 
-        if (rent.rentStatus == requestDto.status) {
+        if (rent.rentStatus == newStatus) {
             throw ServiceException("409-1", "현재 상태와 동일합니다.")
         }
 
-        rent.rentStatus = requestDto.status
-        return RentDetailResponseDto.from(rent)
+        rent.rentStatus = newStatus
+        return RentDetailResponseDto(rent)
     }
 
     /**
      * 대여 게시글을 SOFT DELETE 합니다.
      *
+     * @param userId 작성한 유저의 ID
      * @param rentId 대여 게시글의 ID
      * @throws ServiceException (404) 해당 대여 게시글이 존재하지 않을 때
      */
     @Transactional
-    fun removeRentPage(rentId: Long) {
+    fun removeRentPage(userId: Long, rentId: Long) {
+        val executor = userRepository.findById(userId)
+            .orElseThrow { ServiceException("404-1", "존재하지 않는 유저입니다.") }
+
         val rent = rentRepository.findById(rentId)
-            .orElseThrow { ServiceException("404-2", "해당 대여글은 찾을 수 없습니다.") }
+            .orElseThrow { ServiceException("404-2", "해당 대여글을 찾을 수 없습니다.") }
+
+        if (!executor.isAdmin) {
+            isSameAuthor(userId, rent.lenderUserId)
+        }
 
         checkRentPostIsDeleted(rent)
 
@@ -314,14 +319,15 @@ class RentService(
     @Transactional
     fun restoreRentPage(rentId: Long): RentDetailResponseDto {
         val rent = rentRepository.findById(rentId)
-            .orElseThrow { ServiceException("404-2", "해당 대여글은 찾을 수 없습니다.") }
+            .orElseThrow { ServiceException("404-2", "해당 대여글을 찾을 수 없습니다.") }
 
         if (rent.rentStatus != RentStatus.DELETED) {
             throw ServiceException("409-1", "해당 글은 삭제된 상태가 아닙니다")
         }
 
         rent.rentStatus = RentStatus.AVAILABLE
-        return RentDetailResponseDto.from(rent)
+
+        return RentDetailResponseDto(rent)
     }
 
     /**
@@ -336,7 +342,20 @@ class RentService(
         val rent = rentRepository.findById(rentId)
             .orElseThrow { ServiceException("404-2", "해당 대여글을 찾을 수 없습니다.") }
 
-        return RentDetailResponseDto.from(rent)
+        return RentDetailResponseDto(rent)
+    }
+
+    /**
+     * 대여 글 작성자와 요청자의 Id를 비교하여
+     * 필요 시 예외를 throw 합니다.
+     *
+     * @param executorId 요청을 실행한 유저의 Id
+     * @param authorId 게시글 작성자 Id
+     * @throws ServiceException (403)
+     */
+    private fun isSameAuthor(executorId: Long, authorId: Long) {
+        if (executorId != authorId)
+            throw ServiceException("403", "해당 대여글을 수정할 권한이 없습니다.")
     }
 
     /**
@@ -347,7 +366,7 @@ class RentService(
      */
     private fun checkRentPostIsDeleted(rent: Rent) {
         if (rent.rentStatus == RentStatus.DELETED) {
-            throw ServiceException("404-1", "이미 해당 글은 삭제되었습니다.")
+            throw ServiceException("404-1", "해당 글은 삭제되었습니다.")
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.bookbook.domain.rent.dto
+package com.bookbook.domain.rent.dto.response
 
 // 25.08.28 현준
 // Aladin API의 응답 데이터를 기반으로 필요한 필드만 추출하여 정의

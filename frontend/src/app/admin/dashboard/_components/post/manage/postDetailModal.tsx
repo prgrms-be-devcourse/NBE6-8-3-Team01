@@ -61,7 +61,7 @@ export function PostDetailModal({
   }
 
   const handlePostDelete = async () => {
-    const response = await fetch(`/api/v1/admin/rent/${currentPost.id}`,
+    const response = await fetch(`/api/v1/bookbook/rent/${currentPost.id}`,
       {
         method: "DELETE",
         headers: {
@@ -225,9 +225,9 @@ export function PostDetailModal({
               </button>
               {!isDeleted && (
                 <button
-                onClick={handleStatusUpdate}
-                disabled={initialRentStatus == rentStatusValue}
-                className={rentStatusButtonClassName}
+                  onClick={handleStatusUpdate}
+                  disabled={initialRentStatus == rentStatusValue}
+                  className={rentStatusButtonClassName}
                 >
                   상태 변경
                 </button>

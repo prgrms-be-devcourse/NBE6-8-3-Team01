@@ -1,4 +1,4 @@
-package com.bookbook.domain.rent.dto
+package com.bookbook.domain.rent.dto.response
 
 import com.bookbook.domain.rent.entity.Rent
 import org.springframework.data.domain.Page
@@ -34,7 +34,7 @@ data class RentAvailableResponseDto(
             // Rent 엔티티와 User 엔티티로부터 BookInfo 생성 (Null Safe 처리)
             fun from(rent: Rent, lenderNickname: String?): BookInfo {
                 return BookInfo(
-                    id = rent.id?.toLong(),
+                    id = rent.id,
                     bookTitle = rent.bookTitle,
                     author = rent.author,
                     publisher = rent.publisher,
@@ -42,13 +42,13 @@ data class RentAvailableResponseDto(
                     bookImage = rent.bookImage,
                     address = rent.address,
                     category = rent.category,
-                    rentStatus = rent.rentStatus?.description,
+                    rentStatus = rent.rentStatus.description,
                     lenderUserId = rent.lenderUserId,
                     lenderNickname = lenderNickname,
                     title = rent.title,
                     contents = rent.contents,
-                    createdDate = rent.createdDate?.toString(),
-                    modifiedDate = rent.modifiedDate?.toString()
+                    createdDate = rent.createdDate.toString(),
+                    modifiedDate = rent.modifiedDate.toString()
                 )
             }
         }

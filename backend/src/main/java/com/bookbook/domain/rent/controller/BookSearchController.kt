@@ -1,6 +1,6 @@
 package com.bookbook.domain.rent.controller
 
-import com.bookbook.domain.rent.dto.BookSearchResponseDto
+import com.bookbook.domain.rent.dto.response.BookSearchResponseDto
 import com.bookbook.domain.rent.service.BookSearchService
 import io.swagger.v3.oas.annotations.Operation
 import org.springframework.http.ResponseEntity
