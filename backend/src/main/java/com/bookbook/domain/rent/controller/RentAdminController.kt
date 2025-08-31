@@ -43,14 +43,14 @@ class RentAdminController(
         @RequestParam(defaultValue = "10") size: Int,
         @RequestParam(required = false) status: List<RentStatus>?,
         @RequestParam(required = false) userId: Long?
-    ): ResponseEntity<RsData<PageResponseDto<RentSimpleResponseDto>?>> {
+    ): ResponseEntity<RsData<PageResponseDto<RentSimpleResponseDto>>> {
         val pageable: Pageable = PageRequest.of(page - 1, size)
 
         val rentHistoryPage = rentService.getRentsPage(pageable, status, userId)
         val response = PageResponseDto(rentHistoryPage)
 
         return ResponseEntity.ok(
-            RsData.of(
+            RsData(
                 "200-1",
                 "${rentHistoryPage.totalElements}개의 글을 발견했습니다.",
                 response
@@ -68,11 +68,11 @@ class RentAdminController(
     @Operation(summary = "단일 대여 게시글 상세 조회")
     fun getRentDetail(
         @PathVariable id: Long
-    ): ResponseEntity<RsData<RentDetailResponseDto?>> {
+    ): ResponseEntity<RsData<RentDetailResponseDto>> {
         val responseDto = rentService.getRentPostDetail(id)
 
         return ResponseEntity.ok(
-            RsData.of("200-1", "$id 번 글 상태 변경 완료", responseDto)
+            RsData("200-1", "$id 번 글 상태 변경 완료", responseDto)
         )
     }
 
@@ -87,11 +87,11 @@ class RentAdminController(
     fun changeRentStatus(
         @PathVariable id: Long,
         @RequestBody status: ChangeRentStatusRequestDto
-    ): ResponseEntity<RsData<RentDetailResponseDto?>> { // 경로 변수로 전달된 id를 사용
-        val responseDto = rentService.modifyRentPageStatus(id, status)
+    ): ResponseEntity<RsData<RentDetailResponseDto>> { // 경로 변수로 전달된 id를 사용
+        val responseDto = rentService.modifyRentPageStatus(id, status.status)
 
         return ResponseEntity.ok(
-            RsData.of("200-1", "$id 번 글 상태 변경 완료", responseDto)
+            RsData("200-1", "$id 번 글 상태 변경 완료", responseDto)
         )
     }
 
@@ -103,14 +103,12 @@ class RentAdminController(
      */
     @PatchMapping("/{id}/restore")
     @Operation(summary = "대여 게시글 복구")
-    fun restoreRentPage(@PathVariable id: Long): ResponseEntity<RsData<RentDetailResponseDto?>> { // 경로 변수로 전달된 id를 사용
+    fun restoreRentPage(@PathVariable id: Long): ResponseEntity<RsData<RentDetailResponseDto>> { // 경로 변수로 전달된 id를 사용
         val responseDto = rentService.restoreRentPage(id)
 
         return ResponseEntity.ok(
-            RsData.of(
-                "200-1",
-                "$id 번 글 복구 완료",
-                responseDto
+            RsData(
+                "200-1", "$id 번 글 복구 완료", responseDto
             )
         )
     }
