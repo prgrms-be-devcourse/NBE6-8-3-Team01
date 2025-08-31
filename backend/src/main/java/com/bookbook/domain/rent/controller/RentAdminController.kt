@@ -96,19 +96,6 @@ class RentAdminController(
     }
 
     /**
-     * 대여 게시글 하나를 SOFT DELETE합니다.
-     *
-     * @param id 대여 게시글 ID
-     * @return 없음
-     */
-    @DeleteMapping("/{id}")
-    @Operation(summary = "대여 게시글 영구 삭제")
-    fun deleteRentPage(@PathVariable id: Long): ResponseEntity<RsData<Void?>> { // 경로 변수로 전달된 id를 사용
-        rentService.removeRentPage(id)
-        return ResponseEntity.ok(RsData.of("200-1", "$id 번 글 삭제 완료"))
-    }
-
-    /**
      * SOFT DELETE된 대여 게시글 하나를 복구합니다.
      *
      * @param id 대여 게시글 ID

@@ -3,9 +3,12 @@ package com.bookbook.domain.rent.controller
 import com.bookbook.domain.rent.dto.request.RentRequestDto
 import com.bookbook.domain.rent.dto.response.RentResponseDto
 import com.bookbook.domain.rent.service.RentService
+import com.bookbook.global.exception.ServiceException
+import com.bookbook.global.rsdata.RsData
 import com.bookbook.global.security.CustomOAuth2User
 import io.swagger.v3.oas.annotations.Operation
 import jakarta.validation.Valid
+import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 
@@ -57,4 +60,26 @@ class RentController(
 
     // borrowerUserId : 대여 받은 사용자 ID
     // rentID : 대여 게시글 ID
+
+    /**
+     * 대여 게시글 하나를 SOFT DELETE합니다.
+     *
+     * @param id 대여 게시글 ID
+     * @return 없음
+     */
+    @DeleteMapping("/{id}")
+    @Operation(summary = "대여 게시글 삭제 (Soft Delete)")
+    fun deleteRentPage(
+        @PathVariable id: Long,
+        @AuthenticationPrincipal customOAuth2User: CustomOAuth2User?
+    ): ResponseEntity<RsData<Void>> { // 경로 변수로 전달된 id를 사용
+        if (customOAuth2User == null)
+            throw ServiceException("401-1", "로그인이 필요합니다.")
+
+        rentService.removeRentPage(customOAuth2User.userId, id)
+
+        return ResponseEntity.ok(
+            RsData("200-1", "$id 번 글 삭제 완료")
+        )
+    }
 }
