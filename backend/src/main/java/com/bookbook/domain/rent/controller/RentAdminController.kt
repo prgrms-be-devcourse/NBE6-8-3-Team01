@@ -9,7 +9,6 @@ import com.bookbook.global.jpa.dto.response.PageResponseDto
 import com.bookbook.global.rsdata.RsData
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
-import org.springframework.context.annotation.Lazy
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.http.ResponseEntity
@@ -21,7 +20,7 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/api/v1/admin/rent")
 @Tag(name = "RentAdminController", description = "어드민 전용 대여 게시글 컨트롤러")
 class RentAdminController(
-    @Lazy private val rentService: RentService
+    private val rentService: RentService
 ) {
 
     /**
