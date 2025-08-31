@@ -1,4 +1,4 @@
-package com.bookbook.domain.user.dto
+package com.bookbook.domain.user.dto.response
 
 import com.bookbook.domain.user.entity.User
 import com.bookbook.domain.user.enums.Role
@@ -6,7 +6,7 @@ import com.bookbook.domain.user.enums.UserStatus
 import java.time.LocalDateTime
 
 data class UserResponseDto(
-    val id: Long? = null,
+    val id: Long,
     val username: String,
     val email: String?,
     val nickname: String?,
@@ -14,7 +14,7 @@ data class UserResponseDto(
     val rating: Float,
     val role: Role,
     val userStatus: UserStatus,
-    val createAt: LocalDateTime?,
+    val createAt: LocalDateTime,
     val isRegistrationCompleted: Boolean
 ) {
     constructor(user: User) : this(

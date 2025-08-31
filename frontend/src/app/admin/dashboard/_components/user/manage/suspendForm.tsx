@@ -21,7 +21,7 @@ const SuspendForm: React.FC<SuspendFormProps> = ({
     <div className="p-6 space-y-4">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          정지 대상 | {user.baseResponseDto.nickname}
+          정지 대상 | {user.nickname}
         </label>
         <div className="relative">
           <select
