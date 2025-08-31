@@ -7,6 +7,7 @@ import Link from 'next/link';
 import MessagePanel from '@/app/bookbook/MessagePopup/MessagePanel';
 import { authFetch, logoutUser } from '../util/authFetch';
 import { useLoginModal } from '../context/LoginModalContext';
+import { toast } from 'react-toastify';
 
 const Header = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -148,12 +149,19 @@ const Header = () => {
     if (!isLoggedIn) {
       e.preventDefault();
       
-      // toast 대신 간단한 alert 사용
-      alert('로그인 후 이용해주세요.');
+      toast.info('로그인 후 이용해주세요.', {
+        position: 'top-center',
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: false,
+        draggable: true,
+        progress: undefined,
+      });
       
       setTimeout(() => {
         openLoginModal();
-      }, 100);
+      }, 2000);
     }
   };
 
