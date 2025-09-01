@@ -27,7 +27,7 @@ class WishListControllerTest {
     private lateinit var wishListService: WishListService
 
     // TestSetup에서 생성된 사용자와 RentInitData에서 생성된 대여글 ID 사용
-    // EnvLoader는 TestSetup.kt에서 자동으로 호출됨
+    // EnvLoader는 @Configuration으로 Spring Boot 시작 시 자동 로드됨
     private val testUserId: Long = 1L  // TestSetup에서 생성된 첫 번째 사용자 (user1)
     private val testRentId: Long = 1L  // RentInitData에서 생성된 첫 번째 대여글
 
