@@ -4,10 +4,13 @@ import com.bookbook.domain.suspend.entity.SuspendedUser
 import com.bookbook.domain.suspend.repository.SuspendedUserRepository
 import com.bookbook.domain.user.entity.User
 import com.bookbook.domain.user.repository.UserRepository
+import com.bookbook.global.security.CustomOAuth2User
 import com.bookbook.global.util.EnvLoader
 import jakarta.annotation.PostConstruct
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
+import org.springframework.security.core.GrantedAuthority
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.stereotype.Component
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.transaction.annotation.Transactional
@@ -57,5 +60,27 @@ class TestSetup (
 
             suspendedUserRepository.save(suspendedUser)
         }
+    }
+
+    fun createCustomOAuth2User(user: User): CustomOAuth2User {
+        val authorities: Collection<GrantedAuthority> = listOf(SimpleGrantedAuthority("ROLE_${user.role}"))
+
+        val attributes: Map<String, Any> = mapOf<String, Any>(
+            "id" to user.id,
+            "name" to user.username,
+            "email" to user.email.orEmpty()
+        )
+        val nameAttributeKey = "name"
+
+        return CustomOAuth2User(
+            authorities,
+            attributes,
+            nameAttributeKey,
+            username = user.username,
+            nickname = user.nickname,
+            userId = user.id,
+            isRegistrationCompleted = user.isRegistrationCompleted(),
+            role = user.role
+        )
     }
 }
