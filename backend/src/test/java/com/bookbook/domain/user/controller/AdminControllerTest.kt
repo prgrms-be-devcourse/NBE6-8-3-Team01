@@ -32,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @WithMockUser(roles = ["ADMIN"])
+@DisplayName("AdminController 통합 테스트")
 class AdminControllerTest {
 
     @Autowired
