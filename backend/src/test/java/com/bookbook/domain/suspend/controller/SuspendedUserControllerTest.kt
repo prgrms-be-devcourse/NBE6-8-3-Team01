@@ -49,7 +49,7 @@ class SuspendedUserControllerTest {
     @Test
     @DisplayName("유저 정지")
     fun t1() {
-        val userId = 2
+        val userId = 2L
         val period = 7
 
         val suspendAction = mvc
@@ -68,7 +68,7 @@ class SuspendedUserControllerTest {
             )
             .andDo(print())
 
-        val user = userService.findById(userId.toLong())
+        val user = userService.findById(userId)
             ?: throw NoSuchElementException("존재하지 않는 유저입니다.")
 
         suspendAction
@@ -111,7 +111,7 @@ class SuspendedUserControllerTest {
     @Test
     @DisplayName("정지된 유저를 다시 정지")
     fun t3() {
-        val userId = 4
+        val userId = 4L
         val period = 7
 
         val suspendAction = mvc
@@ -142,7 +142,7 @@ class SuspendedUserControllerTest {
     @Test
     @DisplayName("정지된 멤버를 해제")
     fun t4() {
-        val userId = 4
+        val userId = 4L
 
         val suspendAction = mvc
             .perform(
@@ -166,7 +166,7 @@ class SuspendedUserControllerTest {
     @Test
     @DisplayName("정지가 해제된 유저를 다시 해제 시도")
     fun t5() {
-        val userId = 2
+        val userId = 2L
 
         val suspendAction = mvc
             .perform(
@@ -187,7 +187,7 @@ class SuspendedUserControllerTest {
     @Test
     @DisplayName("유효하지 않은 요청 1")
     fun t6() {
-        val userId = 2
+        val userId = 2L
 
         val suspendAction = mvc
             .perform(
