@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional
 @SpringBootTest
 @ActiveProfiles("test")
 @DisplayName("ReportService 통합 테스트")
+@Transactional
 class ReportServiceTest {
 
     @Autowired
@@ -34,8 +35,6 @@ class ReportServiceTest {
 
     @BeforeEach
     fun setUp() {
-        reportRepository.deleteAll()
-        userRepository.deleteAll()
 
         reporter = userRepository.save(User(
             username = "reporterUser",
