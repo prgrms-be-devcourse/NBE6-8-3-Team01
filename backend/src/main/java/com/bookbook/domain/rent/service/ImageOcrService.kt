@@ -2,7 +2,10 @@
 package com.bookbook.domain.rent.service
 
 import com.bookbook.global.exception.ServiceException
-import com.google.cloud.vision.v1.*
+import com.google.cloud.vision.v1.AnnotateImageRequest
+import com.google.cloud.vision.v1.Feature
+import com.google.cloud.vision.v1.Image
+import com.google.cloud.vision.v1.ImageAnnotatorClient
 import com.google.protobuf.ByteString
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -20,9 +23,7 @@ class ImageOcrService {
         private val log = LoggerFactory.getLogger(ImageOcrService::class.java)
     }
 
-    /**
-     * 이미지에서 텍스트를 추출하는 메인 함수
-     */
+    // 이미지에서 텍스트를 추출하는 메인 함수
     fun extractTextFromImage(imageFile: MultipartFile): String {
         try {
             // Vision API 클라이언트 생성
@@ -76,9 +77,7 @@ class ImageOcrService {
         }
     }
 
-    /**
-     * 이미지 파일 검증
-     */
+    // 이미지 파일 검증
     fun validateImageFile(file: MultipartFile) {
         // 파일 크기 체크 (10MB 제한)
         val maxSizeBytes = 10 * 1024 * 1024

@@ -25,9 +25,7 @@ class BookTitleParsingService {
         private val SPECIAL_CHARS_REGEX = Regex("[『』「」〈〉《》\\[\\]()（）]")
     }
 
-    /**
-     * OCR 텍스트에서 책 제목을 추출하는 메인 함수
-     */
+    // OCR 텍스트에서 책 제목을 추출하는 메인 함수
     fun extractBookTitle(ocrText: String): Pair<String?, Double> {
         try {
             if (ocrText.isBlank()) {
@@ -55,9 +53,7 @@ class BookTitleParsingService {
         }
     }
 
-    /**
-     * 텍스트 전처리
-     */
+    // 텍스트 전처리
     private fun preprocessText(text: String): List<String> {
         return text.split("\\n")
             .map { it.trim() }
@@ -83,9 +79,7 @@ class BookTitleParsingService {
         return candidates.sortedByDescending { it.second }
     }
 
-    /**
-     * 제목 정리 (특수문자, 노이즈 제거)
-     */
+    // 제목 정리 (특수문자, 노이즈 제거)
     private fun cleanTitle(title: String): String {
         var cleaned = title
         
@@ -100,9 +94,7 @@ class BookTitleParsingService {
         return cleaned.trim()
     }
 
-    /**
-     * 제목 신뢰도 계산
-     */
+    // 제목 신뢰도 계산
     private fun calculateTitleConfidence(title: String, position: Int, totalLines: Int): Double {
         var confidence = 0.0
         
@@ -138,9 +130,7 @@ class BookTitleParsingService {
         return max(0.0, min(1.0, confidence))
     }
 
-    /**
-     * 최적의 제목 선택
-     */
+    // 최적의 제목 선택
     private fun selectBestTitle(candidates: List<Pair<String, Double>>): Pair<String?, Double> {
         if (candidates.isEmpty()) {
             return Pair(null, 0.0)
