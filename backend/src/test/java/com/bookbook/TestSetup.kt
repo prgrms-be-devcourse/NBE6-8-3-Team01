@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional
 
 @Component
 @ActiveProfiles("test")
-class UserSetup (
+class TestSetup (
     private val userRepository: UserRepository,
     private val suspendedUserRepository: SuspendedUserRepository
 ){
@@ -43,7 +43,7 @@ class UserSetup (
     }
 
     @Transactional
-    fun setSuspendedUser() {
+    fun setSuspendedUsers() {
         val users = userRepository.findAll()
         val period = 7
 

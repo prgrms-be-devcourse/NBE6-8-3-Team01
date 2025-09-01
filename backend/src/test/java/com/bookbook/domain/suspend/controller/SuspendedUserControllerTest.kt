@@ -1,6 +1,6 @@
 package com.bookbook.domain.suspend.controller
 
-import com.bookbook.UserSetup
+import com.bookbook.TestSetup
 import com.bookbook.domain.suspend.service.SuspendedUserService
 import com.bookbook.domain.user.service.UserService
 import org.hamcrest.Matchers
@@ -22,9 +22,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import org.springframework.transaction.annotation.Transactional
 
 @ActiveProfiles("test")
-@TestPropertySource(properties = [
-    "ALADIN_API_KEY=test-key" // test 프로파일에서 이와 관련한 오류 발생으로 인해 임의로 추가
-])
 @SpringBootTest
 @Transactional
 @AutoConfigureMockMvc
@@ -42,11 +39,11 @@ class SuspendedUserControllerTest {
     private lateinit var userService: UserService
 
     @Autowired
-    private lateinit var userSetup: UserSetup
+    private lateinit var setup: TestSetup
 
     @BeforeAll
     fun setUp() {
-        userSetup.setSuspendedUser()
+        setup.setSuspendedUsers()
     }
 
     @Test
