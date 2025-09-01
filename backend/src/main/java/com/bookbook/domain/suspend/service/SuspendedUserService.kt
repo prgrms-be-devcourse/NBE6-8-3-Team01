@@ -9,6 +9,7 @@ import com.bookbook.domain.user.enums.UserStatus
 import com.bookbook.domain.user.service.UserService
 import com.bookbook.global.exception.ServiceException
 import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -47,13 +48,22 @@ class SuspendedUserService(
     /**
      * 정지된 유저 히스토리를 페이지로 가져옵니다.
      *
-     * @param pageable 페이지 정보
+     * @param page 페이지 번호
+     * @param size 한 페이지 당 크기
+     * @param userId 검색하려는 유저 Id
      * @return 유저 정지 히스토리 페이지
      */
     @Transactional(readOnly = true)
-    fun getSuspendedHistoryPage(pageable: Pageable, userId: Long?): Page<UserSuspendResponseDto> {
-        return suspendedUserRepository.findAllFilteredUser(pageable, userId)
-            .map { suspendedUser -> UserSuspendResponseDto(suspendedUser) }
+    fun getSuspendedHistoryPage(
+        page: Int,
+        size: Int,
+        userId: Long? = null
+    ): Page<UserSuspendResponseDto> {
+        val pageable: Pageable = PageRequest.of(page - 1, size)
+
+        return suspendedUserRepository
+            .findAllFilteredUser(pageable, userId)
+            .map { UserSuspendResponseDto(it) }
     }
 
     /**
@@ -87,7 +97,7 @@ class SuspendedUserService(
      */
     private fun checkUserIsActive(user: User) {
         if (user.userStatus == UserStatus.ACTIVE)
-            throw ServiceException("409-1", "해당 유저의 정지가 이미 해제되어 있습니다")
+            throw ServiceException("409-1", "해당 유저의 정지가 이미 해제되어 있습니다.")
     }
 
     /**
