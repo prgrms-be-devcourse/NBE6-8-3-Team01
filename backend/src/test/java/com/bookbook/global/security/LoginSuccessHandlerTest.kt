@@ -1,4 +1,4 @@
-package com.bookbook.domain.security
+package com.bookbook.global.security
 
 import com.bookbook.TestSetup
 import com.bookbook.domain.suspend.repository.SuspendedUserRepository
