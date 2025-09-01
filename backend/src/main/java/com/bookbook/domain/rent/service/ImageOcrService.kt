@@ -6,7 +6,10 @@ import com.google.cloud.vision.v1.AnnotateImageRequest
 import com.google.cloud.vision.v1.Feature
 import com.google.cloud.vision.v1.Image
 import com.google.cloud.vision.v1.ImageAnnotatorClient
+import com.google.cloud.vision.v1.ImageAnnotatorSettings
 import com.google.protobuf.ByteString
+import com.google.auth.oauth2.GoogleCredentials
+import com.google.api.gax.core.FixedCredentialsProvider
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -26,8 +29,13 @@ class ImageOcrService {
     // 이미지에서 텍스트를 추출하는 메인 함수
     fun extractTextFromImage(imageFile: MultipartFile): String {
         try {
-            // Vision API 클라이언트 생성
-            ImageAnnotatorClient.create().use { vision ->
+            // Vision API 클라이언트 생성 (.env 파일의 인증 정보 사용)
+            val credentialsPath = System.getProperty("GOOGLE_APPLICATION_CREDENTIALS")
+            val credentials = GoogleCredentials.fromStream(java.io.FileInputStream(credentialsPath))
+            val settings = ImageAnnotatorSettings.newBuilder()
+                .setCredentialsProvider(FixedCredentialsProvider.create(credentials))
+                .build()
+            ImageAnnotatorClient.create(settings).use { vision ->
                 
                 // 이미지 파일을 ByteString으로 변환
                 val imgBytes = ByteString.copyFrom(imageFile.bytes)

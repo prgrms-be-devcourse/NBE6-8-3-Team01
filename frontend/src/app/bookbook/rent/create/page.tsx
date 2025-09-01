@@ -1,4 +1,4 @@
-// 25.08.06 현준
+// 25.09.01 현준
 // src/app/bookbook/rent/create/page.tsx
 // 글 작성을 위한 페이지
 
@@ -96,6 +96,92 @@ export default function BookRentPage() {
     const conditions = ['최상 (깨끗함)', '상 (사용감 적음)', '중 (사용감 있음)', '하 (손상 있음)'];
 
     const router = useRouter();
+
+    // AI 분석 기반 자동 글 내용 생성 함수
+    const generateAutoContents = (book: any, ocrResult: any) => {
+        const confidence = (ocrResult.confidence * 100).toFixed(1);
+        
+        // 책 상태 분석 (OCR 신뢰도 기반)
+        let conditionAnalysis = '';
+        if (ocrResult.confidence > 0.8) {
+            conditionAnalysis = '표지가 깨끗하고 선명하게 촬영되어 책 상태가 양호해 보입니다.';
+        } else if (ocrResult.confidence > 0.6) {
+            conditionAnalysis = '표지에 약간의 사용감이 있지만 읽는 데 문제없어 보입니다.';
+        } else {
+            conditionAnalysis = '표지 촬영 상태로 보아 사용감이 있을 수 있습니다.';
+        }
+
+        // 카테고리별 추천 문구
+        const categoryMessages = {
+            '소설': '흥미진진한 이야기가 담긴',
+            '에세이': '일상의 지혜가 담긴',
+            '자기계발': '성장에 도움이 되는',
+            '경제경영': '비즈니스 인사이트가 가득한',
+            '역사': '역사의 교훈이 담긴',
+            '과학': '지적 호기심을 자극하는',
+            '철학': '깊은 사색을 이끄는',
+            '예술': '감성을 자극하는',
+            '만화': '재미있고 유익한'
+        };
+
+        const categoryMsg = categoryMessages[book.category as keyof typeof categoryMessages] || '좋은';
+        
+        return `📚 AI가 이미지를 분석한 결과입니다!
+
+        🔍 **분석 결과** (신뢰도: ${confidence}%)
+        ${conditionAnalysis}
+
+        📖 **도서 소개**
+        ${categoryMsg} "${book.bookTitle}"를 대여해드립니다.
+        ${book.author} 작가의 ${book.publisher}에서 출간한 작품으로, ${book.category || '다양한 분야'} 분야의 도서입니다.
+
+        💡 **책 설명**
+        ${book.bookDescription ? book.bookDescription.substring(0, 100) + '...' : '흥미롭고 유익한 내용이 담긴 도서입니다.'}
+
+        ✨ **추천 이유**
+        - ${book.category || '다양한 분야'}에 관심 있는 분들께 추천
+        - 깔끔하게 관리된 도서
+        - 합리적인 대여 조건
+
+        📞 궁금한 점이 있으시면 언제든 문의해주세요!`;
+            };
+
+    // 검색 결과가 없는 경우의 기본 자동 글 내용 생성 함수
+    const generateBasicAutoContents = (bookTitle: string, ocrResult: any) => {
+        const confidence = (ocrResult.confidence * 100).toFixed(1);
+        
+        // 책 상태 분석 (OCR 신뢰도 기반)
+        let conditionAnalysis = '';
+        if (ocrResult.confidence > 0.8) {
+            conditionAnalysis = '표지가 깨끗하고 선명하게 촬영되어 책 상태가 양호해 보입니다.';
+        } else if (ocrResult.confidence > 0.6) {
+            conditionAnalysis = '표지에 약간의 사용감이 있지만 읽는 데 문제없어 보입니다.';
+        } else {
+            conditionAnalysis = '표지 촬영 상태로 보아 사용감이 있을 수 있습니다.';
+        }
+
+        return `📚 AI가 이미지를 분석한 결과입니다!
+
+🔍 **분석 결과** (신뢰도: ${confidence}%)
+"${bookTitle}" 제목을 성공적으로 인식했습니다.
+${conditionAnalysis}
+
+📖 **도서 소개**
+"${bookTitle}"를 대여해드립니다.
+깔끔하게 관리된 도서로, 독서를 좋아하시는 분들께 추천드립니다.
+
+💡 **상세 정보**
+- 책 제목이 명확하게 인식되었습니다
+- 저자, 출판사 등 추가 정보는 수동으로 입력해주세요
+- 책 상태와 대여 조건을 확인해주세요
+
+✨ **추천 이유**
+- 관심 있는 분야의 도서를 찾고 계신 분들께 추천
+- 합리적인 대여 조건
+- 깔끔한 관리 상태
+
+📞 궁금한 점이 있으시면 언제든 문의해주세요!`;
+    };
 
     // 추가된 로직 : 페이지 로드 시, 유저 상태 확인
     useEffect(() => {
@@ -239,6 +325,13 @@ export default function BookRentPage() {
     const handleOcrBookSearch = async (imageFile: File): Promise<boolean> => {
         setIsOcrProcessing(true);
         setOcrResult(null);
+
+        // 디버깅을 위한 상세 로깅
+        console.log('🔍 OCR 요청 시작:', {
+            fileName: imageFile.name,
+            fileSize: `${(imageFile.size / 1024 / 1024).toFixed(2)}MB`,
+            fileType: imageFile.type
+        });
         
         // 사용자에게 처리 중임을 알림
         showToast('📷 AI가 책 표지를 분석 중입니다... (3-5초 소요)', 'info');
@@ -247,6 +340,7 @@ export default function BookRentPage() {
         formData.append('file', imageFile);
         
         try {
+            const startTime = Date.now();
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/bookbook/ocr-book-search`, {
                 method: 'POST',
                 body: formData,
@@ -255,49 +349,93 @@ export default function BookRentPage() {
             
             if (response.ok) {
                 const rsData = await response.json();
+
+                console.log('📨 백엔드 응답 데이터:', rsData);
+                // RsData 구조 검증
+                if (!rsData.data) {
+                    console.error('❌ RsData.data가 null입니다:', rsData);
+                    showToast('서버 응답 형식이 올바르지 않습니다.', 'error');
+                    return false;
+                }
+                
                 const result = rsData.data;
+
+                // 응답 데이터 구조 로깅
+                console.log('OCR 분석 결과:', {
+                    extractedText: result.extractedText?.substring(0, 100) + '...',
+                    detectedBookTitle: result.detectedBookTitle,
+                    confidence: result.confidence,
+                    searchResultsCount: result.searchResults?.length || 0
+                });
                 
                 // OCR 결과 저장
                 setOcrResult(result);
                 
-                // 검색 결과가 있으면 자동으로 첫 번째 결과로 폼 채우기
+                // 검색 결과가 있으면 자동으로 첫 번째 결과로 모든 필드 채우기
                 if (result.searchResults && result.searchResults.length > 0) {
                     const book = result.searchResults[0];
+                    console.log('자동 선택된 도서:', book.bookTitle);
                     
-                    // 기존 selectBook 함수 로직 재사용
+                    // 1. 책 정보 자동 입력
                     setBookTitle(book.bookTitle);
                     setAuthor(book.author);
                     setPublisher(book.publisher);
                     setCategory(book.category || '');
                     setDescription(book.bookDescription || '');
                     
+                    // 2. 글 제목 자동 생성: "[책 제목] 읽어 보세요~"
+                    const autoTitle = `[${book.bookTitle}] 읽어 보세요~`;
+                    setTitle(autoTitle);
+                    
+                    // 3. 글 내용 자동 생성: AI 분석 기반 설명
+                    const autoContents = generateAutoContents(book, result);
+                    setContents(autoContents);
+                    
                     // 자동 입력 상태 설정
                     setIsAutoFilled(true);
                     setAutoFillSource('ocr');
                     
-                    showToast(` "${book.bookTitle}" 정보가 자동으로 입력되었습니다!`, 'success');
+                    showToast(`"${book.bookTitle}" 모든 정보가 자동으로 입력되었습니다!`, 'success');
                     return true;
                     
                 } else if (result.detectedBookTitle) {
-                    // 제목만 감지된 경우
+                    console.log('제목만 감지됨:', result.detectedBookTitle);
+
+                    // 제목만 감지된 경우도 기본 정보 자동 입력
                     setBookTitle(result.detectedBookTitle);
+                    
+                    // 글 제목 자동 생성
+                    const autoTitle = `[${result.detectedBookTitle}] 읽어 보세요~`;
+                    setTitle(autoTitle);
+                    
+                    // 기본 글 내용 자동 생성 (검색 결과 없는 경우)
+                    const basicContents = generateBasicAutoContents(result.detectedBookTitle, result);
+                    setContents(basicContents);
+                    
                     setIsAutoFilled(true);
                     setAutoFillSource('ocr');
                     
-                    showToast(`"${result.detectedBookTitle}" 제목을 감지했습니다. 추가 정보를 확인해주세요.`, 'info');
+                    showToast(`"${result.detectedBookTitle}" 기본 정보가 자동으로 입력되었습니다. 추가 정보를 확인해주세요.`, 'info');
                     return true;
                     
                 } else {
                     // OCR 실패
+                    console.log('OCR 감지 실패 - 신뢰도:', result.confidence);
                     showToast('책 제목을 인식하지 못했습니다. 수동으로 입력해주세요.', 'error');
                     return false;
                 }
             } else {
-                // API 오류
-                const errorData = await response.json();
-                console.error('OCR API 오류:', errorData);
-                showToast(`${errorData.msg || 'OCR 처리 중 오류가 발생했습니다.'}`, 'error');
-                return false;
+                // 상세한 에러 로깅
+            const errorData = await response.json().catch(() => null);
+            console.error('OCR API 오류:', {
+                status: response.status,
+                statusText: response.statusText,
+                errorData: errorData
+            });
+            
+            const errorMessage = errorData?.msg || `HTTP ${response.status}: ${response.statusText}`;
+            showToast(`${errorMessage}`, 'error');
+            return false;
             }
             
         } catch (error) {
@@ -307,6 +445,7 @@ export default function BookRentPage() {
             
         } finally {
             setIsOcrProcessing(false);
+            console.log('OCR 처리 완료');
         }
     };
 
