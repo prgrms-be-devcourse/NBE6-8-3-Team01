@@ -1,8 +1,6 @@
 package com.bookbook.domain.wishList.controller
 
 import com.bookbook.domain.wishList.service.WishListService
-import com.bookbook.global.util.EnvLoader
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -22,23 +20,15 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional
 class WishListControllerTest {
 
-    companion object {
-        @BeforeAll
-        @JvmStatic
-        fun setupEnv() {
-            // .env 파일에서 환경변수를 로드하여 시스템 프로퍼티로 설정
-            EnvLoader.loadEnv()
-        }
-    }
-
     @Autowired
     private lateinit var mvc: MockMvc
 
     @Autowired
     private lateinit var wishListService: WishListService
 
-    // 초기 데이터에서 생성된 사용자와 대여글 ID 사용
-    private val testUserId: Long = 1L  // UserInitData에서 생성된 첫 번째 사용자
+    // TestSetup에서 생성된 사용자와 RentInitData에서 생성된 대여글 ID 사용
+    // EnvLoader는 TestSetup.kt에서 자동으로 호출됨
+    private val testUserId: Long = 1L  // TestSetup에서 생성된 첫 번째 사용자 (user1)
     private val testRentId: Long = 1L  // RentInitData에서 생성된 첫 번째 대여글
 
     @Test
