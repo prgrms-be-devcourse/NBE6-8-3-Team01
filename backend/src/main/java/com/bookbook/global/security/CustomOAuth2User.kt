@@ -10,11 +10,11 @@ class CustomOAuth2User(
     attributes: Map<String, Any>,
     nameAttributeKey: String,
 
-    @JvmField val username: String,
-    @JvmField val nickname: String?,
-    @JvmField val userId: Long,
-    @JvmField val isRegistrationCompleted: Boolean,
-    @JvmField val role: Role
+     val username: String,
+     val nickname: String?,
+     val userId: Long,
+     val isRegistrationCompleted: Boolean,
+     val role: Role
 ) : DefaultOAuth2User(
     authorities,
     attributes,
