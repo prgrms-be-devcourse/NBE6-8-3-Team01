@@ -3,6 +3,7 @@ package com.bookbook
 import com.bookbook.domain.suspend.entity.SuspendedUser
 import com.bookbook.domain.suspend.repository.SuspendedUserRepository
 import com.bookbook.domain.user.entity.User
+import com.bookbook.domain.user.enums.Role
 import com.bookbook.domain.user.repository.UserRepository
 import com.bookbook.global.security.CustomOAuth2User
 import jakarta.annotation.PostConstruct
@@ -12,7 +13,6 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Component
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.transaction.annotation.Transactional
-import com.bookbook.domain.user.enums.Role
 
 
 @Component
@@ -53,6 +53,8 @@ class TestSetup (
         )
 
         userRepository.save(admin)
+
+        setSuspendedUsers()
     }
 
     @Transactional
@@ -68,6 +70,8 @@ class TestSetup (
                 reason = "그냥 유저 ${it.username}을 ${period}일 동안 정지함",
             )
 
+            // 더티체킹이 제대로 활성화되지 않아 명시적으로 저장
+            userRepository.save(it)
             suspendedUserRepository.save(suspendedUser)
         }
     }
