@@ -358,7 +358,6 @@ class SuspendedUserControllerTest {
             )
             .andDo(print())
 
-
         resultAction
             .andExpect(handler().handlerType(SuspendedUserController::class.java))
             .andExpect(handler().methodName("getAllSuspendedHistory"))
@@ -381,7 +380,6 @@ class SuspendedUserControllerTest {
                     .param("size", size.toString())
             )
             .andDo(print())
-
 
         resultAction
             .andExpect(handler().handlerType(SuspendedUserController::class.java))
