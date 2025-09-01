@@ -5,6 +5,7 @@ import com.bookbook.domain.rent.dto.response.RentDetailResponseDto
 import com.bookbook.domain.rent.dto.response.RentSimpleResponseDto
 import com.bookbook.domain.rent.entity.RentStatus
 import com.bookbook.domain.rent.service.RentService
+import com.bookbook.global.exception.ServiceException
 import com.bookbook.global.jpa.dto.response.PageResponseDto
 import com.bookbook.global.rsdata.RsData
 import io.swagger.v3.oas.annotations.Operation
@@ -43,6 +44,9 @@ class RentAdminController(
         @RequestParam(required = false) status: List<RentStatus>?,
         @RequestParam(required = false) userId: Long?
     ): ResponseEntity<RsData<PageResponseDto<RentSimpleResponseDto>>> {
+        if (page < 1) throw ServiceException("페이지 번호는 1보다 작을 수 없습니다.")
+        if (size < 1) throw ServiceException("페이지 당 크기는 1보다 작을 수 없습니다.")
+
         val pageable: Pageable = PageRequest.of(page - 1, size)
 
         val rentHistoryPage = rentService.getRentsPage(pageable, status, userId)
