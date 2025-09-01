@@ -62,6 +62,10 @@ class TestSetup (
         }
     }
 
+    fun findUser(id: Long): User {
+        return userRepository.findById(id).orElseThrow { IllegalArgumentException("User with id $id not found") }
+    }
+
     fun createCustomOAuth2User(user: User): CustomOAuth2User {
         val authorities: Collection<GrantedAuthority> = listOf(SimpleGrantedAuthority("ROLE_${user.role}"))
 
