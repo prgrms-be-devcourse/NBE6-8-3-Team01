@@ -5,6 +5,7 @@ import com.bookbook.domain.report.dto.request.ReportRequestDto
 import com.bookbook.domain.user.entity.User
 import com.bookbook.domain.user.repository.UserRepository
 import com.fasterxml.jackson.databind.ObjectMapper
+import jakarta.transaction.Transactional
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -25,6 +26,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @DisplayName("ReportController 통합 테스트")
+@Transactional
 class ReportControllerTest {
 
     @Autowired
@@ -43,7 +45,6 @@ class ReportControllerTest {
 
     @BeforeEach
     fun setUp() {
-        userRepository.deleteAll()
 
         reporterUser = userRepository.save(User(
             username = "reporterUser",
@@ -64,11 +65,6 @@ class ReportControllerTest {
         ))
 
         SecurityContextHolder.clearContext()
-    }
-
-    @AfterEach
-    fun cleanUp() {
-        userRepository.deleteAll()
     }
 
     @Test
