@@ -3,7 +3,6 @@ package com.bookbook
 import com.bookbook.domain.suspend.entity.SuspendedUser
 import com.bookbook.domain.suspend.repository.SuspendedUserRepository
 import com.bookbook.domain.user.entity.User
-import com.bookbook.domain.user.enums.Role
 import com.bookbook.domain.user.repository.UserRepository
 import com.bookbook.global.security.CustomOAuth2User
 import com.bookbook.global.util.EnvLoader
@@ -16,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Component
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.transaction.annotation.Transactional
+
 
 @Component
 @ActiveProfiles("test")
