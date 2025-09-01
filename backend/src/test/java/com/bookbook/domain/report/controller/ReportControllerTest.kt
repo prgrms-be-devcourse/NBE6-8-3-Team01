@@ -45,7 +45,6 @@ class ReportControllerTest {
 
     @BeforeEach
     fun setUp() {
-
         reporterUser = userRepository.save(User(
             username = "reporterUser",
             password = "password",

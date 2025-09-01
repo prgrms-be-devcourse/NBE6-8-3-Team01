@@ -56,6 +56,7 @@ class ReportServiceTest {
     }
 
     @Test
+    @Transactional
     @DisplayName("신고 생성 성공 테스트")
     fun createReport_success_test() {
         val reason = "불쾌한 콘텐츠 게시"
@@ -68,6 +69,7 @@ class ReportServiceTest {
     }
 
     @Test
+    @Transactional
     @DisplayName("신고하는 유저가 존재하지 않을 때 실패 테스트")
     fun createReport_reporterNotFound_test() {
         val nonExistentReporterId = 99L
@@ -80,6 +82,7 @@ class ReportServiceTest {
     }
 
     @Test
+    @Transactional
     @DisplayName("신고 대상 유저가 존재하지 않을 때 실패 테스트")
     fun createReport_targetUserNotFound_test() {
         val nonExistentTargetId = 99L
