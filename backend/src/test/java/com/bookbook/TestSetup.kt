@@ -31,17 +31,20 @@ class TestSetup (
     @Transactional
     @PostConstruct
     fun createDummyUser() {
-        for (i in 1..5) {
-            val user = User(
-                username = "user$i",
-                password = "password-$i",
-                nickname = "nickname-$i",
-                email = "email_$i@test.com",
-                address = "서울시",
-                registrationCompleted = true
-            )
-
-            userRepository.save(user)
+        if (userRepository.count() == 0L) {
+            userRepository.deleteAll()
+            suspendedUserRepository.deleteAll()
+            for (i in 1..5) {
+                val user = User(
+                    username = "user$i",
+                    password = "password-$i",
+                    nickname = "nickname-$i",
+                    email = "email_$i@test.com",
+                    address = "서울시",
+                    registrationCompleted = true
+                )
+                userRepository.save(user)
+            }
         }
     }
 
@@ -60,10 +63,6 @@ class TestSetup (
 
             suspendedUserRepository.save(suspendedUser)
         }
-    }
-
-    fun findUser(id: Long): User {
-        return userRepository.findById(id).orElseThrow { IllegalArgumentException("User with id $id not found") }
     }
 
     fun createCustomOAuth2User(user: User): CustomOAuth2User {
