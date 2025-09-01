@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
+import java.util.Optional
 
 interface ReportRepository : JpaRepository<Report, Long> {
     @Query(
@@ -22,4 +23,10 @@ interface ReportRepository : JpaRepository<Report, Long> {
         @Param("status") status: List<ReportStatus>?,
         @Param("targetId") targetId: Long?
     ): Page<Report>
+
+    @Query("SELECT r FROM Report r WHERE r.reporterUserId = :reporterId AND r.targetUserId = :targetUserId")
+    fun findByReporterIdAndTargetUserId(
+        @Param("reporterId") reporterId: Long,
+        @Param("targetUserId") targetUserId: Long
+    ): Optional<Report>
 }
