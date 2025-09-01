@@ -1,7 +1,7 @@
 package com.bookbook.domain.user.service
 
-import com.bookbook.domain.user.dto.response.UserSimpleResponseDto
 import com.bookbook.domain.user.dto.response.UserDetailResponseDto
+import com.bookbook.domain.user.dto.response.UserSimpleResponseDto
 import com.bookbook.domain.user.entity.User
 import com.bookbook.domain.user.enums.UserStatus
 import com.bookbook.domain.user.repository.UserRepository
