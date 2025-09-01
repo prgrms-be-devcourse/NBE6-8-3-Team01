@@ -13,31 +13,39 @@ class OcrBookSearchService(
     private val bookTitleParsingService: BookTitleParsingService,
     private val bookSearchService: BookSearchService
 ) {
-
+    
     companion object {
         private val log = LoggerFactory.getLogger(OcrBookSearchService::class.java)
     }
 
+    // 이미지 OCR + 알라딘 검색 통합 처리
     fun processImageAndSearch(imageFile: MultipartFile): ImageOcrResponseDto {
-
+        
+        log.info("통합 OCR + 검색 처리 시작: ${imageFile.originalFilename}")
+        
         // 1단계: 파일 검증
         imageOcrService.validateImageFile(imageFile)
-
+        
         // 2단계: OCR 처리
         val extractedText = imageOcrService.extractTextFromImage(imageFile)
-
+        log.info("OCR 추출 텍스트 길이: ${extractedText.length}자")
+        
         // 3단계: 책 제목 추출
         val (detectedTitle, confidence) = bookTitleParsingService.extractBookTitle(extractedText)
-
+        log.info("감지된 책 제목: '$detectedTitle', 신뢰도: $confidence")
+        
         // 4단계: 알라딘 검색 (제목이 감지된 경우만)
         val searchResults = if (detectedTitle != null) {
             try {
-                bookSearchService.searchBooksByOcrTitle(detectedTitle, confidence)
+                val results = bookSearchService.searchBooksByOcrTitle(detectedTitle, confidence)
+                log.info("알라딘 검색 결과: ${results.size}건")
+                results
             } catch (e: Exception) {
                 log.warn("알라딘 검색 실패, 빈 결과 반환: ${e.message}")
                 emptyList()
             }
         } else {
+            log.info("책 제목이 감지되지 않아 검색을 건너뜀")
             emptyList()
         }
 

@@ -38,18 +38,31 @@ export default function BookRentPage() {
     const [category, setCategory] = useState('');
     const [description, setDescription] = useState('');
 
+    // OCR 처리 상태 관리
+    const [isOcrProcessing, setIsOcrProcessing] = useState(false);
+    const [ocrResult, setOcrResult] = useState<{
+        extractedText: string;
+        detectedBookTitle: string | null;
+        confidence: number;
+        searchResults: any[] | null;
+    } | null>(null);
+
+    // 자동 입력 상태 표시
+    const [isAutoFilled, setIsAutoFilled] = useState(false);
+    const [autoFillSource, setAutoFillSource] = useState<'ocr' | 'manual' | null>(null);
+
     // Toast 메시지 상태 추가
     const [toastMessage, setToastMessage] = useState<string | null>(null);
-    const [toastType, setToastType] = useState<'success' | 'error' | null>(null);
+    const [toastType, setToastType] = useState<'success' | 'error' | 'info' | null>(null);
 
     // 토스트 메세지를 보여주는 함수
-    const showToast = (message: string, type: 'success' | 'error') => {
+    const showToast = (message: string, type: 'success' | 'error' | 'info') => {
         setToastMessage(message);
         setToastType(type);
         setTimeout(() => {
             setToastMessage(null);
             setToastType(null);
-        }, 3000); // 3초 후에 자동으로 사라짐
+        }, type === 'info' ? 2000 : 3000); // info 메시지는 2초로 단축
     }
 
     const [showPopup, setShowPopup] = useState(false);
@@ -143,11 +156,30 @@ export default function BookRentPage() {
         setCurrentPage(1); // 폼 초기화 시 페이지도 1로 초기화
         setHasMoreResults(false);
     };
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+
+    // OCR 자동 실행 추가
+    const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-            setBookImage(e.target.files[0]);
+
+            const selectedFile = e.target.files[0];
+
+            // 기존 이미지 설정 로직
+            setBookImage(selectedFile);
+
+            // 이미지 선택과 동시에 OCR 실행 
+            try{
+                await handleOcrBookSearch(selectedFile);
+            }catch(error){
+                console.error('OCR 자동 실행 중 오류 발생', error);
+                showToast('OCR 자동 실행 중 오류가 발생했습니다.', 'error');
+            }
+            
         } else {
+            // 파일 선택 취소 시
             setBookImage(null);
+            setOcrResult(null);
+            setIsAutoFilled(false);
+            setAutoFillSource(null);
         }
     };
 
@@ -201,6 +233,81 @@ export default function BookRentPage() {
         setCategory(book.category || ''); // 카테고리 필드 추가
         setDescription(book.bookDescription || ''); // 책 설명 필드 추가
         setShowBookSearchModal(false); // 모달 닫기
+    };
+
+    // OCR + 알라딘 검색 통합 함수
+    const handleOcrBookSearch = async (imageFile: File): Promise<boolean> => {
+        setIsOcrProcessing(true);
+        setOcrResult(null);
+        
+        // 사용자에게 처리 중임을 알림
+        showToast('📷 AI가 책 표지를 분석 중입니다... (3-5초 소요)', 'info');
+        
+        const formData = new FormData();
+        formData.append('file', imageFile);
+        
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/bookbook/ocr-book-search`, {
+                method: 'POST',
+                body: formData,
+                credentials: 'include', // 기존 패턴과 일치
+            });
+            
+            if (response.ok) {
+                const rsData = await response.json();
+                const result = rsData.data;
+                
+                // OCR 결과 저장
+                setOcrResult(result);
+                
+                // 검색 결과가 있으면 자동으로 첫 번째 결과로 폼 채우기
+                if (result.searchResults && result.searchResults.length > 0) {
+                    const book = result.searchResults[0];
+                    
+                    // 기존 selectBook 함수 로직 재사용
+                    setBookTitle(book.bookTitle);
+                    setAuthor(book.author);
+                    setPublisher(book.publisher);
+                    setCategory(book.category || '');
+                    setDescription(book.bookDescription || '');
+                    
+                    // 자동 입력 상태 설정
+                    setIsAutoFilled(true);
+                    setAutoFillSource('ocr');
+                    
+                    showToast(` "${book.bookTitle}" 정보가 자동으로 입력되었습니다!`, 'success');
+                    return true;
+                    
+                } else if (result.detectedBookTitle) {
+                    // 제목만 감지된 경우
+                    setBookTitle(result.detectedBookTitle);
+                    setIsAutoFilled(true);
+                    setAutoFillSource('ocr');
+                    
+                    showToast(`"${result.detectedBookTitle}" 제목을 감지했습니다. 추가 정보를 확인해주세요.`, 'info');
+                    return true;
+                    
+                } else {
+                    // OCR 실패
+                    showToast('책 제목을 인식하지 못했습니다. 수동으로 입력해주세요.', 'error');
+                    return false;
+                }
+            } else {
+                // API 오류
+                const errorData = await response.json();
+                console.error('OCR API 오류:', errorData);
+                showToast(`${errorData.msg || 'OCR 처리 중 오류가 발생했습니다.'}`, 'error');
+                return false;
+            }
+            
+        } catch (error) {
+            console.error('OCR 네트워크 오류:', error);
+            showToast('네트워크 오류가 발생했습니다. 수동으로 검색해주세요.', 'error');
+            return false;
+            
+        } finally {
+            setIsOcrProcessing(false);
+        }
     };
 
     // 백엔드 API (POST /rent)로 데이터 전송.
@@ -305,9 +412,10 @@ export default function BookRentPage() {
                         />
                     </div>
 
+                    {/* 수정된 이미지 업로드 섹션 */}
                     <div>
                         <label htmlFor="bookImage" className="block text-gray-700 text-base font-medium mb-2 font-bold">
-                            책 이미지 업로드
+                            책 이미지 업로드 {isOcrProcessing && <span className="text-blue-500">(AI 분석 중...)</span>}
                         </label>
                         <div className="flex flex-col items-start space-y-3">
                             <input
@@ -316,21 +424,84 @@ export default function BookRentPage() {
                                 className="hidden" // 기본 파일 입력을 숨김
                                 onChange={handleImageChange}
                                 accept="image/*" // 이미지 파일만 선택 가능하도록 제한
+                                disabled={isOcrProcessing} // OCR 처리 중 비활성화
                             />
                             <label
                                 htmlFor="bookImage" // '파일 선택' 버튼(label)을 클릭하면, 브라우저는 자동으로 숨겨진 <input type="file">을 클릭한 것처럼 동작
-                                className="w-full sm:w-auto px-4 py-2 text-white font-semibold rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 cursor-pointer text-center
-                                bg-[#D5BAA3] hover:bg-[#C2A794] focus:ring-[#D5BAA3]"
+                                className={`w-full sm:w-auto px-4 py-2 text-white font-semibold rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 cursor-pointer text-center
+                                    ${isOcrProcessing 
+                                        ? 'bg-gray-400 cursor-not-allowed' 
+                                        : 'bg-[#D5BAA3] hover:bg-[#C2A794] focus:ring-[#D5BAA3]'
+                                    }`}
                             >
-                                파일 선택
+                                {isOcrProcessing ? 'AI 분석 중...' : '파일 선택'}
                             </label>     
-                            <img
-                                src={previewImageUrl}
-                                alt="책 이미지"
-                                className="w-[200px] h-[150px] object-cover rounded-lg"
-                            />                       
+                            
+                            {/* 이미지 미리보기 */}
+                            <div className="relative">
+                                <img
+                                    src={previewImageUrl}
+                                    alt="책 이미지"
+                                    className="w-[200px] h-[150px] object-cover rounded-lg"
+                                />
+                                
+                            {/* 개선된 OCR 처리 중 오버레이 */}
+                            {isOcrProcessing && (
+                                <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center rounded-lg">
+                                    <div className="text-white text-center">
+                                        {/* 3단계 로딩 애니메이션 */}
+                                        <div className="flex space-x-1 mb-3">
+                                            <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
+                                            <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
+                                            <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
+                                        </div>
+                                        
+                                        {/* 단계별 메시지 표시 */}
+                                        <div className="text-sm space-y-1">
+                                            <div className="flex items-center justify-center space-x-2">
+                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                <span>AI가 이미지를 분석하고 있습니다...</span>
+                                            </div>
+                                            <div className="text-xs text-gray-300">
+                                                🔍 텍스트 추출 → 📚 책 제목 인식 → 🔎 도서 검색
+                                            </div>
+                                            <div className="text-xs text-gray-400 mt-2">
+                                                평균 3-5초 소요
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                                
+                                {/* 자동 입력 성공 표시 */}
+                                {isAutoFilled && autoFillSource === 'ocr' && (
+                                    <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded text-xs">
+                                        AI 자동 입력
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
+
+                    {/* OCR 결과 표시 (디버깅 및 사용자 확인용) */}
+                    {ocrResult && (
+                        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <h4 className="font-semibold text-blue-800 mb-2">🤖 AI 분석 결과</h4>
+                            <div className="text-sm text-blue-700 space-y-1">
+                                <div><strong>감지된 제목:</strong> {ocrResult.detectedBookTitle || '감지 실패'}</div>
+                                <div><strong>신뢰도:</strong> {(ocrResult.confidence * 100).toFixed(1)}%</div>
+                                <div><strong>검색 결과:</strong> {ocrResult.searchResults?.length || 0}건</div>
+                            </div>
+                            {ocrResult.extractedText && (
+                                <details className="mt-2">
+                                    <summary className="cursor-pointer text-blue-600 text-sm">추출된 텍스트 보기</summary>
+                                    <pre className="mt-1 text-xs text-gray-600 whitespace-pre-wrap bg-white p-2 rounded border">
+                                        {ocrResult.extractedText}
+                                    </pre>
+                                </details>
+                            )}
+                        </div>
+                    )}
 
                     {/* 책 상태, 주소 입력 부분 */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -528,8 +699,10 @@ export default function BookRentPage() {
             {/* 토스트 메시지 컴포넌트 */}
             {toastMessage && (
                 <div
-                    className={`fixed bottom-8 left-1/2 -translate-x-1/2 px-6 py-3 rounded-lg shadow-lg text-white font-semibold text-center z-50
-                        ${toastType === 'success' ? 'bg-green-500' : 'bg-red-500'}`}
+                    className={`fixed bottom-8 left-1/2 -translate-x-1/2 px-6 py-3 rounded-lg shadow-lg text-white font-semibold text-center z-50 max-w-sm
+                        ${toastType === 'success' ? 'bg-green-500' : 
+                          toastType === 'error' ? 'bg-red-500' : 
+                          toastType === 'info' ? 'bg-blue-500' : 'bg-gray-500'}`}
                 >
                     {toastMessage}
                 </div>
