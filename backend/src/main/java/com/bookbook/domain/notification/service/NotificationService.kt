@@ -32,7 +32,7 @@ class NotificationService(
     // 사용자별 알림 조회
     @Transactional(readOnly = true)
     fun getNotificationsByUser(user: User): List<NotificationResponseDto> {
-        val notifications = notificationRepository.findByReceiverOrderByCreateAtDesc(user)
+        val notifications = notificationRepository.findByReceiverOrderByCreatedDateDesc(user)
 
         return notifications.map { notification ->
             NotificationResponseDto.from(notification)
@@ -64,6 +64,22 @@ class NotificationService(
     @Transactional
     fun markAllAsRead(user: User) {
         notificationRepository.markAllAsReadByReceiver(user)
+    }
+
+    // 특정 대여 건의 RENT_REQUEST 알림을 처리 완료로 표시
+    @Transactional
+    fun markRentRequestAsProcessed(rentId: Long, receiver: User) {
+        val notifications = notificationRepository.findByReceiverAndTypeAndRelatedId(
+            receiver, NotificationType.RENT_REQUEST, rentId
+        )
+        
+        notifications.forEach { notification ->
+            notification.markAsProcessed()
+            notificationRepository.save(notification)
+        }
+        
+        log.info("RENT_REQUEST 알림 처리 완료 표시 - 수신자: {}, Rent ID: {}, 처리된 알림 수: {}", 
+            receiver.nickname, rentId, notifications.size)
     }
 
     // 새 알림 생성 (다른 서비스에서 호출용)

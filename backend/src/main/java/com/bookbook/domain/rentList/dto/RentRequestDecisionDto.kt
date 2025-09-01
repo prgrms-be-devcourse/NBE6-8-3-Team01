@@ -11,7 +11,4 @@ data class RentRequestDecisionDto(
     
     @Schema(description = "거절 사유 (거절 시에만 필요)", example = "죄송합니다. 다른 분께 먼저 대여해드리기로 했습니다.")
     val rejectionReason: String? = null
-) {
-    // Java 호환성을 위한 getter 메서드
-    fun isApproved(): Boolean = approved
-}
+)

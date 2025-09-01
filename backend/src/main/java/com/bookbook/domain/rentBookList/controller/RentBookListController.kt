@@ -3,6 +3,7 @@ package com.bookbook.domain.rentBookList.controller
 import com.bookbook.domain.rentBookList.dto.RentBookListResponseDto
 import com.bookbook.domain.rentBookList.dto.RentRequestDto
 import com.bookbook.domain.rentBookList.service.RentBookListService
+import com.bookbook.global.jpa.dto.response.PageResponseDto
 import com.bookbook.global.rsdata.RsData
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -25,7 +26,7 @@ class RentBookListController(
         @RequestParam(required = false) region: String?,
         @RequestParam(required = false) category: String?,
         @RequestParam(required = false) search: String?
-    ): RsData<Map<String, Any>?> {
+    ): RsData<PageResponseDto<RentBookListResponseDto>?> {
         log.debug(
             "대여 가능한 책 목록 조회 - page: {}, size: {}, region: {}, category: {}, search: {}",
             page, size, region, category, search
@@ -35,15 +36,7 @@ class RentBookListController(
             page - 1, size, region, category, search
         )
 
-        val response = mapOf(
-            "books" to bookPage.content,
-            "pagination" to mapOf(
-                "currentPage" to page,
-                "totalPages" to bookPage.totalPages,
-                "totalElements" to bookPage.totalElements,
-                "size" to size
-            )
-        )
+        val response = PageResponseDto(bookPage)
 
         return RsData("200-1", "대여 가능한 책 목록을 조회했습니다.", response)
     }
