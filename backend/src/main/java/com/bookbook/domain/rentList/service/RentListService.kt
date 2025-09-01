@@ -195,7 +195,7 @@ class RentListService(
             requestMessage,
             rent.bookTitle,
             rent.bookImage,
-            rent.id.toLong()
+            rent.id
         )
         
         log.info(
@@ -276,8 +276,11 @@ class RentListService(
                 approveMessage,
                 rent.bookTitle,
                 rent.bookImage,
-                rent.id.toLong()
+                rent.id
             )
+            
+            // 기존 RENT_REQUEST 알림을 처리 완료로 표시
+            notificationService.markRentRequestAsProcessed(rent.id, currentUser)
             
             log.info(
                 "대여 신청 수락 완료 - 책: {}, 대여자: {}, 신청자: {}, 자동 거절된 다른 신청: {}개", 
@@ -304,8 +307,11 @@ class RentListService(
                 rejectMessage,
                 rent.bookTitle,
                 rent.bookImage,
-                rent.id.toLong()
+                rent.id
             )
+            
+            // 기존 RENT_REQUEST 알림을 처리 완료로 표시
+            notificationService.markRentRequestAsProcessed(rent.id, currentUser)
             
             log.info(
                 "대여 신청 거절 완료 - 책: {}, 대여자: {}, 신청자: {}, 사유: {}", 

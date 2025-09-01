@@ -22,12 +22,6 @@ class TestSetup (
     private val suspendedUserRepository: SuspendedUserRepository
 ){
 
-    @PostConstruct
-    @Order(Ordered.HIGHEST_PRECEDENCE)
-    private fun loadEnv(){
-        EnvLoader.loadEnv()
-    }
-
     @Transactional
     @PostConstruct
     fun createDummyUser() {
