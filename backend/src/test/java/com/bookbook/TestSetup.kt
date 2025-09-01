@@ -4,10 +4,7 @@ import com.bookbook.domain.suspend.entity.SuspendedUser
 import com.bookbook.domain.suspend.repository.SuspendedUserRepository
 import com.bookbook.domain.user.entity.User
 import com.bookbook.domain.user.repository.UserRepository
-import com.bookbook.global.util.EnvLoader
 import jakarta.annotation.PostConstruct
-import org.springframework.core.Ordered
-import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.transaction.annotation.Transactional
@@ -18,12 +15,6 @@ class TestSetup (
     private val userRepository: UserRepository,
     private val suspendedUserRepository: SuspendedUserRepository
 ){
-
-    @PostConstruct
-    @Order(Ordered.HIGHEST_PRECEDENCE)
-    private fun loadEnv(){
-        EnvLoader.loadEnv()
-    }
 
     @Transactional
     @PostConstruct
