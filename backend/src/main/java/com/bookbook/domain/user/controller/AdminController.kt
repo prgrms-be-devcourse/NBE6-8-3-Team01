@@ -142,8 +142,8 @@ class AdminController (
         @RequestParam(required = false) status: List<UserStatus>?,
         @RequestParam(required = false) userId: Long?
     ): ResponseEntity<RsData<PageResponseDto<UserSimpleResponseDto>>> {
-        if (page < 1) throw ServiceException("페이지 번호는 1보다 작을 수 없습니다")
-        if (size < 1) throw ServiceException("페이지 당 크기는 1보다 작을 수 없습니다")
+        if (page < 1) throw ServiceException("페이지 번호는 1보다 작을 수 없습니다.")
+        if (size < 1) throw ServiceException("페이지 당 크기는 1보다 작을 수 없습니다.")
 
         val pageable: Pageable = PageRequest.of(page - 1, size)
 

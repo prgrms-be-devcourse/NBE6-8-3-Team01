@@ -371,6 +371,52 @@ class AdminControllerTest {
         iterateFromList(resultActions, users)
     }
 
+    @Test
+    @DisplayName("유저 목록 조회 - 잘못된 page 인수")
+    fun t10() {
+        val page = -1
+        val size = 10
+
+        val resultAction = mvc
+            .perform(
+                get("/api/v1/admin/users")
+                    .param("page", page.toString())
+                    .param("size", size.toString())
+            )
+            .andDo(print())
+
+        resultAction
+            .andExpect(handler().handlerType(AdminController::class.java))
+            .andExpect(handler().methodName("getFilteredUsers"))
+            .andExpect(jsonPath("$.resultCode").value("400"))
+            .andExpect(jsonPath("$.msg").value("페이지 번호는 1보다 작을 수 없습니다."))
+            .andExpect(jsonPath("$.data").doesNotExist())
+
+    }
+
+    @Test
+    @DisplayName("유저 목록 조회 - 잘못된 size 인수")
+    fun t11() {
+        val page = 1
+        val size = -1
+
+        val resultAction = mvc
+            .perform(
+                get("/api/v1/admin/users")
+                    .param("page", page.toString())
+                    .param("size", size.toString())
+            )
+            .andDo(print())
+
+        resultAction
+            .andExpect(handler().handlerType(AdminController::class.java))
+            .andExpect(handler().methodName("getFilteredUsers"))
+            .andExpect(jsonPath("$.resultCode").value("400"))
+            .andExpect(jsonPath("$.msg").value("페이지 당 크기는 1보다 작을 수 없습니다."))
+            .andExpect(jsonPath("$.data").doesNotExist())
+
+    }
+
     private fun iterateFromList(resultActions: ResultActions, users: List<UserSimpleResponseDto>) {
         for (i in users.indices) {
             val user = users[i]
