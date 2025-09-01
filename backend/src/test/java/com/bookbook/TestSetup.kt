@@ -5,16 +5,14 @@ import com.bookbook.domain.suspend.repository.SuspendedUserRepository
 import com.bookbook.domain.user.entity.User
 import com.bookbook.domain.user.repository.UserRepository
 import com.bookbook.global.security.CustomOAuth2User
-import com.bookbook.global.util.EnvLoader
 import jakarta.annotation.PostConstruct
-import org.springframework.core.Ordered
-import org.springframework.core.annotation.Order
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Component
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.transaction.annotation.Transactional
+import com.bookbook.domain.user.enums.Role
 
 
 @Component
