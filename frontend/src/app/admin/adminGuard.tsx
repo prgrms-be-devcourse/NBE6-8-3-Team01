@@ -10,7 +10,7 @@ interface AdminGuardProps {
 }
 
 export default function AdminGuard({ children }: AdminGuardProps) {
-    const { isLogin, loading } = useAuthContext();
+    const { isLogin, loading, isAdmin } = useAuthContext();
     const pathname = usePathname();
     const router = useRouter();
 
@@ -45,6 +45,10 @@ export default function AdminGuard({ children }: AdminGuardProps) {
     // 로그인하지 않은 경우 로딩 표시 (리다이렉트 중)
     if (!isLogin) {
         return <LoadingScreen message="로그인 페이지로 이동 중..." />;
+    }
+
+    if (!isAdmin) {
+        return <UnauthorizedModal />
     }
 
     // 모든 검증을 통과한 관리자만 children 렌더링

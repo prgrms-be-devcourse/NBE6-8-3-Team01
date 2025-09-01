@@ -10,7 +10,6 @@ interface PostDetailModalProps {
   post: RentPostDetailResponseDto;
   isOpen: boolean;
   onClose: () => void;
-  onRefresh?: () => void;
   onUserDetailClick: () => void;
 }
 
@@ -18,7 +17,6 @@ export function PostDetailModal({
   post,
   isOpen,
   onClose: _onClose,
-  onRefresh,
   onUserDetailClick,
 } : PostDetailModalProps)  {
   const [currentPost, setCurrentPost] = useState(post);
@@ -26,7 +24,7 @@ export function PostDetailModal({
   const [confirmAction, setConfirmAction] = useState<"delete" | "updateStatus" | "restore" | null>(null);
   const initialRentStatus = currentPost?.rentStatus ? currentPost.rentStatus : "UNKNOWN";
   const [rentStatusValue, setRentStatusValue] = useState<RentStatus>(initialRentStatus);
-  const isSameStatus = post.rentStatus == rentStatusValue;
+  const isSameStatus = initialRentStatus == rentStatusValue;
   const isDeleted = initialRentStatus === "DELETED";
 
   const rentStatusButtonClassName = isSameStatus
@@ -63,7 +61,7 @@ export function PostDetailModal({
   }
 
   const handlePostDelete = async () => {
-    const response = await fetch(`/api/v1/admin/rent/${currentPost.id}`,
+    const response = await fetch(`/api/v1/bookbook/rent/${currentPost.id}`,
       {
         method: "DELETE",
         headers: {
@@ -121,7 +119,6 @@ export function PostDetailModal({
 
   const onClose = () => {
     _onClose();
-    onRefresh?.();
   }
 
   const handleConfirmAction = async () => {
@@ -228,9 +225,9 @@ export function PostDetailModal({
               </button>
               {!isDeleted && (
                 <button
-                onClick={handleStatusUpdate}
-                disabled={initialRentStatus == rentStatusValue}
-                className={rentStatusButtonClassName}
+                  onClick={handleStatusUpdate}
+                  disabled={initialRentStatus == rentStatusValue}
+                  className={rentStatusButtonClassName}
                 >
                   상태 변경
                 </button>

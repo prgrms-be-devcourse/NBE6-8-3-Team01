@@ -1,5 +1,4 @@
-// 25.08.03 현준
-package com.bookbook.domain.rent.dto
+package com.bookbook.domain.rent.dto.response
 
 import com.bookbook.domain.rent.entity.RentStatus
 import java.time.LocalDateTime

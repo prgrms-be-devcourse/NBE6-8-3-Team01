@@ -39,10 +39,10 @@ const UserStatusInfo: React.FC<UserStatusInfoProps> = ({ user }) => {
           </label>
           <span
             className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
-              user.baseResponseDto.userStatus
+              user.userStatus
             )}`}
           >
-            {getUserStatus(user.baseResponseDto.userStatus)}
+            {getUserStatus(user.userStatus)}
           </span>
         </div>
         <div>
@@ -50,17 +50,17 @@ const UserStatusInfo: React.FC<UserStatusInfoProps> = ({ user }) => {
           <div className="flex items-center space-x-1">
             <span
               className={`text-sm font-semibold ${getRatingColor(
-                user.baseResponseDto.rating
+                user.rating
               )}`}
             >
-              {user.baseResponseDto.rating.toFixed(1)}
+              {user.rating.toFixed(1)}
             </span>
             <div className="flex">
               {[1, 2, 3, 4, 5].map((star) => (
                 <svg
                   key={star}
                   className={`w-3 h-3 ${
-                    star <= user.baseResponseDto.rating
+                    star <= user.rating
                       ? "text-yellow-400"
                       : "text-gray-300"
                   }`}
@@ -88,7 +88,7 @@ const UserStatusInfo: React.FC<UserStatusInfoProps> = ({ user }) => {
       </div>
 
       {/* 정지 상태일 때만 표시되는 정지 정보 */}
-      {user.baseResponseDto.userStatus === "SUSPENDED" && (
+      {user.userStatus === "SUSPENDED" && (
         <div className="mt-3 pt-3 border-t border-gray-200">
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>

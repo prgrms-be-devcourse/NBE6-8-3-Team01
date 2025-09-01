@@ -10,14 +10,12 @@ interface PostDetailWithUserModalProps {
   post: RentPostDetailResponseDto;
   isOpen: boolean;
   onClose: () => void;
-  onRefresh?: () => void;
 }
 
 const PostDetailWithUserModal: React.FC<PostDetailWithUserModalProps> = ({
    post,
    isOpen,
    onClose,
-   onRefresh,
  }) => {
   const [userDetailOpen, setUserDetailOpen] = useState(false);
   const [userDetail, setUserDetail] = useState<UserDetailResponseDto>(
@@ -46,7 +44,6 @@ const PostDetailWithUserModal: React.FC<PostDetailWithUserModalProps> = ({
             post={post}
             isOpen={isOpen || !userDetailOpen}
             onClose={onClose}
-            onRefresh={onRefresh}
             onUserDetailClick={handleUserDetailClick}
         />
 

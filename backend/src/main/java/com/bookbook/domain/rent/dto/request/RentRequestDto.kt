@@ -1,4 +1,4 @@
-package com.bookbook.domain.rent.dto
+package com.bookbook.domain.rent.dto.request
 
 import com.bookbook.domain.rent.entity.RentStatus
 import jakarta.validation.constraints.NotBlank
