@@ -47,13 +47,7 @@ class Notification() : BaseEntity() {
     var isProcessed: Boolean = false
         protected set // 처리 완료 여부 (수락/거절 완료 시 true)
 
-    @CreatedDate
-    var createAt: LocalDateTime? = null
-        protected set
 
-    @LastModifiedDate
-    var updateAt: LocalDateTime? = null
-        protected set
 
     constructor(
         receiver: User,
