@@ -6,6 +6,7 @@ import com.bookbook.domain.user.dto.response.UserLoginResponseDto
 import com.bookbook.domain.user.dto.response.UserSimpleResponseDto
 import com.bookbook.domain.user.enums.UserStatus
 import com.bookbook.domain.user.service.AdminService
+import com.bookbook.global.exception.ServiceException
 import com.bookbook.global.jpa.dto.response.PageResponseDto
 import com.bookbook.global.rsdata.RsData
 import com.bookbook.global.security.CustomOAuth2User
@@ -141,9 +142,12 @@ class AdminController (
         @RequestParam(required = false) status: List<UserStatus>?,
         @RequestParam(required = false) userId: Long?
     ): ResponseEntity<RsData<PageResponseDto<UserSimpleResponseDto>>> {
+        if (page < 1) throw ServiceException("페이지 번호는 1보다 작을 수 없습니다")
+        if (size < 1) throw ServiceException("페이지 당 크기는 1보다 작을 수 없습니다")
+
         val pageable: Pageable = PageRequest.of(page - 1, size)
 
-        val userPage= adminService.getFilteredUsers(pageable, status, userId)
+        val userPage = adminService.getFilteredUsers(pageable, status, userId)
         val response = PageResponseDto(userPage)
 
         return ResponseEntity.ok(
