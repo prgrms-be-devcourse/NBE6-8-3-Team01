@@ -138,7 +138,7 @@ class AdminController (
     fun getFilteredUsers(
         @RequestParam(defaultValue = "1") page: Int,
         @RequestParam(defaultValue = "10") size: Int,
-        @RequestParam(required = false) status: MutableList<UserStatus>?,
+        @RequestParam(required = false) status: List<UserStatus>?,
         @RequestParam(required = false) userId: Long?
     ): ResponseEntity<RsData<PageResponseDto<UserSimpleResponseDto>>> {
         val pageable: Pageable = PageRequest.of(page - 1, size)

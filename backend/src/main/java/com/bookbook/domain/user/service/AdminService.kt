@@ -53,7 +53,7 @@ class AdminService(
      */
     @Transactional(readOnly = true)
     fun getFilteredUsers(
-        pageable: Pageable, status: MutableList<UserStatus>?, userId: Long?
+        pageable: Pageable, status: List<UserStatus>?, userId: Long?
     ): Page<UserSimpleResponseDto> {
         return userRepository.findFilteredUsers(pageable, status, userId)
             .map { UserSimpleResponseDto(it) }
