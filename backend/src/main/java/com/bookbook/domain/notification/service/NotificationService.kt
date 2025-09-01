@@ -32,7 +32,7 @@ class NotificationService(
     // 사용자별 알림 조회
     @Transactional(readOnly = true)
     fun getNotificationsByUser(user: User): List<NotificationResponseDto> {
-        val notifications = notificationRepository.findByReceiverOrderByCreateAtDesc(user)
+        val notifications = notificationRepository.findByReceiverOrderByCreatedDateDesc(user)
 
         return notifications.map { notification ->
             NotificationResponseDto.from(notification)

@@ -11,13 +11,13 @@ import org.springframework.data.repository.query.Param
 //08-29 유효상
 interface NotificationRepository : JpaRepository<Notification, Long> {
     // 사용자별 알림 조회 (최신순)
-    fun findByReceiverOrderByCreateAtDesc(receiver: User): List<Notification>
+    fun findByReceiverOrderByCreatedDateDesc(receiver: User): List<Notification>
 
     // 사용자별 읽지 않은 알림 개수
     fun countByReceiverAndIsReadFalse(receiver: User): Long
 
     // 사용자별 읽지 않은 알림 조회
-    fun findByReceiverAndIsReadFalseOrderByCreateAtDesc(receiver: User): List<Notification>
+    fun findByReceiverAndIsReadFalseOrderByCreatedDateDesc(receiver: User): List<Notification>
 
     // 사용자의 모든 알림을 읽음 처리하는 쿼리
     @Modifying

@@ -47,7 +47,7 @@ data class NotificationResponseDto(
             return NotificationResponseDto(
                 id = notification.id,
                 message = notification.title, // enum에서 가져온 기본 메시지
-                time = formatTime(notification.createAt),
+                time = formatTime(notification.createdDate),
                 read = notification.isRead,
                 processed = notification.isProcessed, // 처리 완료 여부 추가
                 bookTitle = notification.bookTitle ?: "",
