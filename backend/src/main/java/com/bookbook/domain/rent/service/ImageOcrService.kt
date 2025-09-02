@@ -59,7 +59,7 @@ class ImageOcrService {
                 val request = AnnotateImageRequest.newBuilder()
                     .addFeatures(documentTextFeature) // 문서 텍스트 (정확한 텍스트 추출 + 위치 정보)
                     .addFeatures(imagePropsFeature)    // 이미지 속성 (책 상태 분석용)
-                    .addFeatures(webFeature)           // 웹 검색 (결과 검증)
+                    .addFeatures(webFeature)           // 웹 검색 (결과 검증, 한글 책 우선 검색)
                     .setImage(img)                      // 분석할 이미지
                     .build()
                 
@@ -214,7 +214,7 @@ class ImageOcrService {
         }
     }
 
-    // 웹 검색 결과에서 책 제목을 추출하는 함수
+    // 웹 검색 결과에서 책 제목을 추출하는 함수 (한글 우선)
     private fun extractTitleFromWebDetection(webDetection: com.google.cloud.vision.v1.WebDetection): String {
         return try {
             log.info("=== 웹 검색 결과 분석 시작 ===")
@@ -231,7 +231,12 @@ class ImageOcrService {
                 
                 log.info("신뢰도 40% 이상 엔티티: ${highConfidenceEntities.map { "${it.description}(${(it.score * 100).toInt()}%)" }}")
                 
-                // 책 제목으로 보이는 엔티티 찾기
+                // 한글 포함 여부를 확인하는 함수
+                fun containsKorean(text: String): Boolean {
+                    return text.any { it.code in 0xAC00..0xD7AF || it.code in 0x1100..0x11FF || it.code in 0x3130..0x318F }
+                }
+                
+                // 책 제목으로 보이는 엔티티 찾기 (한글 우선)
                 val bookTitleCandidates = highConfidenceEntities
                     .filter { entity ->
                         val description = entity.description.lowercase()
@@ -241,14 +246,39 @@ class ImageOcrService {
                         !description.contains("isbn") &&
                         !description.contains("price") &&
                         !description.contains("page") &&
-                                                 description.length in 2..80 // 길이 제한을 넓게 (2~80자)
+                        !description.contains("used") &&
+                        !description.contains("good") &&
+                        !description.contains("condition") &&
+                        !description.contains("sale") &&
+                        !description.contains("buy") &&
+                        !description.contains("sell") &&
+                        description.length in 2..80 // 길이 제한을 넓게 (2~80자)
                     }
                 
-                                 if (bookTitleCandidates.isNotEmpty()) {
-                     val bestCandidate = bookTitleCandidates.first()
-                     log.info("웹 엔티티에서 선택된 제목: '${bestCandidate.description}' (신뢰도: ${(bestCandidate.score * 100).toInt()}%)")
-                     return bestCandidate.description
-                 }
+                if (bookTitleCandidates.isNotEmpty()) {
+                    // 한글이 포함된 후보를 우선적으로 선택
+                    val koreanCandidates = bookTitleCandidates.filter { containsKorean(it.description) }
+                    val nonKoreanCandidates = bookTitleCandidates.filter { !containsKorean(it.description) }
+                    
+                    // 한글 후보가 있으면 한글 후보 중에서 선택, 없으면 일반 후보에서 선택
+                    val bestCandidate = if (koreanCandidates.isNotEmpty()) {
+                        // 한글 후보 중에서 한글 문자가 더 많이 포함된 것을 우선 선택
+                        val bestKoreanCandidate = koreanCandidates.maxByOrNull { candidate ->
+                            candidate.description.count { char ->
+                                char.code in 0xAC00..0xD7AF || char.code in 0x1100..0x11FF || char.code in 0x3130..0x318F
+                            }
+                        } ?: koreanCandidates.first()
+                        
+                        log.info("한글 후보 중에서 선택 (한글 문자 수: ${bestKoreanCandidate.description.count { char -> char.code in 0xAC00..0xD7AF || char.code in 0x1100..0x11FF || char.code in 0x3130..0x318F }}): ${koreanCandidates.map { it.description }}")
+                        bestKoreanCandidate
+                    } else {
+                        log.info("한글 후보가 없어 일반 후보 중에서 선택: ${nonKoreanCandidates.map { it.description }}")
+                        nonKoreanCandidates.first()
+                    }
+                    
+                    log.info("웹 엔티티에서 선택된 제목: '${bestCandidate.description}' (신뢰도: ${(bestCandidate.score * 100).toInt()}%, 한글 포함: ${containsKorean(bestCandidate.description)})")
+                    return bestCandidate.description
+                }
             }
             
             log.info("웹 검색 결과에서 적절한 제목을 찾을 수 없습니다")

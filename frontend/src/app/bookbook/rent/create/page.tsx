@@ -111,9 +111,9 @@ export default function BookRentPage() {
         
         // 책 상태 분석 (OCR 신뢰도 기반)
         let conditionAnalysis = '';
-        if (ocrResult.confidence > 0.8) {
+        if (ocrResult.confidence > 0.7) {
             conditionAnalysis = '책 상태가 아주 좋습니다.';
-        } else if (ocrResult.confidence > 0.65) {
+        } else if (ocrResult.confidence > 0.6) {
             conditionAnalysis = '책 상태가 양호합니다.';
         } else if (ocrResult.confidence > 0.5) {
             conditionAnalysis = '약간의 사용감이 있지만 양호합니다.';
@@ -125,6 +125,7 @@ export default function BookRentPage() {
         return `"${book.bookTitle}"를 대여해드립니다.
 ${book.publisher}에서 출간한 ${book.author} 작가의 책입니다.
 ${book.category || '다양한 분야'}에 관심 있는 분들께 추천합니다.
+
 ${conditionAnalysis}`;
     };
 
@@ -232,11 +233,6 @@ ${conditionAnalysis}`;
                 showToast('OCR 자동 실행 중 오류가 발생했습니다.', 'error');
             }
             
-        } else {
-            // 사진 올리기 취소 시
-            setBookImage(null);
-            setOcrResult(null);
-            resetBookFields(); // 책 관련 필드도 함께 초기화
         }
     };
 
@@ -359,27 +355,30 @@ ${conditionAnalysis}`;
                      const book = result.searchResults[0];
                      console.log('자동 선택된 도서:', book.bookTitle);
                      
-                     // 1. 책 정보 자동 입력
-                     setBookTitle(book.bookTitle);
-                     setAuthor(book.author);
-                     setPublisher(book.publisher);
-                     setCategory(book.category || '');
-                     setDescription(book.bookDescription || '');
-                     
-                     // 2. 글 제목 자동 생성: "[책 제목]"
-                     const autoTitle = `[${book.bookTitle}]`;
-                     setTitle(autoTitle);
-                     
-                     // 3. 글 내용 자동 생성: AI 분석 기반 설명
-                     const autoContents = generateAutoContents(book, result);
-                     setContents(autoContents);
-                     
-                     // 자동 입력 상태 설정
-                     setIsAutoFilled(true);
-                     setAutoFillSource('ocr');
-                     
-                     showToast(`"${book.bookTitle}" 모든 정보가 자동으로 입력되었습니다!`, 'success');
-                     return true;
+                                           // 1. 책 정보 자동 입력
+                      setBookTitle(book.bookTitle);
+                      setAuthor(book.author);
+                      setPublisher(book.publisher);
+                      setCategory(book.category || '');
+                      setDescription(book.bookDescription || '');
+                      
+                      // 2. 글 제목 자동 생성: "[책 제목]"
+                      const autoTitle = `[${book.bookTitle}]`;
+                      setTitle(autoTitle);
+                      
+                      // 3. 글 내용 자동 생성: AI 분석 기반 설명
+                      const autoContents = generateAutoContents(book, result);
+                      setContents(autoContents);
+                      
+                      // 4. 책 검색 상자에도 제목 입력
+                      setSearchQuery(book.bookTitle);
+                      
+                      // 자동 입력 상태 설정
+                      setIsAutoFilled(true);
+                      setAutoFillSource('ocr');
+                      
+                      showToast(`"${book.bookTitle}" 모든 정보가 자동으로 입력되었습니다!`, 'success');
+                      return true;
                      
                  } else if (result.detectedBookTitle) {
                      // 검색 결과가 0건인 경우 모든 필드 초기화 (책 제목 포함)
