@@ -43,7 +43,12 @@ class ReportAdminController (
         @RequestParam(defaultValue = "10") size: Int,
         @RequestParam(required = false) status: MutableList<ReportStatus>?,
         @RequestParam(required = false) targetUserId: Long?
+        @RequestParam(required = false) status: List<ReportStatus>?,
     ): ResponseEntity<RsData<PageResponseDto<ReportSimpleResponseDto>>> {
+
+        val page = if (page < 1) 1 else page
+        val size = if (size < 1) 10 else size
+
         val pageable: Pageable = PageRequest.of(page - 1, size)
 
         val reportHistoryPage = reportService.getReportPage(pageable, status, targetUserId)
@@ -52,7 +57,7 @@ class ReportAdminController (
         return ResponseEntity.ok(
             RsData(
                 "200-1",
-                "${response.pageInfo.totalElements}개의 신고글을 발견했습니다.",
+                "${response.pageInfo.totalElements}개의 신고글 조회 완료.",
                 response
             )
         )
