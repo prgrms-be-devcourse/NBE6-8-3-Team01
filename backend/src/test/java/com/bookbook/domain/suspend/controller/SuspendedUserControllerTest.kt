@@ -345,7 +345,7 @@ class SuspendedUserControllerTest {
     }
 
     @Test
-    @DisplayName("정지된 유저 목록 조회 - 잘못된 page 인수")
+    @DisplayName("정지된 유저 목록 조회 - 잘못된 page 인수 조정")
     fun t11() {
         val page = -1
         val size = 10
@@ -361,14 +361,12 @@ class SuspendedUserControllerTest {
         resultAction
             .andExpect(handler().handlerType(SuspendedUserController::class.java))
             .andExpect(handler().methodName("getAllSuspendedHistory"))
-            .andExpect(jsonPath("$.resultCode").value("400"))
-            .andExpect(jsonPath("$.msg").value("페이지 번호는 1보다 작을 수 없습니다."))
-            .andExpect(jsonPath("$.data").doesNotExist())
-
+            .andExpect(jsonPath("$.resultCode").value("200-1"))
+            .andExpect(jsonPath("$.data").exists())
     }
 
     @Test
-    @DisplayName("정지된 유저 목록 조회 - 잘못된 size 인수")
+    @DisplayName("정지된 유저 목록 조회 - 잘못된 size 인수 조정")
     fun t12() {
         val page = 1
         val size = -1
@@ -384,9 +382,8 @@ class SuspendedUserControllerTest {
         resultAction
             .andExpect(handler().handlerType(SuspendedUserController::class.java))
             .andExpect(handler().methodName("getAllSuspendedHistory"))
-            .andExpect(jsonPath("$.resultCode").value("400"))
-            .andExpect(jsonPath("$.msg").value("페이지 당 크기는 1보다 작을 수 없습니다."))
-            .andExpect(jsonPath("$.data").doesNotExist())
-
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.resultCode").value("200-1"))
+            .andExpect(jsonPath("$.data").exists())
     }
 }

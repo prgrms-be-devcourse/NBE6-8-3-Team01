@@ -4,7 +4,6 @@ import com.bookbook.domain.suspend.dto.request.UserSuspendRequestDto
 import com.bookbook.domain.suspend.dto.response.UserSuspendResponseDto
 import com.bookbook.domain.suspend.service.SuspendedUserService
 import com.bookbook.domain.user.dto.response.UserDetailResponseDto
-import com.bookbook.global.exception.ServiceException
 import com.bookbook.global.jpa.dto.response.PageResponseDto
 import com.bookbook.global.rsdata.RsData
 import io.swagger.v3.oas.annotations.Operation
@@ -45,8 +44,8 @@ class SuspendedUserController (
         @RequestParam(defaultValue = "10") size: Int,
         @RequestParam(required = false) userId: Long?
     ): ResponseEntity<RsData<PageResponseDto<UserSuspendResponseDto>>> {
-        if (page < 1) throw ServiceException("페이지 번호는 1보다 작을 수 없습니다.")
-        if (size < 1) throw ServiceException("페이지 당 크기는 1보다 작을 수 없습니다.")
+        val page = if (page < 1) 1 else page
+        val size = if (size < 1) 10 else size
 
         val histories = suspendedUserService.getSuspendedHistoryPage(page, size, userId)
 
