@@ -86,8 +86,21 @@ export default function BookRentPage() {
      const [isAddressPopupOpen, setIsAddressPopupOpen] = useState(false); // 팝업 출력 용
      const [selectedAddress, setSelectedAddress] = useState(''); // 선택된 주소
      
-     // AI 조회 실패 팝업 상태 추가
-     const [showAiFailurePopup, setShowAiFailurePopup] = useState(false);
+         // AI 조회 실패 팝업 상태 추가
+    const [showAiFailurePopup, setShowAiFailurePopup] = useState(false);
+    
+    // AI 작성 모드 상태 추가
+    const [isAiModeEnabled, setIsAiModeEnabled] = useState(true);
+    
+    // AI 모드 변경 시 OCR 결과 초기화
+    useEffect(() => {
+        if (!isAiModeEnabled) {
+            // AI 모드가 비활성화되면 OCR 결과와 자동 입력 상태 초기화
+            setOcrResult(null);
+            setIsAutoFilled(false);
+            setAutoFillSource(null);
+        }
+    }, [isAiModeEnabled]);
 
     useEffect(() => {
         if (bookImage) {
@@ -225,12 +238,17 @@ ${conditionAnalysis}`;
             // 기존 이미지 설정 로직
             setBookImage(selectedFile);
 
-            // 이미지 선택과 동시에 OCR 실행 
-            try{
-                await handleOcrBookSearch(selectedFile);
-            }catch(error){
-                console.error('OCR 자동 실행 중 오류 발생', error);
-                showToast('OCR 자동 실행 중 오류가 발생했습니다.', 'error');
+            // AI 모드가 활성화된 경우에만 OCR 실행
+            if (isAiModeEnabled) {
+                try{
+                    await handleOcrBookSearch(selectedFile);
+                }catch(error){
+                    console.error('OCR 자동 실행 중 오류 발생', error);
+                    showToast('OCR 자동 실행 중 오류가 발생했습니다.', 'error');
+                }
+            } else {
+                // AI 모드가 비활성화된 경우 단순 이미지 등록만
+                showToast('이미지가 등록되었습니다. 수동으로 정보를 입력해주세요.', 'info');
             }
             
         }
@@ -535,29 +553,53 @@ ${conditionAnalysis}`;
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     
-                    {/* 수정된 이미지 업로드 섹션 */}
-                    <div>
-                        <label htmlFor="bookImage" className="block text-gray-700 text-base font-bold mb-2">
-                            책 이미지 업로드 {isOcrProcessing && <span className="text-blue-500">(AI 분석 중...)</span>}
-                        </label>
+                                         {/* AI 작성 모드 선택 */}
+                     <div className="mb-6">
+                         <div className="flex items-center space-x-3">
+                             <label className="flex items-center space-x-2 cursor-pointer">
+                                 <input
+                                     type="checkbox"
+                                     checked={isAiModeEnabled}
+                                     onChange={(e) => setIsAiModeEnabled(e.target.checked)}
+                                     className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                                 />
+                                 <span className="text-gray-700 font-medium">AI로 작성하기</span>
+                             </label>
+                         </div>
+                         
+                         {/* AI 모드 비활성화 시 안내 메시지 */}
+                         {!isAiModeEnabled && (
+                             <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                 <p className="text-sm text-blue-700">
+                                     💡 <strong>수동 모드</strong>: 이미지를 등록한 후 모든 정보를 직접 입력해주세요.
+                                 </p>
+                             </div>
+                         )}
+                     </div>
+
+                     {/* 수정된 이미지 업로드 섹션 */}
+                     <div>
+                         <label htmlFor="bookImage" className="block text-gray-700 text-base font-bold mb-2">
+                             책 이미지 업로드 {isAiModeEnabled && isOcrProcessing && <span className="text-blue-500">(AI 분석 중...)</span>}
+                         </label>
                         <div className="flex flex-col items-start space-y-3">
-                            <input
-                                type="file"
-                                id="bookImage"
-                                className="hidden" // 기본 파일 입력을 숨김
-                                onChange={handleImageChange}
-                                accept="image/*" // 이미지 파일만 선택 가능하도록 제한
-                                disabled={isOcrProcessing} // OCR 처리 중 비활성화
-                            />
+                                                         <input
+                                 type="file"
+                                 id="bookImage"
+                                 className="hidden" // 기본 파일 입력을 숨김
+                                 onChange={handleImageChange}
+                                 accept="image/*" // 이미지 파일만 선택 가능하도록 제한
+                                 disabled={isAiModeEnabled && isOcrProcessing} // AI 모드에서만 OCR 처리 중 비활성화
+                             />
                             <label
                                 htmlFor="bookImage" // '사진 올리기' 버튼(label)을 클릭하면, 브라우저는 자동으로 숨겨진 <input type="file">을 클릭한 것처럼 동작
                                 className={`w-full sm:w-auto px-4 py-2 text-white font-semibold rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 cursor-pointer text-center
-                                    ${isOcrProcessing 
+                                    ${(isAiModeEnabled && isOcrProcessing)
                                         ? 'bg-gray-400 cursor-not-allowed' 
                                         : 'bg-[#D5BAA3] hover:bg-[#C2A794] focus:ring-[#D5BAA3]'
                                     }`}
                             >
-                                {isOcrProcessing ? 'AI 분석 중...' : '사진 올리기'}
+                                {(isAiModeEnabled && isOcrProcessing) ? 'AI 분석 중...' : '사진 올리기'}
                             </label>     
                             
                             {/* 이미지 미리보기 */}
@@ -568,21 +610,14 @@ ${conditionAnalysis}`;
                                     className="w-[200px] h-[150px] object-cover rounded-lg"
                                 />
                                 
-                                                         {/* OCR 처리 중일 때는 간단한 로딩 표시만 */}
-                             {isOcrProcessing && (
-                                 <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center rounded-lg">
-                                     <div className="text-white text-center">
-                                         <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                     </div>
-                                 </div>
-                             )}
-                                
-                                {/* 자동 입력 성공 표시 */}
-                                {isAutoFilled && autoFillSource === 'ocr' && (
-                                    <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded text-xs">
-                                        AI 자동 입력
-                                    </div>
-                                )}
+                                                                                          {/* OCR 처리 중일 때는 간단한 로딩 표시만 (AI 모드에서만) */}
+                              {isAiModeEnabled && isOcrProcessing && (
+                                  <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center rounded-lg">
+                                      <div className="text-white text-center">
+                                          <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                      </div>
+                                  </div>
+                              )}
                             </div>
                         </div>
                     </div>
@@ -602,8 +637,8 @@ ${conditionAnalysis}`;
                         />
                     </div>
                     
-                                {/* AI 분석 중 로딩 팝업 */}
-                                             {isOcrProcessing && (
+                                {/* AI 분석 중 로딩 팝업 (AI 모드에서만) */}
+                                             {isAiModeEnabled && isOcrProcessing && (
                            <div className="fixed inset-0 bg-black/50 bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-[60]">
                                                            <div className="bg-white bg-opacity-95 backdrop-blur-md rounded-2xl p-8 shadow-2xl max-w-sm mx-4 text-center">
                                  
