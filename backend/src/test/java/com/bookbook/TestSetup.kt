@@ -7,8 +7,10 @@ import com.bookbook.domain.user.enums.Role
 import com.bookbook.domain.user.repository.UserRepository
 import com.bookbook.global.security.CustomOAuth2User
 import jakarta.annotation.PostConstruct
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Component
 import org.springframework.test.context.ActiveProfiles
@@ -21,8 +23,40 @@ class TestSetup (
     private val userRepository: UserRepository,
     private val suspendedUserRepository: SuspendedUserRepository,
     private val passwordEncoder: PasswordEncoder
-
 ){
+    companion object {
+        fun setAuthentication(user: User) {
+            val customUser = createCustomOAuth2User(user)
+
+            val authentication = UsernamePasswordAuthenticationToken(
+                customUser, null, customUser.authorities
+            )
+
+            SecurityContextHolder.getContext().authentication = authentication
+        }
+
+        fun createCustomOAuth2User(user: User): CustomOAuth2User {
+            val authorities: Collection<GrantedAuthority> = listOf(SimpleGrantedAuthority("ROLE_${user.role}"))
+
+            val attributes: Map<String, Any> = mapOf<String, Any>(
+                "id" to user.id,
+                "name" to user.username,
+                "email" to user.email.orEmpty()
+            )
+            val nameAttributeKey = "name"
+
+            return CustomOAuth2User(
+                authorities,
+                attributes,
+                nameAttributeKey,
+                username = user.username,
+                nickname = user.nickname,
+                userId = user.id,
+                isRegistrationCompleted = user.isRegistrationCompleted(),
+                role = user.role
+            )
+        }
+    }
 
     @Transactional
     @PostConstruct
