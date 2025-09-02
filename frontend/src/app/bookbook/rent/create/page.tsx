@@ -571,7 +571,7 @@ ${conditionAnalysis}`;
                          {!isAiModeEnabled && (
                              <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                                  <p className="text-sm text-blue-700">
-                                     💡 <strong>수동 모드</strong>: 이미지를 등록한 후 모든 정보를 직접 입력해주세요.
+                                    이미지를 등록한 후 모든 정보를 직접 입력해주세요.
                                  </p>
                              </div>
                          )}
