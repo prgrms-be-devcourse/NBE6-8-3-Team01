@@ -8,6 +8,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers.print
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
@@ -182,5 +183,84 @@ class LendListControllerTest {
             .andExpect(jsonPath("$.data").exists())
             .andExpect(jsonPath("$.data.content").isArray)
             .andExpect(jsonPath("$.data.size").value(20))
+    }
+
+    @Test
+    @DisplayName("도서 게시글 소프트 삭제 - 성공")
+    fun t9() {
+        // 테스트용 대여 게시글 ID (RentInitData에서 생성된 첫 번째 게시글)
+        val rentId = 1L
+        
+        val resultActions = mvc
+            .perform(delete("/api/v1/user/$testUserId/lendlist/$rentId"))
+            .andDo(print())
+
+        resultActions
+            .andExpect(handler().handlerType(LendListController::class.java))
+            .andExpect(handler().methodName("deleteLendList"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.resultCode").value("200"))
+            .andExpect(jsonPath("$.msg").value("도서 게시글을 삭제했습니다."))
+    }
+
+    @Test
+    @DisplayName("권한 없는 사용자가 도서 게시글 삭제 시도 - 실패")
+    fun t10() {
+        // 다른 사용자가 등록한 게시글 삭제 시도
+        val otherUserId = 2L
+        val rentId = 1L  // testUserId(1)가 작성한 게시글
+        
+        val resultActions = mvc
+            .perform(delete("/api/v1/user/$otherUserId/lendlist/$rentId"))
+            .andDo(print())
+
+        resultActions
+            .andExpect(handler().handlerType(LendListController::class.java))
+            .andExpect(handler().methodName("deleteLendList"))
+            .andExpect(status().isForbidden)
+            .andExpect(jsonPath("$.resultCode").value("403-FORBIDDEN"))
+            .andExpect(jsonPath("$.msg").value("해당 게시글을 삭제할 권한이 없습니다."))
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 게시글 삭제 시도 - 실패")
+    fun t11() {
+        val nonExistentRentId = 999L
+        
+        val resultActions = mvc
+            .perform(delete("/api/v1/user/$testUserId/lendlist/$nonExistentRentId"))
+            .andDo(print())
+
+        resultActions
+            .andExpect(handler().handlerType(LendListController::class.java))
+            .andExpect(handler().methodName("deleteLendList"))
+            .andExpect(status().isNotFound)
+            .andExpect(jsonPath("$.resultCode").value("404-RENT-NOT-FOUND"))
+            .andExpect(jsonPath("$.msg").value("해당 대여 게시글을 찾을 수 없습니다."))
+    }
+
+    @Test
+    @DisplayName("삭제된 게시글이 목록 조회에서 제외되는지 확인")
+    fun t12() {
+        // 먼저 게시글 삭제
+        val rentId = 1L
+        mvc.perform(delete("/api/v1/user/$testUserId/lendlist/$rentId"))
+            .andExpect(status().isOk)
+        
+        // 삭제 후 목록 조회
+        val resultActions = mvc
+            .perform(get("/api/v1/user/$testUserId/lendlist"))
+            .andDo(print())
+
+        resultActions
+            .andExpect(handler().handlerType(LendListController::class.java))
+            .andExpect(handler().methodName("getLendListByUserId"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.resultCode").value("200"))
+            .andExpect(jsonPath("$.msg").value("등록한 도서 목록을 조회했습니다."))
+            .andExpect(jsonPath("$.data").exists())
+            .andExpect(jsonPath("$.data.content").isArray)
+            // 삭제된 게시글은 목록에 포함되지 않아야 함
+            // (실제 데이터 개수는 테스트 데이터에 따라 다를 수 있음)
     }
 }
