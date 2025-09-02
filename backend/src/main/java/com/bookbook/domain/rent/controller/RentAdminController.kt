@@ -43,6 +43,9 @@ class RentAdminController(
         @RequestParam(required = false) status: List<RentStatus>?,
         @RequestParam(required = false) userId: Long?
     ): ResponseEntity<RsData<PageResponseDto<RentSimpleResponseDto>>> {
+        val page = if (page < 1) 1 else page
+        val size = if (size < 1) 10 else size
+
         val pageable: Pageable = PageRequest.of(page - 1, size)
 
         val rentHistoryPage = rentService.getRentsPage(pageable, status, userId)
