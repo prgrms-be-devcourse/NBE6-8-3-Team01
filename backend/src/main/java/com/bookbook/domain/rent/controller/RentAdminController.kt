@@ -71,7 +71,7 @@ class RentAdminController(
         val responseDto = rentService.getRentPostDetail(id)
 
         return ResponseEntity.ok(
-            RsData("200-1", "$id 번 글 상태 변경 완료", responseDto)
+            RsData("200-1", "${id}번 글 조회 완료.", responseDto)
         )
     }
 
@@ -90,7 +90,7 @@ class RentAdminController(
         val responseDto = rentService.modifyRentPageStatus(id, status.status)
 
         return ResponseEntity.ok(
-            RsData("200-1", "$id 번 글 상태 변경 완료", responseDto)
+            RsData("200-1", "${id}번 글 상태 변경 완료.", responseDto)
         )
     }
 
@@ -107,7 +107,7 @@ class RentAdminController(
 
         return ResponseEntity.ok(
             RsData(
-                "200-1", "$id 번 글 복구 완료", responseDto
+                "200-1", "${id}번 글 복구 완료.", responseDto
             )
         )
     }
