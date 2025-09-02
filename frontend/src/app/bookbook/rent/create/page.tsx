@@ -46,6 +46,9 @@ export default function BookRentPage() {
         confidence: number;
         searchResults: any[] | null;
     } | null>(null);
+    
+    // 프로그레스 바 진행률 상태 추가
+    const [progressValue, setProgressValue] = useState(0);
 
     // 자동 입력 상태 표시
     const [isAutoFilled, setIsAutoFilled] = useState(false);
@@ -79,9 +82,12 @@ export default function BookRentPage() {
     const defaultImageUrl = 'https://i.postimg.cc/pLC9D2vW/noimg.gif';
     const [previewImageUrl, setPreviewImageUrl] = useState<string>(defaultImageUrl);
 
-    // 주소 선택 관련 상태 추가
-    const [isAddressPopupOpen, setIsAddressPopupOpen] = useState(false); // 팝업 출력 용
-    const [selectedAddress, setSelectedAddress] = useState(''); // 선택된 주소
+         // 주소 선택 관련 상태 추가
+     const [isAddressPopupOpen, setIsAddressPopupOpen] = useState(false); // 팝업 출력 용
+     const [selectedAddress, setSelectedAddress] = useState(''); // 선택된 주소
+     
+     // AI 조회 실패 팝업 상태 추가
+     const [showAiFailurePopup, setShowAiFailurePopup] = useState(false);
 
     useEffect(() => {
         if (bookImage) {
@@ -97,6 +103,8 @@ export default function BookRentPage() {
 
     const router = useRouter();
 
+
+
     // AI 분석 기반 자동 글 내용 생성 함수
     const generateAutoContents = (book: any, ocrResult: any) => {
         const confidence = (ocrResult.confidence * 100).toFixed(1);
@@ -104,84 +112,35 @@ export default function BookRentPage() {
         // 책 상태 분석 (OCR 신뢰도 기반)
         let conditionAnalysis = '';
         if (ocrResult.confidence > 0.8) {
-            conditionAnalysis = '표지가 깨끗하고 선명하게 촬영되어 책 상태가 양호해 보입니다.';
-        } else if (ocrResult.confidence > 0.6) {
-            conditionAnalysis = '표지에 약간의 사용감이 있지만 읽는 데 문제없어 보입니다.';
+            conditionAnalysis = '책 상태가 아주 좋습니다.';
+        } else if (ocrResult.confidence > 0.65) {
+            conditionAnalysis = '책 상태가 양호합니다.';
+        } else if (ocrResult.confidence > 0.5) {
+            conditionAnalysis = '약간의 사용감이 있지만 양호합니다.';
         } else {
-            conditionAnalysis = '표지 촬영 상태로 보아 사용감이 있을 수 있습니다.';
+            conditionAnalysis = '사용감이 다소 있습니다.';
         }
 
-        // 카테고리별 추천 문구
-        const categoryMessages = {
-            '소설': '흥미진진한 이야기가 담긴',
-            '에세이': '일상의 지혜가 담긴',
-            '자기계발': '성장에 도움이 되는',
-            '경제경영': '비즈니스 인사이트가 가득한',
-            '역사': '역사의 교훈이 담긴',
-            '과학': '지적 호기심을 자극하는',
-            '철학': '깊은 사색을 이끄는',
-            '예술': '감성을 자극하는',
-            '만화': '재미있고 유익한'
+        // 자동 완성 되는 글 내용 부분
+        return `"${book.bookTitle}"를 대여해드립니다.
+${book.publisher}에서 출간한 ${book.author} 작가의 책입니다.
+${book.category || '다양한 분야'}에 관심 있는 분들께 추천합니다.
+${conditionAnalysis}`;
+    };
+
+    // ESC 키로 로딩 팝업 닫기
+    useEffect(() => {
+        const handleEscKey = (event: KeyboardEvent) => {
+            if (event.key === 'Escape' && isOcrProcessing) {
+                // ESC 키로는 로딩을 중단할 수 없음 (처리 중이므로)
+                // 단순히 사용자에게 알림만 표시
+                showToast('AI 분석이 진행 중입니다. 잠시만 기다려주세요.', 'info');
+            }
         };
 
-        const categoryMsg = categoryMessages[book.category as keyof typeof categoryMessages] || '좋은';
-        
-        return `📚 AI가 이미지를 분석한 결과입니다!
-
-        🔍 **분석 결과** (신뢰도: ${confidence}%)
-        ${conditionAnalysis}
-
-        📖 **도서 소개**
-        ${categoryMsg} "${book.bookTitle}"를 대여해드립니다.
-        ${book.author} 작가의 ${book.publisher}에서 출간한 작품으로, ${book.category || '다양한 분야'} 분야의 도서입니다.
-
-        💡 **책 설명**
-        ${book.bookDescription ? book.bookDescription.substring(0, 100) + '...' : '흥미롭고 유익한 내용이 담긴 도서입니다.'}
-
-        ✨ **추천 이유**
-        - ${book.category || '다양한 분야'}에 관심 있는 분들께 추천
-        - 깔끔하게 관리된 도서
-        - 합리적인 대여 조건
-
-        📞 궁금한 점이 있으시면 언제든 문의해주세요!`;
-            };
-
-    // 검색 결과가 없는 경우의 기본 자동 글 내용 생성 함수
-    const generateBasicAutoContents = (bookTitle: string, ocrResult: any) => {
-        const confidence = (ocrResult.confidence * 100).toFixed(1);
-        
-        // 책 상태 분석 (OCR 신뢰도 기반)
-        let conditionAnalysis = '';
-        if (ocrResult.confidence > 0.8) {
-            conditionAnalysis = '표지가 깨끗하고 선명하게 촬영되어 책 상태가 양호해 보입니다.';
-        } else if (ocrResult.confidence > 0.6) {
-            conditionAnalysis = '표지에 약간의 사용감이 있지만 읽는 데 문제없어 보입니다.';
-        } else {
-            conditionAnalysis = '표지 촬영 상태로 보아 사용감이 있을 수 있습니다.';
-        }
-
-        return `📚 AI가 이미지를 분석한 결과입니다!
-
-🔍 **분석 결과** (신뢰도: ${confidence}%)
-"${bookTitle}" 제목을 성공적으로 인식했습니다.
-${conditionAnalysis}
-
-📖 **도서 소개**
-"${bookTitle}"를 대여해드립니다.
-깔끔하게 관리된 도서로, 독서를 좋아하시는 분들께 추천드립니다.
-
-💡 **상세 정보**
-- 책 제목이 명확하게 인식되었습니다
-- 저자, 출판사 등 추가 정보는 수동으로 입력해주세요
-- 책 상태와 대여 조건을 확인해주세요
-
-✨ **추천 이유**
-- 관심 있는 분야의 도서를 찾고 계신 분들께 추천
-- 합리적인 대여 조건
-- 깔끔한 관리 상태
-
-📞 궁금한 점이 있으시면 언제든 문의해주세요!`;
-    };
+        document.addEventListener('keydown', handleEscKey);
+        return () => document.removeEventListener('keydown', handleEscKey);
+    }, [isOcrProcessing]);
 
     // 추가된 로직 : 페이지 로드 시, 유저 상태 확인
     useEffect(() => {
@@ -242,6 +201,19 @@ ${conditionAnalysis}
         setCurrentPage(1); // 폼 초기화 시 페이지도 1로 초기화
         setHasMoreResults(false);
     };
+    
+    // OCR 실패 시 책 관련 필드만 초기화하는 함수
+    const resetBookFields = () => {
+        setBookTitle('');
+        setAuthor('');
+        setPublisher('');
+        setCategory('');
+        setDescription('');
+        setTitle('');
+        setContents('');
+        setIsAutoFilled(false);
+        setAutoFillSource(null);
+    };
 
     // OCR 자동 실행 추가
     const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -261,11 +233,10 @@ ${conditionAnalysis}
             }
             
         } else {
-            // 파일 선택 취소 시
+            // 사진 올리기 취소 시
             setBookImage(null);
             setOcrResult(null);
-            setIsAutoFilled(false);
-            setAutoFillSource(null);
+            resetBookFields(); // 책 관련 필드도 함께 초기화
         }
     };
 
@@ -325,6 +296,18 @@ ${conditionAnalysis}
     const handleOcrBookSearch = async (imageFile: File): Promise<boolean> => {
         setIsOcrProcessing(true);
         setOcrResult(null);
+        setProgressValue(0); // 프로그레스 바 초기화
+        
+        // 프로그레스 바 애니메이션 시작
+        const progressInterval = setInterval(() => {
+            setProgressValue(prev => {
+                if (prev >= 90) {
+                    clearInterval(progressInterval);
+                    return 90; // 90%에서 멈춤 (실제 완료 시 100%로 설정)
+                }
+                return prev + Math.random() * 15; // 랜덤하게 진행
+            });
+        }, 200);
 
         // 디버깅을 위한 상세 로깅
         console.log('🔍 OCR 요청 시작:', {
@@ -334,7 +317,7 @@ ${conditionAnalysis}
         });
         
         // 사용자에게 처리 중임을 알림
-        showToast('📷 AI가 책 표지를 분석 중입니다... (3-5초 소요)', 'info');
+        showToast('AI가 책 표지를 분석 중입니다... (3-5초 소요)', 'info');
         
         const formData = new FormData();
         formData.append('file', imageFile);
@@ -371,57 +354,61 @@ ${conditionAnalysis}
                 // OCR 결과 저장
                 setOcrResult(result);
                 
-                // 검색 결과가 있으면 자동으로 첫 번째 결과로 모든 필드 채우기
-                if (result.searchResults && result.searchResults.length > 0) {
-                    const book = result.searchResults[0];
-                    console.log('자동 선택된 도서:', book.bookTitle);
-                    
-                    // 1. 책 정보 자동 입력
-                    setBookTitle(book.bookTitle);
-                    setAuthor(book.author);
-                    setPublisher(book.publisher);
-                    setCategory(book.category || '');
-                    setDescription(book.bookDescription || '');
-                    
-                    // 2. 글 제목 자동 생성: "[책 제목] 읽어 보세요~"
-                    const autoTitle = `[${book.bookTitle}] 읽어 보세요~`;
-                    setTitle(autoTitle);
-                    
-                    // 3. 글 내용 자동 생성: AI 분석 기반 설명
-                    const autoContents = generateAutoContents(book, result);
-                    setContents(autoContents);
-                    
-                    // 자동 입력 상태 설정
-                    setIsAutoFilled(true);
-                    setAutoFillSource('ocr');
-                    
-                    showToast(`"${book.bookTitle}" 모든 정보가 자동으로 입력되었습니다!`, 'success');
-                    return true;
-                    
-                } else if (result.detectedBookTitle) {
-                    console.log('제목만 감지됨:', result.detectedBookTitle);
-
-                    // 제목만 감지된 경우도 기본 정보 자동 입력
-                    setBookTitle(result.detectedBookTitle);
-                    
-                    // 글 제목 자동 생성
-                    const autoTitle = `[${result.detectedBookTitle}] 읽어 보세요~`;
-                    setTitle(autoTitle);
-                    
-                    // 기본 글 내용 자동 생성 (검색 결과 없는 경우)
-                    const basicContents = generateBasicAutoContents(result.detectedBookTitle, result);
-                    setContents(basicContents);
-                    
-                    setIsAutoFilled(true);
-                    setAutoFillSource('ocr');
-                    
-                    showToast(`"${result.detectedBookTitle}" 기본 정보가 자동으로 입력되었습니다. 추가 정보를 확인해주세요.`, 'info');
-                    return true;
+                                 // 검색 결과가 있으면 자동으로 첫 번째 결과로 모든 필드 채우기
+                 if (result.searchResults && result.searchResults.length > 0) {
+                     const book = result.searchResults[0];
+                     console.log('자동 선택된 도서:', book.bookTitle);
+                     
+                     // 1. 책 정보 자동 입력
+                     setBookTitle(book.bookTitle);
+                     setAuthor(book.author);
+                     setPublisher(book.publisher);
+                     setCategory(book.category || '');
+                     setDescription(book.bookDescription || '');
+                     
+                     // 2. 글 제목 자동 생성: "[책 제목]"
+                     const autoTitle = `[${book.bookTitle}]`;
+                     setTitle(autoTitle);
+                     
+                     // 3. 글 내용 자동 생성: AI 분석 기반 설명
+                     const autoContents = generateAutoContents(book, result);
+                     setContents(autoContents);
+                     
+                     // 자동 입력 상태 설정
+                     setIsAutoFilled(true);
+                     setAutoFillSource('ocr');
+                     
+                     showToast(`"${book.bookTitle}" 모든 정보가 자동으로 입력되었습니다!`, 'success');
+                     return true;
+                     
+                 } else if (result.detectedBookTitle) {
+                     // 검색 결과가 0건인 경우 모든 필드 초기화 (책 제목 포함)
+                     if (!result.searchResults || result.searchResults.length === 0) {
+                         console.log('검색 결과가 0건이므로 모든 필드 초기화');
+                         resetBookFields();
+                         
+                         // 모든 필드를 비우고 (책 제목도 포함)
+                         setBookTitle('');
+                         setContents('');
+                         
+                         // AI 조회 실패 팝업 표시
+                         setShowAiFailurePopup(true);
+                         return false;
+                     }
+                     
+                     // 이 부분은 실제로는 도달하지 않음 (위에서 이미 처리됨)
+                     // 하지만 혹시 모를 상황을 대비해 남겨둠
+                     console.log('예상치 못한 상황: 제목은 감지되었지만 검색 결과 처리 로직에 도달');
+                     return false;
                     
                 } else {
                     // OCR 실패
                     console.log('OCR 감지 실패 - 신뢰도:', result.confidence);
                     showToast('책 제목을 인식하지 못했습니다. 수동으로 입력해주세요.', 'error');
+                    
+                    // OCR 실패 시 책 관련 필드 초기화
+                    resetBookFields();
+                    
                     return false;
                 }
             } else {
@@ -435,16 +422,28 @@ ${conditionAnalysis}
             
             const errorMessage = errorData?.msg || `HTTP ${response.status}: ${response.statusText}`;
             showToast(`${errorMessage}`, 'error');
+            
+            // API 오류 시에도 책 관련 필드 초기화
+            resetBookFields();
+            
             return false;
             }
             
         } catch (error) {
             console.error('OCR 네트워크 오류:', error);
             showToast('네트워크 오류가 발생했습니다. 수동으로 검색해주세요.', 'error');
+            
+            // 네트워크 오류 시에도 책 관련 필드 초기화
+            resetBookFields();
+            
             return false;
             
         } finally {
-            setIsOcrProcessing(false);
+            setProgressValue(100); // 프로그레스 바 100% 완료
+            setTimeout(() => {
+                setIsOcrProcessing(false);
+                setProgressValue(0); // 상태 초기화
+            }, 500); // 0.5초 후 팝업 닫기
             console.log('OCR 처리 완료');
         }
     };
@@ -536,24 +535,10 @@ ${conditionAnalysis}
                 <hr className="border-t-2 border-gray-300 mb-6 sm:mb-8" />
 
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    <div>
-                        <label htmlFor="postTitle" className="block text-gray-700 text-base font-medium mb-2 font-bold">
-                            글 제목
-                        </label>
-                        <input
-                            type="text"
-                            id="postTitle"
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                            placeholder="글 제목을 입력해주세요."
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                            required
-                        />
-                    </div>
-
+                    
                     {/* 수정된 이미지 업로드 섹션 */}
                     <div>
-                        <label htmlFor="bookImage" className="block text-gray-700 text-base font-medium mb-2 font-bold">
+                        <label htmlFor="bookImage" className="block text-gray-700 text-base font-bold mb-2">
                             책 이미지 업로드 {isOcrProcessing && <span className="text-blue-500">(AI 분석 중...)</span>}
                         </label>
                         <div className="flex flex-col items-start space-y-3">
@@ -566,14 +551,14 @@ ${conditionAnalysis}
                                 disabled={isOcrProcessing} // OCR 처리 중 비활성화
                             />
                             <label
-                                htmlFor="bookImage" // '파일 선택' 버튼(label)을 클릭하면, 브라우저는 자동으로 숨겨진 <input type="file">을 클릭한 것처럼 동작
+                                htmlFor="bookImage" // '사진 올리기' 버튼(label)을 클릭하면, 브라우저는 자동으로 숨겨진 <input type="file">을 클릭한 것처럼 동작
                                 className={`w-full sm:w-auto px-4 py-2 text-white font-semibold rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 cursor-pointer text-center
                                     ${isOcrProcessing 
                                         ? 'bg-gray-400 cursor-not-allowed' 
                                         : 'bg-[#D5BAA3] hover:bg-[#C2A794] focus:ring-[#D5BAA3]'
                                     }`}
                             >
-                                {isOcrProcessing ? 'AI 분석 중...' : '파일 선택'}
+                                {isOcrProcessing ? 'AI 분석 중...' : '사진 올리기'}
                             </label>     
                             
                             {/* 이미지 미리보기 */}
@@ -584,33 +569,14 @@ ${conditionAnalysis}
                                     className="w-[200px] h-[150px] object-cover rounded-lg"
                                 />
                                 
-                            {/* 개선된 OCR 처리 중 오버레이 */}
-                            {isOcrProcessing && (
-                                <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center rounded-lg">
-                                    <div className="text-white text-center">
-                                        {/* 3단계 로딩 애니메이션 */}
-                                        <div className="flex space-x-1 mb-3">
-                                            <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
-                                            <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
-                                            <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
-                                        </div>
-                                        
-                                        {/* 단계별 메시지 표시 */}
-                                        <div className="text-sm space-y-1">
-                                            <div className="flex items-center justify-center space-x-2">
-                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                                <span>AI가 이미지를 분석하고 있습니다...</span>
-                                            </div>
-                                            <div className="text-xs text-gray-300">
-                                                🔍 텍스트 추출 → 📚 책 제목 인식 → 🔎 도서 검색
-                                            </div>
-                                            <div className="text-xs text-gray-400 mt-2">
-                                                평균 3-5초 소요
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
+                                                         {/* OCR 처리 중일 때는 간단한 로딩 표시만 */}
+                             {isOcrProcessing && (
+                                 <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center rounded-lg">
+                                     <div className="text-white text-center">
+                                         <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                     </div>
+                                 </div>
+                             )}
                                 
                                 {/* 자동 입력 성공 표시 */}
                                 {isAutoFilled && autoFillSource === 'ocr' && (
@@ -622,32 +588,103 @@ ${conditionAnalysis}
                         </div>
                     </div>
 
-                    {/* OCR 결과 표시 (디버깅 및 사용자 확인용) */}
-                    {ocrResult && (
-                        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                            <h4 className="font-semibold text-blue-800 mb-2">🤖 AI 분석 결과</h4>
-                            <div className="text-sm text-blue-700 space-y-1">
-                                <div><strong>감지된 제목:</strong> {ocrResult.detectedBookTitle || '감지 실패'}</div>
-                                <div><strong>신뢰도:</strong> {(ocrResult.confidence * 100).toFixed(1)}%</div>
-                                <div><strong>검색 결과:</strong> {ocrResult.searchResults?.length || 0}건</div>
-                            </div>
-                            {ocrResult.extractedText && (
-                                <details className="mt-2">
-                                    <summary className="cursor-pointer text-blue-600 text-sm">추출된 텍스트 보기</summary>
-                                    <pre className="mt-1 text-xs text-gray-600 whitespace-pre-wrap bg-white p-2 rounded border">
-                                        {ocrResult.extractedText}
-                                    </pre>
-                                </details>
-                            )}
-                        </div>
-                    )}
+                    <div>
+                        <label htmlFor="postTitle" className="block text-gray-700 text-base font-bold mb-2">
+                            글 제목
+                        </label>
+                        <input
+                            type="text"
+                            id="postTitle"
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                            placeholder="글 제목을 입력해주세요."
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            required
+                        />
+                    </div>
+                    
+                                {/* AI 분석 중 로딩 팝업 */}
+                                             {isOcrProcessing && (
+                           <div className="fixed inset-0 bg-black/50 bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-[60]">
+                                                           <div className="bg-white bg-opacity-95 backdrop-blur-md rounded-2xl p-8 shadow-2xl max-w-sm mx-4 text-center">
+                                 
+                                 {/* 메인 메시지 */}
+                                 <h3 className="text-xl font-bold text-gray-800 mb-4">
+                                     AI가 이미지를 분석하고 있습니다
+                                 </h3>
+                                 
+                                 {/* 진행 단계 표시 */}
+                                 <div className="space-y-3 mb-6">
+                                     <div className="flex items-center space-x-3">
+                                         <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                                             <div className="w-2 h-2 bg-white rounded-full"></div>
+                                         </div>
+                                         <span className="text-sm text-gray-600">이미지 업로드 완료</span>
+                                     </div>
+                                     <div className="flex items-center space-x-3">
+                                         <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                                             progressValue > 30 ? 'bg-blue-500' : 'bg-gray-300'
+                                         }`}>
+                                             <div className={`w-2 h-2 rounded-full ${
+                                                 progressValue > 30 ? 'bg-white animate-pulse' : 'bg-gray-400'
+                                             }`}></div>
+                                         </div>
+                                         <span className={`text-sm ${
+                                             progressValue > 30 ? 'text-gray-600' : 'text-gray-400'
+                                         }`}>
+                                             {progressValue > 30 ? 'AI 이미지 분석 중...' : 'AI 이미지 분석 대기'}
+                                         </span>
+                                     </div>
+                                     <div className="flex items-center space-x-3">
+                                         <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                                             progressValue > 70 ? 'bg-blue-500' : 'bg-gray-300'
+                                         }`}>
+                                             <div className={`w-2 h-2 rounded-full ${
+                                                 progressValue > 70 ? 'bg-white animate-pulse' : 'bg-gray-400'
+                                             }`}></div>
+                                         </div>
+                                         <span className={`text-sm ${
+                                             progressValue > 70 ? 'text-gray-600' : 'text-gray-400'
+                                         }`}>
+                                             {progressValue > 70 ? '도서 정보 검색 중...' : '도서 정보 검색 대기'}
+                                         </span>
+                                     </div>
+                                 </div>
+                                 
+                                 {/* 로딩 애니메이션 */}
+                                 <div className="flex justify-center space-x-1 mb-4">
+                                     <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
+                                     <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
+                                     <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
+                                 </div>
+                                 
+                                                                   {/* 프로그레스 바 */}
+                                  <div className="w-full bg-gray-200 rounded-full h-2 mb-4 overflow-hidden">
+                                      <div 
+                                          className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-300 ease-out"
+                                          style={{width: `${progressValue}%`}}
+                                      ></div>
+                                  </div>
+                                  
+                                  {/* 진행률 표시 */}
+                                  <div className="text-sm text-gray-600 mb-2">
+                                      {Math.round(progressValue)}%
+                                  </div>
+                                 
+                                 {/* 예상 소요 시간 */}
+                                 <p className="text-sm text-gray-500">
+                                     평균 3-5초 소요됩니다
+                                 </p>
+                             </div>
+                         </div>
+                     )}
 
                     {/* 책 상태, 주소 입력 부분 */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
                         {/* 책 상태 */}
                         <div className='md:col-span-1'> {/* 1:2 비율을 위해 md:col-span-1 추가 */}
-                            <label htmlFor="bookCondition" className="block text-gray-700 text-base font-medium mb-2 font-bold">
+                            <label htmlFor="bookCondition" className="block text-gray-700 text-base font-bold mb-2">
                                 책 상태
                             </label>
                             {/* 책 상태 토글 */}
@@ -667,7 +704,7 @@ ${conditionAnalysis}
 
                         {/* 주소 입력 */}
                         <div className='md:col-span-2'> {/* 1:2 비율을 위해 md:col-span-2 추가 */}
-                            <label htmlFor="address" className="block text-gray-700 text-base font-medium mb-2 font-bold">
+                            <label htmlFor="address" className="block text-gray-700 text-base font-bold mb-2">
                                 주소
                             </label>
 
@@ -696,7 +733,7 @@ ${conditionAnalysis}
                     </div>
 
                     <div>
-                        <label htmlFor="contents" className="block text-gray-700 text-base font-medium mb-2 font-bold">
+                        <label htmlFor="contents" className="block text-gray-700 text-base font-bold mb-2">
                             글 내용
                         </label>
                         <textarea
@@ -745,7 +782,7 @@ ${conditionAnalysis}
                     </div>
 
                     <div>
-                        <label htmlFor="bookTitle" className="block text-gray-700 text-base font-medium mb-2 font-bold">
+                        <label htmlFor="bookTitle" className="block text-gray-700 text-base font-bold mb-2">
                             책 제목
                         </label>
                         <input
@@ -761,7 +798,7 @@ ${conditionAnalysis}
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
-                            <label htmlFor="author" className="block text-gray-700 text-base font-medium mb-2 font-bold">
+                            <label htmlFor="author" className="block text-gray-700 text-base font-bold mb-2">
                                 저자
                             </label>
                             <input
@@ -775,7 +812,7 @@ ${conditionAnalysis}
                             />
                         </div>
                         <div>
-                            <label htmlFor="publisher" className="block text-gray-700 text-base font-medium mb-2 font-bold">
+                            <label htmlFor="publisher" className="block text-gray-700 text-base font-bold mb-2">
                                 출판사
                             </label>
                             <input
@@ -789,7 +826,7 @@ ${conditionAnalysis}
                             />
                         </div>
                         <div>
-                            <label htmlFor="category" className="block text-gray-700 text-base font-medium mb-2 font-bold">
+                            <label htmlFor="category" className="block text-gray-700 text-base font-bold mb-2">
                                 카테고리
                             </label>
                             <input
@@ -805,7 +842,7 @@ ${conditionAnalysis}
                     </div>
 
                     <div>
-                        <label htmlFor="description" className="block text-gray-700 text-base font-medium mb-2 font-bold">
+                        <label htmlFor="description" className="block text-gray-700 text-base font-bold mb-2">
                             책 설명
                         </label>
                         <textarea
@@ -958,15 +995,47 @@ ${conditionAnalysis}
                 </div>
             )}
 
-            {/* 주소 선택 팝업 */}
-            <AddressSelectionPopup
-                isOpen={isAddressPopupOpen}
-                onClose={() => setIsAddressPopupOpen(false)}
-                onSelectAddress={(address: string) => {
-                    setSelectedAddress(address);
-                    setIsAddressPopupOpen(false);
-                }}
-            />
+                         {/* AI 조회 실패 팝업 */}
+             {showAiFailurePopup && (
+                 <div 
+                     className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4"
+                     onClick={() => setShowAiFailurePopup(false)}
+                 >
+                     <div
+                         className="bg-white rounded-xl p-6 sm:p-8 shadow-lg w-full max-w-sm mx-4"
+                         onClick={e => e.stopPropagation()}
+                     >
+                         <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 text-center">
+                             AI 조회 실패
+                         </h2>
+                         <hr className="border-t-2 border-gray-300 mb-6" />
+                         
+                         <p className="text-center text-gray-600 mb-6">
+                             책 정보를 자동으로 찾을 수 없습니다.<br />
+                             책 검색 기능을 이용해주세요.
+                         </p>
+                         
+                         <div className="flex justify-center">
+                             <button
+                                 onClick={() => setShowAiFailurePopup(false)}
+                                 className="px-6 py-2 text-white rounded-lg font-bold bg-[#D5BAA3] hover:bg-[#C2A794]"
+                             >
+                                 확인
+                             </button>
+                         </div>
+                     </div>
+                 </div>
+             )}
+             
+             {/* 주소 선택 팝업 */}
+             <AddressSelectionPopup
+                 isOpen={isAddressPopupOpen}
+                 onClose={() => setIsAddressPopupOpen(false)}
+                 onSelectAddress={(address: string) => {
+                     setSelectedAddress(address);
+                     setIsAddressPopupOpen(false);
+                 }}
+             />
         </div>
     )
 };
