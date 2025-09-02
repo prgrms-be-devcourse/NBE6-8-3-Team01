@@ -6,7 +6,6 @@ import com.bookbook.domain.user.dto.response.UserLoginResponseDto
 import com.bookbook.domain.user.dto.response.UserSimpleResponseDto
 import com.bookbook.domain.user.enums.UserStatus
 import com.bookbook.domain.user.service.AdminService
-import com.bookbook.global.exception.ServiceException
 import com.bookbook.global.jpa.dto.response.PageResponseDto
 import com.bookbook.global.rsdata.RsData
 import com.bookbook.global.security.CustomOAuth2User
@@ -48,7 +47,7 @@ class AdminController (
     @PostMapping("/login")
     @Operation(summary = "어드민 로그인")
     fun adminLogin(
-        @RequestBody requestDto: @Valid UserLoginRequestDto,
+        @RequestBody @Valid requestDto: UserLoginRequestDto,
         response: HttpServletResponse
     ): ResponseEntity<RsData<UserLoginResponseDto>> {
         val admin = adminService.login(requestDto.username, requestDto.password)
@@ -91,7 +90,7 @@ class AdminController (
         invalidateCookie(response, jwtRefreshTokenCookieName)
 
         currentUser?.let {
-            jwtProvider.deleteRefreshToken(currentUser.userId)
+            jwtProvider.deleteRefreshToken(it.userId)
         }
 
         return ResponseEntity.ok(
@@ -142,8 +141,8 @@ class AdminController (
         @RequestParam(required = false) status: List<UserStatus>?,
         @RequestParam(required = false) userId: Long?
     ): ResponseEntity<RsData<PageResponseDto<UserSimpleResponseDto>>> {
-        if (page < 1) throw ServiceException("페이지 번호는 1보다 작을 수 없습니다.")
-        if (size < 1) throw ServiceException("페이지 당 크기는 1보다 작을 수 없습니다.")
+        val page = if (page < 1) 1 else page
+        val size = if (size < 1) 10 else size
 
         val pageable: Pageable = PageRequest.of(page - 1, size)
 

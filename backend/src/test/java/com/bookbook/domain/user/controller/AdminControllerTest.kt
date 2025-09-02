@@ -200,7 +200,7 @@ class AdminControllerTest {
     @Test
     @DisplayName("유저 목록 가져오기 without filters")
     fun t5() {
-        val page = 0
+        val page = 1
         val size = 10
 
         val resultActions = mvc
@@ -218,7 +218,7 @@ class AdminControllerTest {
             )
             .andDo(print())
 
-        val pageable = PageRequest.of(0, 10)
+        val pageable = PageRequest.of(page - 1, size)
 
         val pagedUsers = adminService.getFilteredUsers(pageable, null, null)
         val users = pagedUsers.content
@@ -389,9 +389,9 @@ class AdminControllerTest {
         resultAction
             .andExpect(handler().handlerType(AdminController::class.java))
             .andExpect(handler().methodName("getFilteredUsers"))
-            .andExpect(jsonPath("$.resultCode").value("400"))
-            .andExpect(jsonPath("$.msg").value("페이지 번호는 1보다 작을 수 없습니다."))
-            .andExpect(jsonPath("$.data").doesNotExist())
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.resultCode").value("200-1"))
+            .andExpect(jsonPath("$.data").exists())
 
     }
 
@@ -412,9 +412,9 @@ class AdminControllerTest {
         resultAction
             .andExpect(handler().handlerType(AdminController::class.java))
             .andExpect(handler().methodName("getFilteredUsers"))
-            .andExpect(jsonPath("$.resultCode").value("400"))
-            .andExpect(jsonPath("$.msg").value("페이지 당 크기는 1보다 작을 수 없습니다."))
-            .andExpect(jsonPath("$.data").doesNotExist())
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.resultCode").value("200-1"))
+            .andExpect(jsonPath("$.data").exists())
 
     }
 
