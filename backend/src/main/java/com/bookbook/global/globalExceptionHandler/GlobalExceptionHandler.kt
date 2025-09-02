@@ -16,13 +16,9 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 @RestControllerAdvice
 class GlobalExceptionHandler {
     @ExceptionHandler(NoSuchElementException::class)
-    fun handle(ex: NoSuchElementException?): ResponseEntity<RsData<Void>> {
+    fun handle(ex: NoSuchElementException): ResponseEntity<RsData<Void>> {
         return ResponseEntity(
-            RsData<Void>(
-                "404-1",
-                "해당 데이터가 존재하지 않습니다.",
-                null
-            ),
+            RsData("404-1", "해당 데이터가 존재하지 않습니다."),
             HttpStatus.NOT_FOUND
         )
     }
@@ -41,11 +37,7 @@ class GlobalExceptionHandler {
             .joinToString("\n")
 
         return ResponseEntity(
-            RsData<Void>(
-                "400-1",
-                message,
-                null
-            ),
+            RsData("400-1", message,),
             HttpStatus.BAD_REQUEST
         )
     }
@@ -60,23 +52,15 @@ class GlobalExceptionHandler {
             .joinToString("\n")
 
         return ResponseEntity(
-            RsData<Void>(
-                "400-1",
-                message,
-                null
-            ),
+            RsData("400-1", message),
             HttpStatus.BAD_REQUEST
         )
     }
 
     @ExceptionHandler(HttpMessageNotReadableException::class)
-    fun handle(ex: HttpMessageNotReadableException?): ResponseEntity<RsData<Void>> {
+    fun handle(ex: HttpMessageNotReadableException): ResponseEntity<RsData<Void>> {
         return ResponseEntity(
-            RsData<Void>(
-                "400-1",
-                "요청 본문이 올바르지 않습니다.",
-                null
-            ),
+            RsData("400-1", "요청 본문이 올바르지 않습니다."),
             HttpStatus.BAD_REQUEST
         )
     }
@@ -84,10 +68,9 @@ class GlobalExceptionHandler {
     @ExceptionHandler(MissingRequestHeaderException::class)
     fun handle(ex: MissingRequestHeaderException): ResponseEntity<RsData<Void>> {
         return ResponseEntity(
-            RsData<Void>(
+            RsData(
                 "400-1",
-                "${ex.headerName}-NotBlank-${ex.localizedMessage}",
-                null
+                "${ex.headerName}-NotBlank-${ex.localizedMessage}"
             ),
             HttpStatus.BAD_REQUEST
         )
