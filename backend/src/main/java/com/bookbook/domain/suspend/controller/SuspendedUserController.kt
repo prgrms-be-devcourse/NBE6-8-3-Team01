@@ -44,6 +44,9 @@ class SuspendedUserController (
         @RequestParam(defaultValue = "10") size: Int,
         @RequestParam(required = false) userId: Long?
     ): ResponseEntity<RsData<PageResponseDto<UserSuspendResponseDto>>> {
+        val page = if (page < 1) 1 else page
+        val size = if (size < 1) 10 else size
+
         val histories = suspendedUserService.getSuspendedHistoryPage(page, size, userId)
 
         val response =  PageResponseDto(histories)

@@ -34,6 +34,8 @@ class SuspendedUserService(
         val user = userService.findById(requestDto.userId)
             ?: throw ServiceException("404-1", "해당 유저는 존재하지 않습니다")
 
+        if (user.isAdmin) throw ServiceException("403-1", "어드민은 정지시킬 수 없습니다.")
+
         // 현재 정지 중인지 확인하고 정지 중이면 중단
         checkUserIsSuspended(user)
 
