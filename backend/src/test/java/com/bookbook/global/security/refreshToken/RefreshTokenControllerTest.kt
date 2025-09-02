@@ -59,8 +59,8 @@ class RefreshTokenControllerTest {
     }
 
     @Test
-    @DisplayName("유효한 리프레시 토큰으로 액세스 토큰을 성공적으로 갱신한다")
-    fun refreshAccessToken_withValidToken_shouldSucceed() {
+    @DisplayName("유효한 리프레시 토큰으로 토큰 갱신 성공")
+    fun refreshSuccess() {
         val refreshToken = jwtProvider.generateRefreshToken(testUser.id)
 
         mockMvc.perform(
@@ -75,8 +75,8 @@ class RefreshTokenControllerTest {
     }
 
     @Test
-    @DisplayName("리프레시 토큰 쿠키가 없는 경우 실패한다")
-    fun refreshAccessToken_withMissingToken_shouldFail() {
+    @DisplayName("리프레시 토큰이 없으면 실패")
+    fun refreshFailOnMissingToken() {
         mockMvc.perform(
             MockMvcRequestBuilders.post("/api/v1/bookbook/auth/refresh-token")
         )
@@ -86,8 +86,8 @@ class RefreshTokenControllerTest {
     }
 
     @Test
-    @DisplayName("유효하지 않은 리프레시 토큰으로 갱신 요청 시 실패한다")
-    fun refreshAccessToken_withInvalidToken_shouldFail() {
+    @DisplayName("유효하지 않은 리프레시 토큰으로 갱신 실패")
+    fun refreshFailOnInvalidToken() {
         val invalidRefreshToken = "invalid.token.value"
 
         mockMvc.perform(
@@ -100,8 +100,8 @@ class RefreshTokenControllerTest {
     }
 
     @Test
-    @DisplayName("토큰의 사용자 ID로 사용자를 찾을 수 없는 경우 실패한다")
-    fun refreshAccessToken_withUserNotFoundInToken_shouldFail() {
+    @DisplayName("토큰의 사용자 ID로 사용자를 못 찾으면 실패")
+    fun refreshFailOnUserNotFound() {
         val nonExistentUserId = 999L
         val refreshToken = jwtProvider.generateRefreshToken(nonExistentUserId)
 
@@ -115,8 +115,8 @@ class RefreshTokenControllerTest {
     }
 
     @Test
-    @DisplayName("리프레시 토큰이 만료된 경우 실패한다")
-    fun refreshAccessToken_withExpiredToken_shouldFail() {
+    @DisplayName("만료된 리프레시 토큰으로 갱신 실패")
+    fun refreshFailOnExpiredToken() {
         val expiredRefreshToken = generateExpiredRefreshToken(testUser.id)
 
         mockMvc.perform(

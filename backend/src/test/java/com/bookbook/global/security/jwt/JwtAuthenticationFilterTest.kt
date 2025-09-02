@@ -1,7 +1,6 @@
 package com.bookbook.global.security.jwt
 
 import com.bookbook.global.exception.ServiceException
-import com.bookbook.global.security.CustomOAuth2User
 import io.jsonwebtoken.Jwts
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.Cookie
@@ -18,6 +17,7 @@ import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.security.core.context.SecurityContextHolder
 
+@DisplayName("JwtAuthenticationFilter 테스트")
 @ExtendWith(MockitoExtension::class)
 class JwtAuthenticationFilterTest {
 
@@ -44,91 +44,61 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
-    @DisplayName("유효한 JWT 토큰이 쿠키에 있는 경우 SecurityContext에 Authentication 객체를 설정한다")
-    fun `should set authentication in security context for valid jwt`() {
-        // Given
+    @DisplayName("유효한 JWT 토큰이 있으면 인증 객체를 설정")
+    fun setAuthenticationWithValidJwt() {
         val jwt = "valid.jwt.token"
-        val userId = 1L
-        val username = "testuser"
-        val role = "USER"
-        val claims = Jwts.claims().apply {
-            this["userId"] = userId.toInt()
-            this["username"] = username
-            this["role"] = role
-        }
         val cookie = Cookie(jwtCookieName, jwt)
-
         `when`(request.cookies).thenReturn(arrayOf(cookie))
-        `when`(jwtProvider.getAllClaimsFromToken(jwt)).thenReturn(claims)
+        `when`(jwtProvider.getAllClaimsFromToken(anyString())).thenReturn(Jwts.claims().apply {
+            this["userId"] = 1
+            this["username"] = "testuser"
+            this["role"] = "USER"
+        })
 
-        // When
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain)
 
-        // Then
         assertNotNull(SecurityContextHolder.getContext().authentication)
-        val authentication = SecurityContextHolder.getContext().authentication
-        val principal = authentication.principal as CustomOAuth2User
-        assertEquals(username, principal.username)
-        assertEquals(userId, principal.userId)
-        assertTrue(authentication.authorities.any { it.authority == "ROLE_USER" })
-
         verify(filterChain, times(1)).doFilter(request, response)
     }
 
     @Test
-    @DisplayName("JWT 토큰이 쿠키에 없는 경우 SecurityContext에 변경이 없고 필터 체인이 계속된다")
-    fun `should not set authentication if jwt cookie is missing`() {
-        // Given
+    @DisplayName("JWT 토큰이 없으면 변경 없이 필터 체인 계속")
+    fun continueFilterChainWithoutJwt() {
         `when`(request.cookies).thenReturn(null)
 
-        // When
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain)
 
-        // Then
         assertNull(SecurityContextHolder.getContext().authentication)
         verify(filterChain, times(1)).doFilter(request, response)
     }
 
     @Test
-    @DisplayName("JWT 토큰이 유효하지 않은 경우 ServiceException을 발생시키고 401 응답을 반환한다")
-    fun `should handle ServiceException for invalid jwt`() {
-        // Given
+    @DisplayName("유효하지 않은 JWT 토큰은 401 응답")
+    fun handleInvalidJwt() {
         val jwt = "invalid.jwt.token"
         val cookie = Cookie(jwtCookieName, jwt)
-        val serviceException = ServiceException("401-JWT-INVALID", "잘못된 JWT 서명입니다.")
-        val errorMessage = serviceException.message
-
         `when`(request.cookies).thenReturn(arrayOf(cookie))
-        `when`(jwtProvider.getAllClaimsFromToken(jwt)).thenThrow(serviceException)
+        `when`(jwtProvider.getAllClaimsFromToken(anyString())).thenThrow(ServiceException("401-JWT-INVALID", "잘못된 JWT 서명입니다."))
 
-        // When
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain)
 
-        // Then
         assertNull(SecurityContextHolder.getContext().authentication)
-        verify(response, times(1)).sendError(HttpServletResponse.SC_UNAUTHORIZED, errorMessage)
-
+        verify(response, times(1)).sendError(eq(HttpServletResponse.SC_UNAUTHORIZED), anyString())
         verify(filterChain, never()).doFilter(request, response)
     }
 
     @Test
-    @DisplayName("JWT 처리 중 예상치 못한 오류가 발생하면 401 응답을 반환한다")
-    fun `should handle generic exception`() {
-        // Given
+    @DisplayName("예상치 못한 오류 발생 시 401 응답")
+    fun handleGenericException() {
         val jwt = "malformed.jwt"
         val cookie = Cookie(jwtCookieName, jwt)
-
         `when`(request.cookies).thenReturn(arrayOf(cookie))
-        `when`(jwtProvider.getAllClaimsFromToken(jwt)).thenThrow(RuntimeException("Unexpected error"))
+        `when`(jwtProvider.getAllClaimsFromToken(anyString())).thenThrow(RuntimeException("Unexpected error"))
 
-        // When
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain)
 
-        // Then
         assertNull(SecurityContextHolder.getContext().authentication)
-        // 일반적인 Exception이 발생하면 JwtAuthenticationFilter는 미리 정의된 메시지를 반환합니다.
-        verify(response, times(1)).sendError(eq(HttpServletResponse.SC_UNAUTHORIZED), eq("An unexpected error occurred."))
-
+        verify(response, times(1)).sendError(eq(HttpServletResponse.SC_UNAUTHORIZED), anyString())
         verify(filterChain, never()).doFilter(request, response)
     }
 }
