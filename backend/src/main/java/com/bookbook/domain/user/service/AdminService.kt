@@ -1,7 +1,7 @@
 package com.bookbook.domain.user.service
 
-import com.bookbook.domain.user.dto.response.UserSimpleResponseDto
 import com.bookbook.domain.user.dto.response.UserDetailResponseDto
+import com.bookbook.domain.user.dto.response.UserSimpleResponseDto
 import com.bookbook.domain.user.entity.User
 import com.bookbook.domain.user.enums.UserStatus
 import com.bookbook.domain.user.repository.UserRepository
@@ -53,7 +53,7 @@ class AdminService(
      */
     @Transactional(readOnly = true)
     fun getFilteredUsers(
-        pageable: Pageable, status: MutableList<UserStatus>?, userId: Long?
+        pageable: Pageable, status: List<UserStatus>?, userId: Long?
     ): Page<UserSimpleResponseDto> {
         return userRepository.findFilteredUsers(pageable, status, userId)
             .map { UserSimpleResponseDto(it) }
