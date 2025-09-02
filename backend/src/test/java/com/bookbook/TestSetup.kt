@@ -111,24 +111,6 @@ class TestSetup (
     }
 
     fun createCustomOAuth2User(user: User): CustomOAuth2User {
-        val authorities: Collection<GrantedAuthority> = listOf(SimpleGrantedAuthority("ROLE_${user.role}"))
-
-        val attributes: Map<String, Any> = mapOf<String, Any>(
-            "id" to user.id,
-            "name" to user.username,
-            "email" to user.email.orEmpty()
-        )
-        val nameAttributeKey = "name"
-
-        return CustomOAuth2User(
-            authorities,
-            attributes,
-            nameAttributeKey,
-            username = user.username,
-            nickname = user.nickname,
-            userId = user.id,
-            isRegistrationCompleted = user.isRegistrationCompleted(),
-            role = user.role
-        )
+        return Companion.createCustomOAuth2User(user)
     }
 }
