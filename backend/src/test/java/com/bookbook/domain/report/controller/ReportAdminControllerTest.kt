@@ -2,7 +2,6 @@ package com.bookbook.domain.report.controller
 
 import com.bookbook.TestSetup
 import com.bookbook.domain.report.enums.ReportStatus
-import com.bookbook.domain.report.repository.ReportRepository
 import com.bookbook.domain.report.service.ReportService
 import com.bookbook.domain.user.entity.User
 import com.bookbook.domain.user.repository.UserRepository
@@ -14,7 +13,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.domain.PageRequest
 import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
@@ -25,11 +23,10 @@ import org.springframework.transaction.annotation.Transactional
 
 @ActiveProfiles("test")
 @SpringBootTest
+@DisplayName("ReportAdminController 통합 테스트")
 @AutoConfigureMockMvc(addFilters = false)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Transactional
-@WithMockUser(roles = ["ADMIN"])
-@DisplayName("ReportAdminController 통합 테스트")
 class ReportAdminControllerTest {
 
     @Autowired
@@ -37,9 +34,6 @@ class ReportAdminControllerTest {
 
     @Autowired
     private lateinit var reportService: ReportService
-
-    @Autowired
-    private lateinit var reportRepository: ReportRepository
 
     @Autowired
     private lateinit var userRepository: UserRepository
@@ -68,10 +62,6 @@ class ReportAdminControllerTest {
                 target.id,
                 "이유 예시 $i"
             )
-
-            val found = reportRepository.findById(i.toLong())
-
-            if (found.isEmpty) continue
 
             if (i % 3 == 0)
                 reportService.getReportDetail(i.toLong())
