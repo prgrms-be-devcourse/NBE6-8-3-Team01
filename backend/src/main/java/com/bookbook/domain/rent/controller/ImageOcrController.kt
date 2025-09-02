@@ -21,12 +21,9 @@ class ImageOcrController(
     private val bookTitleParsingService: BookTitleParsingService,
     private val ocrBookSearchService: OcrBookSearchService
 ) {
-    
     private val log = LoggerFactory.getLogger(ImageOcrController::class.java)
 
-
-
-    // 🆕 통합 OCR + 알라딘 검색 엔드포인트
+    // 통합 OCR + 알라딘 검색 엔드포인트
     @PostMapping("/ocr-book-search")
     @Operation(summary = "이미지 OCR + 도서 검색 통합",
         description = "책 표지 이미지를 업로드하면 OCR로 제목을 추출하고 알라딘 API에서 자동 검색")
@@ -50,6 +47,6 @@ class ImageOcrController(
             }
         }
 
-        return RsData.of("200-1", message, result)
+        return RsData("200-1", message, result)
     }
 }
