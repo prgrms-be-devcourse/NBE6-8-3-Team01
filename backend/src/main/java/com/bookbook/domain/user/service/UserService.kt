@@ -180,7 +180,7 @@ class UserService(
         return if (user.isAdmin) {
             UserProfileResponseDto(user, 5.0, 0)
         } else {
-            val averageRating = reviewRepository.findAverageRatingByRevieweeId(userId).orElse(0.0)
+            val averageRating = reviewRepository.findAverageRatingByRevieweeId(userId) ?: 0.0
             val mannerScoreCount = reviewRepository.countByRevieweeId(userId)
             UserProfileResponseDto(user, averageRating, mannerScoreCount.toInt())
         }

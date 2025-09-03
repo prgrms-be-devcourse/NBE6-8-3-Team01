@@ -20,6 +20,27 @@ class LendListService(
     private val userRepository: UserRepository,
     private val reviewRepository: ReviewRepository
 ) {
+    private fun toLendListResponseDto(rent: com.bookbook.domain.rent.entity.Rent, userId: Long): LendListResponseDto {
+        val rentLists = rent.id?.let { rentListRepository.findByRentId(it) } ?: emptyList()
+        val rentList = rentLists.firstOrNull()
+
+        val borrowerNickname = rentList?.borrowerUser?.id?.let { borrowerId ->
+            userRepository.findById(borrowerId)
+                .map { user -> user.nickname }
+                .orElse(null)
+        }
+
+        val hasReview = rent.id?.let { rentId ->
+            reviewRepository.findByRentIdAndReviewerId(rentId, userId) != null
+        } ?: false
+
+        return LendListResponseDto(
+            rent = rent,
+            borrowerNickname = borrowerNickname,
+            returnDate = rentList?.returnDate,
+            hasReview = hasReview
+        )
+    }
     /**
      * 사용자가 등록한 도서 목록 조회
      */
@@ -30,29 +51,7 @@ class LendListService(
             userId
         )
         
-        return rentPage.map { rent ->
-            val rentLists = rent.id?.let { rentListRepository.findByRentId(it) } ?: emptyList()
-            val rentList = rentLists.firstOrNull()
-            
-            val borrowerNickname = rentList?.borrowerUser?.id?.let { borrowerId ->
-                userRepository.findById(borrowerId)
-                    .map { user -> user.nickname }
-                    .orElse(null)
-            }
-            
-            val hasReview = rentList?.let {
-                rent.id?.let { rentId -> 
-                    reviewRepository.findByRentIdAndReviewerId(rentId, userId).isPresent 
-                }
-            } ?: false
-            
-            LendListResponseDto(
-                rent = rent,
-                borrowerNickname = borrowerNickname,
-                returnDate = rentList?.returnDate,
-                hasReview = hasReview
-            )
-        }
+        return rentPage.map { rent -> toLendListResponseDto(rent, userId) }
     }
 
     /**
@@ -66,65 +65,13 @@ class LendListService(
             userId
         )
         
-        return rentPage.map { rent ->
-            val rentLists = rent.id?.let { rentListRepository.findByRentId(it) } ?: emptyList()
-            val rentList = rentLists.firstOrNull()
-            
-            val borrowerNickname = rentList?.borrowerUser?.id?.let { borrowerId ->
-                userRepository.findById(borrowerId)
-                    .map { user -> user.nickname }
-                    .orElse(null)
-            }
-            
-            val hasReview = rentList?.let {
-                rent.id?.let { rentId -> 
-                    reviewRepository.findByRentIdAndReviewerId(rentId, userId).isPresent 
-                }
-            } ?: false
-            
-            LendListResponseDto(
-                rent = rent,
-                borrowerNickname = borrowerNickname,
-                returnDate = rentList?.returnDate,
-                hasReview = hasReview
-            )
-        }
+        return rentPage.map { rent -> toLendListResponseDto(rent, userId) }
     }
 
     /**
      * 완료된 도서 대여 목록 조회
      */
-    fun getCompletedLendList(userId: Long, pageable: Pageable): Page<LendListResponseDto> {
-        val rentPage = rentRepository.findFilteredRentHistory(
-            pageable,
-            listOf(RentStatus.FINISHED),
-            userId
-        )
-        
-        return rentPage.map { rent ->
-            val rentLists = rent.id?.let { rentListRepository.findByRentId(it) } ?: emptyList()
-            val rentList = rentLists.firstOrNull()
-            
-            val borrowerNickname = rentList?.borrowerUser?.id?.let { borrowerId ->
-                userRepository.findById(borrowerId)
-                    .map { user -> user.nickname }
-                    .orElse(null)
-            }
-            
-            val hasReview = rentList?.let {
-                rent.id?.let { rentId -> 
-                    reviewRepository.findByRentIdAndReviewerId(rentId, userId).isPresent 
-                }
-            } ?: false
-            
-            LendListResponseDto(
-                rent = rent,
-                borrowerNickname = borrowerNickname,
-                returnDate = rentList?.returnDate,
-                hasReview = hasReview
-            )
-        }
-    }
+    // getCompletedLendList removed: not referenced anywhere
 
     /**
      * 도서 게시글 삭제 (소프트 삭제)

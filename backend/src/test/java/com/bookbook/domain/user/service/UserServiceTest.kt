@@ -116,7 +116,7 @@ class UserServiceTest {
     fun getUserProfile_regularUser_success() {
         val mannerScore = 4.5
         val mannerScoreCount = 10L
-        `when`(reviewRepository.findAverageRatingByRevieweeId(anyLong())).thenReturn(Optional.of(mannerScore))
+        `when`(reviewRepository.findAverageRatingByRevieweeId(anyLong())).thenReturn(mannerScore)
         `when`(reviewRepository.countByRevieweeId(anyLong())).thenReturn(mannerScoreCount)
 
         val result = userService.getUserProfileDetails(savedUser.id)
