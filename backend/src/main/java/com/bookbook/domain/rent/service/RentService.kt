@@ -259,7 +259,7 @@ class RentService(
         userId: Long?
     ): Page<RentSimpleResponseDto> {
         return rentRepository.findFilteredRentHistory(pageable, status, userId)
-            .map{ RentSimpleResponseDto(it) }
+            .map { RentSimpleResponseDto(it) }
     }
 
     /**
@@ -322,7 +322,7 @@ class RentService(
             .orElseThrow { ServiceException("404-2", "해당 대여글을 찾을 수 없습니다.") }
 
         if (rent.rentStatus != RentStatus.DELETED) {
-            throw ServiceException("409-1", "해당 글은 삭제된 상태가 아닙니다")
+            throw ServiceException("409-1", "해당 글은 삭제된 상태가 아닙니다.")
         }
 
         rent.rentStatus = RentStatus.AVAILABLE

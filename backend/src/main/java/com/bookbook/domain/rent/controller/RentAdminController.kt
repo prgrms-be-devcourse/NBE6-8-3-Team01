@@ -43,6 +43,9 @@ class RentAdminController(
         @RequestParam(required = false) status: List<RentStatus>?,
         @RequestParam(required = false) userId: Long?
     ): ResponseEntity<RsData<PageResponseDto<RentSimpleResponseDto>>> {
+        val page = if (page < 1) 1 else page
+        val size = if (size < 1) 10 else size
+
         val pageable: Pageable = PageRequest.of(page - 1, size)
 
         val rentHistoryPage = rentService.getRentsPage(pageable, status, userId)
@@ -71,7 +74,7 @@ class RentAdminController(
         val responseDto = rentService.getRentPostDetail(id)
 
         return ResponseEntity.ok(
-            RsData("200-1", "$id 번 글 상태 변경 완료", responseDto)
+            RsData("200-1", "${id}번 글 조회 완료.", responseDto)
         )
     }
 
@@ -90,7 +93,7 @@ class RentAdminController(
         val responseDto = rentService.modifyRentPageStatus(id, status.status)
 
         return ResponseEntity.ok(
-            RsData("200-1", "$id 번 글 상태 변경 완료", responseDto)
+            RsData("200-1", "${id}번 글 상태 변경 완료.", responseDto)
         )
     }
 
@@ -107,7 +110,7 @@ class RentAdminController(
 
         return ResponseEntity.ok(
             RsData(
-                "200-1", "$id 번 글 복구 완료", responseDto
+                "200-1", "${id}번 글 복구 완료.", responseDto
             )
         )
     }

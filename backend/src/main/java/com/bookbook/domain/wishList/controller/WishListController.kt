@@ -36,7 +36,7 @@ class WishListController(
         } else {
             wishListService.getWishListByUserId(userId)
         }
-        return ResponseEntity.ok(RsData.of("200", "찜 목록을 조회했습니다.", wishList))
+        return ResponseEntity.ok(RsData("200", "찜 목록을 조회했습니다.", wishList))
     }
 
     /**

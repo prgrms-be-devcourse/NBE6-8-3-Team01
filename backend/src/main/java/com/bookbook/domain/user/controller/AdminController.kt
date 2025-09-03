@@ -47,7 +47,7 @@ class AdminController (
     @PostMapping("/login")
     @Operation(summary = "어드민 로그인")
     fun adminLogin(
-        @RequestBody requestDto: @Valid UserLoginRequestDto,
+        @RequestBody @Valid requestDto: UserLoginRequestDto,
         response: HttpServletResponse
     ): ResponseEntity<RsData<UserLoginResponseDto>> {
         val admin = adminService.login(requestDto.username, requestDto.password)
@@ -90,7 +90,7 @@ class AdminController (
         invalidateCookie(response, jwtRefreshTokenCookieName)
 
         currentUser?.let {
-            jwtProvider.deleteRefreshToken(currentUser.userId)
+            jwtProvider.deleteRefreshToken(it.userId)
         }
 
         return ResponseEntity.ok(
@@ -138,12 +138,15 @@ class AdminController (
     fun getFilteredUsers(
         @RequestParam(defaultValue = "1") page: Int,
         @RequestParam(defaultValue = "10") size: Int,
-        @RequestParam(required = false) status: MutableList<UserStatus>?,
+        @RequestParam(required = false) status: List<UserStatus>?,
         @RequestParam(required = false) userId: Long?
     ): ResponseEntity<RsData<PageResponseDto<UserSimpleResponseDto>>> {
+        val page = if (page < 1) 1 else page
+        val size = if (size < 1) 10 else size
+
         val pageable: Pageable = PageRequest.of(page - 1, size)
 
-        val userPage= adminService.getFilteredUsers(pageable, status, userId)
+        val userPage = adminService.getFilteredUsers(pageable, status, userId)
         val response = PageResponseDto(userPage)
 
         return ResponseEntity.ok(

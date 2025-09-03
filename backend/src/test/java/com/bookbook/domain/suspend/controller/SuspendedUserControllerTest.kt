@@ -3,6 +3,8 @@ package com.bookbook.domain.suspend.controller
 import com.bookbook.TestSetup
 import com.bookbook.domain.suspend.service.SuspendedUserService
 import com.bookbook.domain.user.service.UserService
+import com.bookbook.global.security.CustomOAuth2User
+import org.assertj.core.api.Assertions.assertThat
 import org.hamcrest.Matchers
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
@@ -13,6 +15,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.security.test.context.support.WithMockUser
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oauth2Login
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
@@ -27,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @WithMockUser(roles = ["ADMIN"])
+@DisplayName("SuspendedUser 통합 테스트")
 class SuspendedUserControllerTest {
 
     @Autowired
@@ -39,11 +43,15 @@ class SuspendedUserControllerTest {
     private lateinit var userService: UserService
 
     @Autowired
-    private lateinit var setup: TestSetup
+    private lateinit var testSetup: TestSetup
+
+    private lateinit var mockUser: CustomOAuth2User
 
     @BeforeAll
-    fun setUp() {
-        setup.setSuspendedUsers()
+    fun before() {
+        mockUser = testSetup.createCustomOAuth2User(
+            userService.findById(2L)!! // USER 권한 유저
+        )
     }
 
     @Test
@@ -82,6 +90,7 @@ class SuspendedUserControllerTest {
             .andExpect(jsonPath("$.data.suspendedAt").value(Matchers.startsWith(user.suspendedAt.toString().take(20))))
             .andExpect(jsonPath("$.data.resumedAt").value(Matchers.startsWith(user.resumedAt.toString().take(20))))
     }
+
     @Test
     @DisplayName("정지된 유저 목록 조회")
     fun t2() {
@@ -91,6 +100,8 @@ class SuspendedUserControllerTest {
         val resultAction = mvc
             .perform(
                 get("/api/v1/admin/users/suspend")
+                    .param("page", page.toString())
+                    .param("size", size.toString())
             )
             .andDo(print())
 
@@ -106,13 +117,51 @@ class SuspendedUserControllerTest {
                 .andExpect(jsonPath("$.data.content[$i].suspendedAt").value(Matchers.startsWith(user.suspendedAt.toString().take(20))))
                 .andExpect(jsonPath("$.data.content[$i].resumedAt").value(Matchers.startsWith(user.resumedAt.toString().take(20))))
         }
+
+        assertThat(suspendedUsers.size).isEqualTo(2)
+    }
+
+    @Test
+    @DisplayName("정지된 유저 목록 조회 with userId")
+    fun t3() {
+        val page = 1
+        val size = 10
+        val userId = 4L
+
+        val resultAction = mvc
+            .perform(
+                get("/api/v1/admin/users/suspend")
+                    .param("page", page.toString())
+                    .param("size", size.toString())
+                    .param("userId", userId.toString())
+            )
+            .andDo(print())
+
+        val suspendedUsers = suspendedUserService.getSuspendedHistoryPage(page, size, userId).content
+
+        for (i in suspendedUsers.indices) {
+            val user = suspendedUsers[i]
+
+            resultAction
+                .andExpect(jsonPath("$.data.content[$i].userId").value(user.userId))
+                .andExpect(jsonPath("$.data.content[$i].name").value(user.name))
+                .andExpect(jsonPath("$.data.content[$i].reason").value(user.reason))
+                .andExpect(jsonPath("$.data.content[$i].suspendedAt").value(Matchers.startsWith(user.suspendedAt.toString().take(20))))
+                .andExpect(jsonPath("$.data.content[$i].resumedAt").value(Matchers.startsWith(user.resumedAt.toString().take(20))))
+        }
+
+        assertThat(suspendedUsers.size).isEqualTo(1)
     }
 
     @Test
     @DisplayName("정지된 유저를 다시 정지")
-    fun t3() {
+    fun t4() {
         val userId = 4L
         val period = 7
+
+        val user = userService.findById(userId) ?: throw NoSuchElementException()
+
+        assertThat(user.userStatus.toString()).isEqualTo("SUSPENDED")
 
         val suspendAction = mvc
             .perform(
@@ -141,7 +190,7 @@ class SuspendedUserControllerTest {
 
     @Test
     @DisplayName("정지된 멤버를 해제")
-    fun t4() {
+    fun t5() {
         val userId = 4L
 
         val suspendAction = mvc
@@ -164,8 +213,8 @@ class SuspendedUserControllerTest {
     }
 
     @Test
-    @DisplayName("정지가 해제된 유저를 다시 해제 시도")
-    fun t5() {
+    @DisplayName("정지 상태가 아닌 유저를 다시 해제 시도")
+    fun t6() {
         val userId = 2L
 
         val suspendAction = mvc
@@ -186,7 +235,7 @@ class SuspendedUserControllerTest {
 
     @Test
     @DisplayName("유효하지 않은 요청 1")
-    fun t6() {
+    fun t7() {
         val userId = 2L
 
         val suspendAction = mvc
@@ -214,7 +263,7 @@ class SuspendedUserControllerTest {
 
     @Test
     @DisplayName("유효하지 않은 요청 2")
-    fun t7() {
+    fun t8() {
         val suspendAction = mvc
             .perform(
                 patch("/api/v1/admin/users/suspend")
@@ -235,5 +284,106 @@ class SuspendedUserControllerTest {
             .andExpect(status().isBadRequest)
             .andExpect(jsonPath("$.resultCode").value("400-1"))
             .andExpect(jsonPath("$.data").doesNotExist())
+    }
+
+    @Test
+    @DisplayName("어드민 유저 정지 시도")
+    fun t9() {
+        val userId = 6L
+        val period = 7
+
+        val suspendAction = mvc
+            .perform(
+                patch("/api/v1/admin/users/suspend")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        """
+                        {
+                            "userId": $userId,
+                            "reason" : "광고",
+                            "period" : $period
+                        }
+                    """
+                    )
+            )
+            .andDo(print())
+
+        suspendAction
+            .andExpect(handler().handlerType(SuspendedUserController::class.java))
+            .andExpect(handler().methodName("suspendUser"))
+            .andExpect(status().isForbidden)
+            .andExpect(jsonPath("$.resultCode").value("403-1"))
+            .andExpect(jsonPath("$.msg").value("어드민은 정지시킬 수 없습니다."))
+            .andExpect(jsonPath("$.data").doesNotExist())
+    }
+
+    @Test
+    @DisplayName("권한이 없는 유저가 정지를 실시함")
+    fun t10() {
+        val userId = 3L
+        val period = 7
+
+        val suspendAction = mvc
+            .perform(
+                patch("/api/v1/admin/users/suspend")
+                    .with(oauth2Login().oauth2User(mockUser)) // 일반 유저가 로그인 후 정지 시도
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        """
+                        {
+                            "userId": $userId,
+                            "reason" : "광고",
+                            "period" : $period
+                        }
+                    """
+                    )
+            )
+            .andDo(print())
+
+        suspendAction
+            .andExpect(status().isForbidden)
+    }
+
+    @Test
+    @DisplayName("정지된 유저 목록 조회 - 잘못된 page 인수 조정")
+    fun t11() {
+        val page = -1
+        val size = 10
+
+        val resultAction = mvc
+            .perform(
+                get("/api/v1/admin/users/suspend")
+                    .param("page", page.toString())
+                    .param("size", size.toString())
+            )
+            .andDo(print())
+
+        resultAction
+            .andExpect(handler().handlerType(SuspendedUserController::class.java))
+            .andExpect(handler().methodName("getAllSuspendedHistory"))
+            .andExpect(jsonPath("$.resultCode").value("200-1"))
+            .andExpect(jsonPath("$.data").exists())
+    }
+
+    @Test
+    @DisplayName("정지된 유저 목록 조회 - 잘못된 size 인수 조정")
+    fun t12() {
+        val page = 1
+        val size = -1
+
+        val resultAction = mvc
+            .perform(
+                get("/api/v1/admin/users/suspend")
+                    .param("page", page.toString())
+                    .param("size", size.toString())
+            )
+            .andDo(print())
+
+        resultAction
+            .andExpect(handler().handlerType(SuspendedUserController::class.java))
+            .andExpect(handler().methodName("getAllSuspendedHistory"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.resultCode").value("200-1"))
+            .andExpect(jsonPath("$.data").exists())
     }
 }
