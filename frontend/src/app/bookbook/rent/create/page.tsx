@@ -1,7 +1,5 @@
-// 25.09.01 현준
-// src/app/bookbook/rent/create/page.tsx
+// 25.09.03 현준
 // 글 작성을 위한 페이지
-
 "use client";
 
 import React, { useEffect, useState } from 'react';
@@ -9,6 +7,20 @@ import { useRouter } from "next/navigation";
 
 // 분리한 AddressSelectionPopup 컴포넌트를 import
 import AddressSelectionPopup from '@/app/components/AddressSelectionPopup';
+// AI 작성 모드 선택 컴포넌트를 import
+import AiModeSelector from './AiModeSelector';
+// 책 검색 섹션 컴포넌트를 import
+import BookSearchSection from './BookSearchSection';
+// 이미지 업로드 섹션 컴포넌트를 import
+import ImageUploadSection from './ImageUploadSection';
+// AI 분석 로딩 팝업 컴포넌트를 import
+import AiLoadingPopup from './AiLoadingPopup';
+// 폼 필드 섹션 컴포넌트를 import
+import FormFieldsSection from './FormFieldsSection';
+// 팝업 모달들 컴포넌트를 import
+import PopupModals from './PopupModals';
+// 토스트 알림 모듈을 import
+import ToastNotification, { useToast, ToastType } from './ToastNotificationModule';
 
 interface BookSearchResult {
     bookTitle: string;
@@ -54,19 +66,8 @@ export default function BookRentPage() {
     const [isAutoFilled, setIsAutoFilled] = useState(false);
     const [autoFillSource, setAutoFillSource] = useState<'ocr' | 'manual' | null>(null);
 
-    // Toast 메시지 상태 추가
-    const [toastMessage, setToastMessage] = useState<string | null>(null);
-    const [toastType, setToastType] = useState<'success' | 'error' | 'info' | null>(null);
-
-    // 토스트 메세지를 보여주는 함수
-    const showToast = (message: string, type: 'success' | 'error' | 'info') => {
-        setToastMessage(message);
-        setToastType(type);
-        setTimeout(() => {
-            setToastMessage(null);
-            setToastType(null);
-        }, type === 'info' ? 2000 : 3000); // info 메시지는 2초로 단축
-    }
+    // 토스트 알림 훅 사용
+    const { toastState, showToast } = useToast();
 
     const [showPopup, setShowPopup] = useState(false);
 
@@ -244,11 +245,11 @@ ${conditionAnalysis}`;
                     await handleOcrBookSearch(selectedFile);
                 }catch(error){
                     console.error('OCR 자동 실행 중 오류 발생', error);
-                    showToast('OCR 자동 실행 중 오류가 발생했습니다.', 'error');
+                    showToast('OCR 자동 실행 중 오류가 발생했습니다.', 'error' as ToastType);
                 }
             } else {
                 // AI 모드가 비활성화된 경우 단순 이미지 등록만
-                showToast('이미지가 등록되었습니다. 수동으로 정보를 입력해주세요.', 'info');
+                showToast('이미지가 등록되었습니다.  수동으로 정보를 입력해주세요.', 'info' as ToastType);
             }
             
         }
@@ -257,7 +258,7 @@ ${conditionAnalysis}`;
     // start 파라미터를 받는 handleBookSearch 함수로 변경
     const handleBookSearch = async (pageNumber: number) => {
         if(!searchQuery.trim()){
-            showToast('검색어를 입력해주세요.', 'error');
+            showToast('검색어를 입력해주세요.', 'error' as ToastType);
             return;
         }
 
@@ -269,7 +270,7 @@ ${conditionAnalysis}`;
             if(!response.ok){
                 const errorData = await response.text();
                 console.error('백엔드 책 검색 API 요청 실패:', response.status, response.statusText, errorData);
-                showToast(`책 검색 API 요청 실패: ${response.status} ${response.statusText}`, 'error');
+                showToast(`책 검색 API 요청 실패: ${response.status} ${response.statusText}`, 'error' as ToastType);
                 return;
             }
 
@@ -282,14 +283,14 @@ ${conditionAnalysis}`;
                 setShowBookSearchModal(true);
                 setCurrentPage(pageNumber); // 검색 성공 시 현재 페이지 업데이트
             } else {
-                showToast('검색 결과가 없습니다. 직접 입력해주세요.', 'error');
+                showToast('검색 결과가 없습니다. 직접 입력해주세요.', 'error' as ToastType);
                 setSearchResults([]);
                 setHasMoreResults(false);
                 setShowBookSearchModal(false); // 결과 없으면 모달 닫기
             }
         } catch (error) {
             console.error('책 검색 중 오류 발생', error);
-            showToast('책 검색 중 오류가 발생했습니다. 잠시 후 다시 시도하세요.', 'error');
+            showToast('책 검색 중 오류가 발생했습니다. 잠시 후 다시 시도하세요.', 'error' as ToastType);
             setSearchResults([]);
             setHasMoreResults(false);
             setShowBookSearchModal(false);
@@ -395,8 +396,8 @@ ${conditionAnalysis}`;
                       setIsAutoFilled(true);
                       setAutoFillSource('ocr');
                       
-                      showToast(`"${book.bookTitle}" 모든 정보가 자동으로 입력되었습니다!`, 'success');
-                      return true;
+                                           showToast(`"${book.bookTitle}" 모든 정보가 자동으로 입력되었습니다!`, 'success' as ToastType);
+                     return true;
                      
                  } else if (result.detectedBookTitle) {
                      // 검색 결과가 0건인 경우 모든 필드 초기화 (책 제목 포함)
@@ -421,7 +422,7 @@ ${conditionAnalysis}`;
                 } else {
                     // OCR 실패
                     console.log('OCR 감지 실패 - 신뢰도:', result.confidence);
-                    showToast('책 제목을 인식하지 못했습니다. 수동으로 입력해주세요.', 'error');
+                    showToast('책 제목을 인식하지 못했습니다. 수동으로 입력해주세요.', 'error' as ToastType);
                     
                     // OCR 실패 시 책 관련 필드 초기화
                     resetBookFields();
@@ -438,7 +439,7 @@ ${conditionAnalysis}`;
             });
             
             const errorMessage = errorData?.msg || `HTTP ${response.status}: ${response.statusText}`;
-            showToast(`${errorMessage}`, 'error');
+            showToast(`${errorMessage}`, 'error' as ToastType);
             
             // API 오류 시에도 책 관련 필드 초기화
             resetBookFields();
@@ -448,7 +449,7 @@ ${conditionAnalysis}`;
             
         } catch (error) {
             console.error('OCR 네트워크 오류:', error);
-            showToast('네트워크 오류가 발생했습니다. 수동으로 검색해주세요.', 'error');
+            showToast('네트워크 오류가 발생했습니다. 수동으로 검색해주세요.', 'error' as ToastType);
             
             // 네트워크 오류 시에도 책 관련 필드 초기화
             resetBookFields();
@@ -475,7 +476,7 @@ ${conditionAnalysis}`;
 
         // ✅ 핵심 로직: bookImage가 null이고 previewImageUrl이 defaultImageUrl과 같으면 등록 막기
         if (!bookImage) {
-            showToast('책 이미지를 등록해 주세요.', 'error');
+            showToast('책 이미지를 등록해 주세요.', 'error' as ToastType);
             return;
         }
 
@@ -495,12 +496,12 @@ ${conditionAnalysis}`;
                 }else{
                     const errorText = await imageUploadRes.text();
                     console.error('이미지 업로드 실패', errorText);
-                    showToast(`이미지 업로드 실패: ${imageUploadRes.statusText || errorText}`, 'error');
+                    showToast(`이미지 업로드 실패: ${imageUploadRes.statusText || errorText}`, 'error' as ToastType);
                     return;
                 }
             }catch(error){
                 console.error('이미지 업로드 중 네트워크 오류', error);
-                showToast('이미지 업로드 중 오류가 발생했습니다.', 'error');
+                showToast('이미지 업로드 중 오류가 발생했습니다.', 'error' as ToastType);
                 return;
             }
         }
@@ -535,11 +536,11 @@ ${conditionAnalysis}`;
 
                 const errorData = await res.json();
                 console.error('책 등록 실패', errorData);
-                showToast(`책 등록에 실패했습니다. ${errorData.msg || res.statusText}`, 'error');
+                showToast(`책 등록에 실패했습니다. ${errorData.msg || res.statusText}`, 'error' as ToastType);
             }
         } catch(error) {
             console.error('책 등록 중 네트워크 에러', error);
-            showToast('책 등록 중 네트워크 에러가 발생했습니다.', 'error');
+            showToast('책 등록 중 네트워크 에러가 발생했습니다.', 'error' as ToastType);
         }
     };
 
@@ -553,358 +554,62 @@ ${conditionAnalysis}`;
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     
-                                                                                                        {/* AI 작성 모드 선택 */}
-                        <div className="mb-6">
-                            <div className={`inline-block px-4 py-2 rounded-lg border-2 transition-all duration-300 ${
-                                isAiModeEnabled 
-                                    ? 'bg-[#D5BAA3] border-[#C2A794]' 
-                                    : 'bg-gray-100 border-gray-300'
-                            }`}>
-                                <div className="flex items-center space-x-4">
-                                    <div className="flex items-center space-x-3">
-                                        <span className={`font-medium transition-colors duration-300 ${
-                                            isAiModeEnabled ? 'text-white' : 'text-gray-700'
-                                        }`}>
-                                            AI로 작성하기
-                                        </span>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsAiModeEnabled(!isAiModeEnabled)}
-                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                                            isAiModeEnabled 
-                                                ? 'bg-white focus:ring-white' 
-                                                : 'bg-gray-400 focus:ring-gray-400'
-                                        }`}
-                                    >
-                                        <span
-                                            className={`inline-block h-4 w-4 transform rounded-full transition-all duration-300 ${
-                                                isAiModeEnabled 
-                                                    ? 'translate-x-6 bg-[#D5BAA3]' 
-                                                    : 'translate-x-1 bg-white'
-                                            }`}
-                                        />
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                    {/* AI 작성 모드 선택 */}
+                    <AiModeSelector 
+                        isAiModeEnabled={isAiModeEnabled}
+                        onToggle={setIsAiModeEnabled}
+                    />
 
-                     {/* 수정된 이미지 업로드 섹션 */}
-                     <div>
-                         <label htmlFor="bookImage" className="block text-gray-700 text-base font-bold mb-2">
-                             책 이미지 업로드 {isAiModeEnabled && isOcrProcessing && <span className="text-blue-500">(AI 분석 중...)</span>}
-                         </label>
-                        <div className="flex flex-col items-start space-y-3">
-                            <input
-                                type="file"
-                                id="bookImage"
-                                className="hidden" // 기본 파일 입력을 숨김
-                                onChange={handleImageChange}
-                                accept="image/*" // 이미지 파일만 선택 가능하도록 제한
-                                disabled={isAiModeEnabled && isOcrProcessing} // AI 모드에서만 OCR 처리 중 비활성화
-                            />
-                            <label
-                                htmlFor="bookImage" // '사진 올리기' 버튼(label)을 클릭하면, 브라우저는 자동으로 숨겨진 <input type="file">을 클릭한 것처럼 동작
-                                className={`w-full sm:w-auto px-4 py-2 text-white font-semibold rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 cursor-pointer text-center
-                                    ${(isAiModeEnabled && isOcrProcessing)
-                                        ? 'bg-gray-400 cursor-not-allowed' 
-                                        : 'bg-[#D5BAA3] hover:bg-[#C2A794] focus:ring-[#D5BAA3]'
-                                    }`}
-                            >
-                                {(isAiModeEnabled && isOcrProcessing) ? 'AI 분석 중...' : '사진 올리기'}
-                            </label>     
-                            
-                            {/* 이미지 미리보기 */}
-                            <div className="relative">
-                                <img
-                                    src={previewImageUrl}
-                                    alt="책 이미지"
-                                    className="w-[200px] h-[150px] object-cover rounded-lg"
-                                />
-                                
-                                {/* OCR 처리 중일 때는 간단한 로딩 표시만 (AI 모드에서만) */}
-                                {isAiModeEnabled && isOcrProcessing && (
-                                    <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center rounded-lg">
-                                        <div className="text-white text-center">
-                                            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
+                                          {/* 이미지 업로드 섹션 */}
+                     <ImageUploadSection
+                         bookImage={bookImage}
+                         previewImageUrl={previewImageUrl}
+                         isAiModeEnabled={isAiModeEnabled}
+                         isOcrProcessing={isOcrProcessing}
+                         onImageChange={handleImageChange}
+                     />
 
-                    <div>
-                        <label htmlFor="postTitle" className="block text-gray-700 text-base font-bold mb-2">
-                            글 제목
-                        </label>
-                        <input
-                            type="text"
-                            id="postTitle"
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                            placeholder="글 제목을 입력해주세요."
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                            required
-                        />
-                    </div>
-                    
                     {/* AI 분석 중 로딩 팝업 (AI 모드에서만) */}
-                    {isAiModeEnabled && isOcrProcessing && (
-                        <div className="fixed inset-0 bg-black/50 bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-[60]">
-                            <div className="bg-white bg-opacity-95 backdrop-blur-md rounded-2xl p-8 shadow-2xl max-w-sm mx-4 text-center">
-                                 
-                                 {/* 메인 메시지 */}
-                                 <h3 className="text-xl font-bold text-gray-800 mb-4">
-                                     AI가 이미지를 분석하고 있습니다
-                                 </h3>
-                                 
-                                 {/* 진행 단계 표시 */}
-                                 <div className="space-y-3 mb-6">
-                                     <div className="flex items-center space-x-3">
-                                         <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                                             <div className="w-2 h-2 bg-white rounded-full"></div>
-                                         </div>
-                                         <span className="text-sm text-gray-600">이미지 업로드 완료</span>
-                                     </div>
-                                     <div className="flex items-center space-x-3">
-                                         <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                                             progressValue > 30 ? 'bg-blue-500' : 'bg-gray-300'
-                                         }`}>
-                                             <div className={`w-2 h-2 rounded-full ${
-                                                 progressValue > 30 ? 'bg-white animate-pulse' : 'bg-gray-400'
-                                             }`}></div>
-                                         </div>
-                                         <span className={`text-sm ${
-                                             progressValue > 30 ? 'text-gray-600' : 'text-gray-400'
-                                         }`}>
-                                             {progressValue > 30 ? 'AI 이미지 분석 중...' : 'AI 이미지 분석 대기'}
-                                         </span>
-                                     </div>
-                                     <div className="flex items-center space-x-3">
-                                         <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                                             progressValue > 70 ? 'bg-blue-500' : 'bg-gray-300'
-                                         }`}>
-                                             <div className={`w-2 h-2 rounded-full ${
-                                                 progressValue > 70 ? 'bg-white animate-pulse' : 'bg-gray-400'
-                                             }`}></div>
-                                         </div>
-                                         <span className={`text-sm ${
-                                             progressValue > 70 ? 'text-gray-600' : 'text-gray-400'
-                                         }`}>
-                                             {progressValue > 70 ? '도서 정보 검색 중...' : '도서 정보 검색 대기'}
-                                         </span>
-                                     </div>
-                                 </div>
-                                 
-                                 {/* 로딩 애니메이션 */}
-                                 <div className="flex justify-center space-x-1 mb-4">
-                                     <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
-                                     <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
-                                     <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
-                                 </div>
-                                 
-                                                                   {/* 프로그레스 바 */}
-                                  <div className="w-full bg-gray-200 rounded-full h-2 mb-4 overflow-hidden">
-                                      <div 
-                                          className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-300 ease-out"
-                                          style={{width: `${progressValue}%`}}
-                                      ></div>
-                                  </div>
-                                  
-                                  {/* 진행률 표시 */}
-                                  <div className="text-sm text-gray-600 mb-2">
-                                      {Math.round(progressValue)}%
-                                  </div>
-                                 
-                                 {/* 예상 소요 시간 */}
-                                 <p className="text-sm text-gray-500">
-                                     평균 3-5초 소요됩니다
-                                 </p>
-                             </div>
-                         </div>
-                     )}
+                    <AiLoadingPopup 
+                        isVisible={isAiModeEnabled && isOcrProcessing}
+                        progressValue={progressValue}
+                    />
 
-                    {/* 책 상태, 주소 입력 부분 */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* 폼 필드 섹션 */}
+                    <FormFieldsSection
+                        title={title}
+                        onTitleChange={setTitle}
+                        bookCondition={bookCondition}
+                        onBookConditionChange={setBookCondition}
+                        conditions={conditions}
+                        selectedAddress={selectedAddress}
+                        onAddressPopupOpen={() => setIsAddressPopupOpen(true)}
+                        contents={contents}
+                        onContentsChange={setContents}
+                        bookTitle={bookTitle}
+                        onBookTitleChange={setBookTitle}
+                        author={author}
+                        onAuthorChange={setAuthor}
+                        publisher={publisher}
+                        onPublisherChange={setPublisher}
+                        category={category}
+                        onCategoryChange={setCategory}
+                        description={description}
+                        onDescriptionChange={setDescription}
+                    />
 
-                        {/* 책 상태 */}
-                        <div className='md:col-span-1'> {/* 1:2 비율을 위해 md:col-span-1 추가 */}
-                            <label htmlFor="bookCondition" className="block text-gray-700 text-base font-bold mb-2">
-                                책 상태
-                            </label>
-                            {/* 책 상태 토글 */}
-                            <select
-                                id="bookCondition"
-                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-gray-900 h-12"
-                                value={bookCondition}
-                                onChange={(e) => setBookCondition(e.target.value)}
-                                required
-                            >
-                                <option value="" disabled>책 상태를 선택하세요</option>
-                                {conditions.map((cond) => (
-                                    <option key={cond} value={cond}>{cond}</option>
-                                ))}
-                            </select>
-                        </div>
-
-                        {/* 주소 입력 */}
-                        <div className='md:col-span-2'> {/* 1:2 비율을 위해 md:col-span-2 추가 */}
-                            <label htmlFor="address" className="block text-gray-700 text-base font-bold mb-2">
-                                주소
-                            </label>
-
-                            {/* 주소 선택 필드를 텍스트와 버튼으로 변경 */}
-                            <div className="flex items-center space-x-2">
-                                {/* 주소 선택 인풋 상자 */}
-                                <input
-                                    type="text"
-                                    id="address"
-                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-gray-900 h-12"
-                                    value={selectedAddress || '주소를 선택해주세요'} // 선택된 주소 표시
-                                    readOnly // 직접 입력 방지
-                                    required
-                                />
-                                {/* 책 선택 버튼 */}
-                                <button
-                                    type="button"
-                                    onClick={() => setIsAddressPopupOpen(true)} // 주소 팝업 열기
-                                    className="px-4 py-3 whitespace-nowrap text-white font-semibold rounded-lg shadow-md bg-[#D5BAA3] hover:bg-[#C2A794] "
-                                >
-                                    선택
-                                </button>
-                            </div>
-
-                        </div>
-                    </div>
-
-                    <div>
-                        <label htmlFor="contents" className="block text-gray-700 text-base font-bold mb-2">
-                            글 내용
-                        </label>
-                        <textarea
-                            id="contents"
-                            rows={6}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-gray-900 resize-y"
-                            placeholder="책에 대한 설명, 상태 등을 자세히 적어주세요."
-                            value={contents}
-                            onChange={(e) => setContents(e.target.value)}
-                            maxLength={500}
-                            required
-                        ></textarea>
-                        <div className="text-right text-sm text-gray-500 mt-1">
-                            {contents.length}/500
-                        </div>
-                    </div>
-
-                    <div className="flex flex-col items-center justify-end space-y-3 sm:space-y-0 sm:flex-row sm:space-x-3">
-                        {/* 책 도움말 말풍선 */}
-                        <div className="relative w-full sm:w-auto">
-                            {/* 책 검색 상자 */}
-                            <input
-                                type="text"
-                                placeholder="책 제목 입력"
-                                className="w-full sm:w-auto p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                            {/* 비어있을 때만 출력하는 span 부분 */}
-                            {searchQuery.trim() === '' && (
-                               <span className="absolute left-1/2 -top-8 -translate-x-1/2 bg-blue-500 text-white text-xs font-semibold px-2 py-1 rounded-md shadow-md whitespace-nowrap">
-                                    책 검색 기능으로 간편하게 입력하세요!
-                                </span>
-                            )}
-                        </div>
-
-                        {/* 책 검색 버튼 */}
-                        <button
-                            type="button"
-                            className="px-6 py-2 text-white font-semibold rounded-lg shadow-md
-                            bg-[#D5BAA3] hover:bg-[#C2A794]"
-                            onClick={() => handleBookSearch(1)}
-                        >
-                            책 검색하기
-                        </button>
-                    </div>
-
-                    <div>
-                        <label htmlFor="bookTitle" className="block text-gray-700 text-base font-bold mb-2">
-                            책 제목
-                        </label>
-                        <input
-                            type="text"
-                            id="bookTitle"
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                            placeholder="예: 식탁 위의 세계사"
-                            value={bookTitle}
-                            onChange={(e) => setBookTitle(e.target.value)}
-                            required
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div>
-                            <label htmlFor="author" className="block text-gray-700 text-base font-bold mb-2">
-                                저자
-                            </label>
-                            <input
-                                type="text"
-                                id="author"
-                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                                placeholder="예: 이영숙"
-                                value={author}
-                                onChange={(e) => setAuthor(e.target.value)}
-                                required
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor="publisher" className="block text-gray-700 text-base font-bold mb-2">
-                                출판사
-                            </label>
-                            <input
-                                type="text"
-                                id="publisher"
-                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                                placeholder="예: 장비"
-                                value={publisher}
-                                onChange={(e) => setPublisher(e.target.value)}
-                                required
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor="category" className="block text-gray-700 text-base font-bold mb-2">
-                                카테고리
-                            </label>
-                            <input
-                                type="text"
-                                id="category"
-                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                                placeholder="예: 역사"
-                                value={category}
-                                onChange={(e) => setCategory(e.target.value)}
-                                required
-                            />
-                        </div>
-                    </div>
-
-                    <div>
-                        <label htmlFor="description" className="block text-gray-700 text-base font-bold mb-2">
-                            책 설명
-                        </label>
-                        <textarea
-                            id="description"
-                            rows={3}
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-gray-900 resize-y"
-                            placeholder="책에 대한 간략한 설명을 입력하거나, 검색된 내용을 확인하세요."
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            maxLength={500}
-                            required
-                        ></textarea>
-                        <div className="text-right text-sm text-gray-500 mt-1">
-                            {description.length}/500
-                        </div>
-                    </div>
+                    {/* 책 검색 섹션 */}
+                    <BookSearchSection
+                        searchQuery={searchQuery}
+                        onSearchQueryChange={setSearchQuery}
+                        onBookSelect={selectBook}
+                        onSearch={handleBookSearch}
+                        searchResults={searchResults}
+                        showBookSearchModal={showBookSearchModal}
+                        onCloseModal={() => setShowBookSearchModal(false)}
+                        currentPage={currentPage}
+                        hasMoreResults={hasMoreResults}
+                    />
 
                     <div className="pt-4 flex justify-center">
                         <button
@@ -918,160 +623,25 @@ ${conditionAnalysis}`;
                 </form>
             </div>
 
-            {/* 토스트 메시지 컴포넌트 */}
-            {toastMessage && (
-                <div
-                    className={`fixed bottom-8 left-1/2 -translate-x-1/2 px-6 py-3 rounded-lg shadow-lg text-white font-semibold text-center z-50 max-w-sm
-                        ${toastType === 'success' ? 'bg-green-500' : 
-                          toastType === 'error' ? 'bg-red-500' : 
-                          toastType === 'info' ? 'bg-blue-500' : 'bg-gray-500'}`}
-                >
-                    {toastMessage}
-                </div>
-            )}
-        
-            {/* 책 검색 결과 팝업 모달 */}
-            {showBookSearchModal && (
-                <div
-                    className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4"
-                    onClick={() => setShowBookSearchModal(false)}
-                >
-                    <div
-                        className="bg-white rounded-xl p-6 sm:p-8 shadow-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto"
-                        onClick={e => e.stopPropagation()}
-                    >
-                        <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 text-center">
-                            책 검색 결과
-                        </h2>
-                        <hr className="border-t-2 border-gray-300 mb-6" />
-
-                        {searchResults.length > 0 ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {searchResults.map((book, index) => (
-                                    <div
-                                        key={index}
-                                        className="border border-gray-200 rounded-lg p-4 flex flex-col items-center text-center shadow-sm hover:shadow-md transition duration-150 cursor-pointer"
-                                    >
-                                        <img
-                                            src={book.coverImageUrl || defaultImageUrl}
-                                            alt={book.bookTitle}
-                                            className="w-24 h-32 object-cover rounded-md mb-3"
-                                        />
-                                        <h3 className="font-semibold text-gray-800 text-base mb-1 line-clamp-2">
-                                            {book.bookTitle}
-                                        </h3>
-                                        <p className="text-sm text-gray-600 line-clamp-1">
-                                            {book.author} | {book.publisher}
-                                        </p>
-                                        <p className="text-xs text-gray-500 mt-1">
-                                            {book.pubDate}
-                                        </p>
-                                        <button
-                                            className="mt-4 px-4 py-2 text-white font-semibold rounded-lg bg-[#D5BAA3] hover:bg-[#C2A794] text-sm"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                selectBook(book); // 책 선택 함수 호출
-                                            }}
-                                        >
-                                            선택하기
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <p className="text-center text-gray-600">검색 결과가 없습니다.</p>
-                        )}
-
-                        <div className="flex justify-center items-center mt-6 space-x-4">
-                            <button
-                                onClick={() => handleBookSearch(currentPage - 1)} // 이전 버튼 클릭 시
-                                disabled={currentPage === 1}
-                                className="px-4 py-2 rounded-lg bg-[#D5BAA3] text-white disabled:opacity-50"
-                            >
-                                이전
-                            </button>
-                            {/* 현재 페이지 번호와 총 페이지 수를 정확히 알 수 없으므로, 현재 페이지 정보만 표시하거나, 다음 페이지가 있는지 여부로 대체 */}
-                            <span>
-                                페이지 {currentPage}
-                            </span>
-                            <button
-                                onClick={() => handleBookSearch(currentPage + 1)} // 다음 버튼 클릭 시
-                                disabled={!hasMoreResults} // 다음 페이지 결과가 없을 경우 비활성화
-                                className="px-4 py-2 rounded-lg bg-[#D5BAA3] text-white disabled:opacity-50"
-                            >
-                                다음
-                            </button>
-                        </div>
-
-                        <div className="mt-6 flex justify-center">
-                            <button
-                                onClick={() => setShowBookSearchModal(false)}
-                                className="px-6 py-2 text-white rounded-lg font-bold bg-gray-500 hover:bg-gray-600"
-                            >
-                                닫기
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}   
-
-            {/* 글 작성 팝업 */}
-            {showPopup && (
-                <div
-                  className="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
-                  onClick={() => setShowPopup(false)}
-                >
-                  <div
-                    className="bg-white rounded-xl p-8 shadow-lg flex flex-col items-center"
-                    onClick={e => e.stopPropagation()}
-                  >
-                    <div className="mb-6 text-lg font-semibold">
-                      글이 작성되었습니다.
-                    </div>
-                    <button
-                      onClick={() => {
-                        setShowPopup(false);
-                        router.push(`/bookbook/rent`);
-                      }}
-                      className="px-6 py-2 text-white rounded-lg font-bold bg-[#D5BAA3] hover:bg-[#C2A794]"
-                    >
-                      확인
-                    </button>
-                  </div>
-                </div>
-            )}
-
-                         {/* AI 조회 실패 팝업 */}
-             {showAiFailurePopup && (
-                 <div 
-                     className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4"
-                     onClick={() => setShowAiFailurePopup(false)}
-                 >
-                     <div
-                         className="bg-white rounded-xl p-6 sm:p-8 shadow-lg w-full max-w-sm mx-4"
-                         onClick={e => e.stopPropagation()}
-                     >
-                         <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 text-center">
-                             AI 조회 실패
-                         </h2>
-                         <hr className="border-t-2 border-gray-300 mb-6" />
-                         
-                         <p className="text-center text-gray-600 mb-6">
-                             책 정보를 자동으로 찾을 수 없습니다.<br />
-                             책 검색 기능을 이용해주세요.
-                         </p>
-                         
-                         <div className="flex justify-center">
-                             <button
-                                 onClick={() => setShowAiFailurePopup(false)}
-                                 className="px-6 py-2 text-white rounded-lg font-bold bg-[#D5BAA3] hover:bg-[#C2A794]"
-                             >
-                                 확인
-                             </button>
-                         </div>
-                     </div>
-                 </div>
-             )}
+                         {/* 팝업 모달들 */}
+             <PopupModals
+                 showPopup={showPopup}
+                 onClosePopup={() => setShowPopup(false)}
+                 showAiFailurePopup={showAiFailurePopup}
+                 onCloseAiFailurePopup={() => setShowAiFailurePopup(false)}
+                 isAddressPopupOpen={isAddressPopupOpen}
+                 onCloseAddressPopup={() => setIsAddressPopupOpen(false)}
+                 onSelectAddress={(address: string) => {
+                     setSelectedAddress(address);
+                     setIsAddressPopupOpen(false);
+                 }}
+             />
+             
+             {/* 토스트 알림 컴포넌트 */}
+             <ToastNotification 
+                 message={toastState.message} 
+                 type={toastState.type} 
+             />
              
              {/* 주소 선택 팝업 */}
              <AddressSelectionPopup
