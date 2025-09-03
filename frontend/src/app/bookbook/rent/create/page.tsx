@@ -190,53 +190,64 @@ ${conditionAnalysis}`;
                     const responseData = await res.json();
                     const currentUser: CurrentUserDto = responseData.data;
                     
-                    // 만약 유저 상태가 'SUSPENDED'라면
-                    if (currentUser.userStatus === 'SUSPENDED') {
-                        // 경고창을 띄우고
-                        alert('정지된 회원입니다.');
-                        // 홈 페이지로 리다이렉트
-                        router.push(`/bookbook`);
-                    }
-                } else {
-                    // 유저 정보 가져오기 실패 시 로그인 페이지 등으로 리다이렉트
-                    // 예를 들어, 인증 실패 시
-                    if (res.status === 401) {
-                         alert('로그인이 필요합니다.');
+                                                              // 만약 유저 상태가 'SUSPENDED'라면
+                     if (currentUser.userStatus === 'SUSPENDED') {
+                         // 토스트 메시지로 알림
+                         showToast('정지된 회원입니다.', 'error' as ToastType);
+                         // 홈 페이지로 리다이렉트
+                         router.push(`/bookbook`);
+                     }
+                 } else {
+                     // 유저 정보 가져오기 실패 시 로그인 페이지 등으로 리다이렉트
+                     // 예를 들어, 인증 실패 시
+                     if (res.status === 401) {
+                         showToast('로그인이 필요합니다.', 'error' as ToastType);
                          router.push('/login');
-                    }
-                }
-            } catch (error) {
-                console.error("유저 상태 확인 중 오류 발생:", error);
-                // 네트워크 오류 발생 시에도 홈으로 보내거나 에러 메시지 표시
-                alert('유저 정보를 가져오는 중 오류가 발생했습니다.');
-                router.push('/');
-            }
+                     }
+                 }
+             } catch (error) {
+                 console.error("유저 상태 확인 중 오류 발생:", error);
+                 // 네트워크 오류 발생 시에도 홈으로 보내거나 에러 메시지 표시
+                 showToast('유저 정보를 가져오는 중 오류가 발생했습니다.', 'error' as ToastType);
+                 router.push('/');
+             }
         };
 
         checkUserStatus();
     }, [router]); // router 객체를 의존성 배열에 추가
 
+    // 통합된 초기화 함수들
     const resetForm = () => {
+        // 모든 폼 필드 초기화
         setTitle('');
-        setBookImage(null);
         setBookCondition('');
-        setSelectedAddress('');
         setAddress('');
         setContents('');
         setBookTitle('');
         setAuthor('');
         setPublisher('');
         setCategory('');
-        setSearchQuery('');
         setDescription('');
+        
+        // 이미지 및 주소 초기화
+        setBookImage(null);
+        setSelectedAddress('');
+        
+        // 검색 관련 상태 초기화
+        setSearchQuery('');
         setSearchResults([]);
         setShowBookSearchModal(false);
-        setCurrentPage(1); // 폼 초기화 시 페이지도 1로 초기화
+        setCurrentPage(1);
         setHasMoreResults(false);
+        
+        // OCR 상태 초기화
+        setIsAutoFilled(false);
+        setAutoFillSource(null);
     };
     
-    // OCR 실패 시 책 관련 필드만 초기화하는 함수
+    // OCR 실패 시 책 관련 필드만 초기화하는 함수 (중복 제거)
     const resetBookFields = () => {
+        // 책 관련 필드만 초기화
         setBookTitle('');
         setAuthor('');
         setPublisher('');
@@ -244,6 +255,8 @@ ${conditionAnalysis}`;
         setDescription('');
         setTitle('');
         setContents('');
+        
+        // OCR 상태 초기화
         setIsAutoFilled(false);
         setAutoFillSource(null);
     };
@@ -302,36 +315,38 @@ ${conditionAnalysis}`;
                 setCurrentPage(pageNumber); // 검색 성공 시 현재 페이지 업데이트
             } else {
                 showToast('검색 결과가 없습니다. 직접 입력해주세요.', 'error' as ToastType);
+                
+                // 검색 상태 초기화를 한 번에 처리
                 setSearchResults([]);
                 setHasMoreResults(false);
-                setShowBookSearchModal(false); // 결과 없으면 모달 닫기
+                setShowBookSearchModal(false);
             }
         } catch (error) {
             console.error('책 검색 중 오류 발생', error);
             showToast('책 검색 중 오류가 발생했습니다. 잠시 후 다시 시도하세요.', 'error' as ToastType);
+            
+            // 검색 상태 초기화를 한 번에 처리
             setSearchResults([]);
             setHasMoreResults(false);
             setShowBookSearchModal(false);
         }
     };
 
-    // 책 선택 시 폼 필드 채우는 함수
+    // 책 선택 시 폼 필드 채우는 함수 (중복 제거)
     const selectBook = (book: BookSearchResult) => {
+        // 책 정보를 한 번에 업데이트
         setBookTitle(book.bookTitle);
         setAuthor(book.author);
         setPublisher(book.publisher);
-        setCategory(book.category || ''); // 카테고리 필드 추가
-        setDescription(book.bookDescription || ''); // 책 설명 필드 추가
-        setShowBookSearchModal(false); // 모달 닫기
+        setCategory(book.category || '');
+        setDescription(book.bookDescription || '');
+        
+        // 모달 닫기
+        setShowBookSearchModal(false);
     };
 
-    // OCR + 알라딘 검색 통합 함수
-    const handleOcrBookSearch = async (imageFile: File): Promise<boolean> => {
-        setIsOcrProcessing(true);
-        setOcrResult(null);
-        setProgressValue(0); // 프로그레스 바 초기화
-        
-        // 프로그레스 바 애니메이션 시작
+    // 프로그레스 바 애니메이션 시작 함수
+    const startProgressAnimation = () => {
         const progressInterval = setInterval(() => {
             setProgressValue(prev => {
                 if (prev >= CONSTANTS.PROGRESS_THRESHOLD_90) {
@@ -341,6 +356,133 @@ ${conditionAnalysis}`;
                 return prev + Math.random() * CONSTANTS.PROGRESS_INCREMENT_MAX; // 랜덤하게 진행
             });
         }, CONSTANTS.PROGRESS_ANIMATION_INTERVAL);
+        
+        return progressInterval;
+    };
+
+    // OCR API 호출 함수
+    const callOcrApi = async (imageFile: File): Promise<Response> => {
+        const formData = new FormData();
+        formData.append('file', imageFile);
+        
+        return await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/bookbook/ocr-book-search`, {
+            method: 'POST',
+            body: formData,
+            credentials: 'include',
+        });
+    };
+
+    // OCR 응답 처리 함수
+    const processOcrResponse = async (response: Response): Promise<OcrResult | null> => {
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => null);
+            console.error('OCR API 오류:', {
+                status: response.status,
+                statusText: response.statusText,
+                errorData: errorData
+            });
+            
+            const errorMessage = errorData?.msg || `HTTP ${response.status}: ${response.statusText}`;
+            showToast(`${errorMessage}`, 'error' as ToastType);
+            return null;
+        }
+
+        const rsData = await response.json();
+        
+        // RsData 구조 검증
+        if (!rsData.data) {
+            console.error('❌ RsData.data가 null입니다:', rsData);
+            showToast('서버 응답 형식이 올바르지 않습니다.', 'error' as ToastType);
+            return null;
+        }
+
+        const result = rsData.data;
+        
+        // 응답 데이터 구조 로깅
+        console.log('OCR 분석 결과:', {
+            extractedText: result.extractedText?.substring(0, 100) + '...',
+            detectedBookTitle: result.detectedBookTitle,
+            confidence: result.confidence,
+            searchResultsCount: result.searchResults?.length || 0
+        });
+
+        return result;
+    };
+
+    // 책 정보 자동 입력 함수
+    const autoFillBookFields = (book: BookSearchResult, result: OcrResult): boolean => {
+        // 1. 책 정보 자동 입력
+        setBookTitle(book.bookTitle);
+        setAuthor(book.author);
+        setPublisher(book.publisher);
+        setCategory(book.category || '');
+        setDescription(book.bookDescription || '');
+        
+        // 2. 글 제목 자동 생성: "[책 제목]"
+        const autoTitle = `[${book.bookTitle}]`;
+        setTitle(autoTitle);
+        
+        // 3. 글 내용 자동 생성: AI 분석 기반 설명
+        const autoContents = generateAutoContents(book, result);
+        setContents(autoContents);
+        
+        // 4. 책 검색 상자에도 제목 입력
+        setSearchQuery(book.bookTitle);
+        
+        // 자동 입력 상태 설정
+        setIsAutoFilled(true);
+        setAutoFillSource('ocr');
+        
+        showToast(`"${book.bookTitle}" 모든 정보가 자동으로 입력되었습니다!`, 'success' as ToastType);
+        return true;
+    };
+
+    // OCR 에러 처리 함수
+    const handleOcrError = (result: OcrResult | null): boolean => {
+        if (!result) {
+            resetBookFields();
+            return false;
+        }
+
+        if (result.searchResults && result.searchResults.length > 0) {
+            // 검색 결과가 있으면 자동 입력
+            const book = result.searchResults[0];
+            console.log('자동 선택된 도서:', book.bookTitle);
+            return autoFillBookFields(book, result);
+        } else if (result.detectedBookTitle) {
+            // 검색 결과가 0건인 경우
+            if (!result.searchResults || result.searchResults.length === 0) {
+                console.log('검색 결과가 0건이므로 모든 필드 초기화');
+                resetBookFields();
+                
+                // 모든 필드를 비우고 (책 제목도 포함)
+                setBookTitle('');
+                setContents('');
+                
+                // AI 조회 실패 팝업 표시
+                setShowAiFailurePopup(true);
+                return false;
+            }
+        } else {
+            // OCR 실패
+            console.log('OCR 감지 실패 - 신뢰도:', result.confidence);
+            showToast('책 제목을 인식하지 못했습니다. 수동으로 입력해주세요.', 'error' as ToastType);
+            resetBookFields();
+            return false;
+        }
+
+        return false;
+    };
+
+    // OCR + 알라딘 검색 통합 함수 (중복 제거)
+    const handleOcrBookSearch = async (imageFile: File): Promise<boolean> => {
+        // OCR 상태를 한 번에 초기화
+        setIsOcrProcessing(true);
+        setOcrResult(null);
+        setProgressValue(0);
+        
+        // 프로그레스 바 애니메이션 시작
+        const progressInterval = startProgressAnimation();
 
         // 디버깅을 위한 상세 로깅
         console.log('🔍 OCR 요청 시작:', {
@@ -352,134 +494,36 @@ ${conditionAnalysis}`;
         // 사용자에게 처리 중임을 알림
         showToast('AI가 책 표지를 분석 중입니다... (3-5초 소요)', 'info');
         
-        const formData = new FormData();
-        formData.append('file', imageFile);
-        
         try {
-            const startTime = Date.now();
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/bookbook/ocr-book-search`, {
-                method: 'POST',
-                body: formData,
-                credentials: 'include', // 기존 패턴과 일치
-            });
+            // OCR API 호출
+            const response = await callOcrApi(imageFile);
             
-            if (response.ok) {
-                const rsData = await response.json();
-
-                console.log('📨 백엔드 응답 데이터:', rsData);
-                // RsData 구조 검증
-                if (!rsData.data) {
-                    console.error('❌ RsData.data가 null입니다:', rsData);
-                    showToast('서버 응답 형식이 올바르지 않습니다.', 'error');
-                    return false;
-                }
-                
-                const result = rsData.data;
-
-                // 응답 데이터 구조 로깅
-                console.log('OCR 분석 결과:', {
-                    extractedText: result.extractedText?.substring(0, 100) + '...',
-                    detectedBookTitle: result.detectedBookTitle,
-                    confidence: result.confidence,
-                    searchResultsCount: result.searchResults?.length || 0
-                });
-                
+            // 응답 처리
+            const result = await processOcrResponse(response);
+            
+            if (result) {
                 // OCR 결과 저장
                 setOcrResult(result);
                 
-                                 // 검색 결과가 있으면 자동으로 첫 번째 결과로 모든 필드 채우기
-                 if (result.searchResults && result.searchResults.length > 0) {
-                     const book = result.searchResults[0];
-                     console.log('자동 선택된 도서:', book.bookTitle);
-                     
-                                           // 1. 책 정보 자동 입력
-                      setBookTitle(book.bookTitle);
-                      setAuthor(book.author);
-                      setPublisher(book.publisher);
-                      setCategory(book.category || '');
-                      setDescription(book.bookDescription || '');
-                      
-                      // 2. 글 제목 자동 생성: "[책 제목]"
-                      const autoTitle = `[${book.bookTitle}]`;
-                      setTitle(autoTitle);
-                      
-                      // 3. 글 내용 자동 생성: AI 분석 기반 설명
-                      const autoContents = generateAutoContents(book, result);
-                      setContents(autoContents);
-                      
-                      // 4. 책 검색 상자에도 제목 입력
-                      setSearchQuery(book.bookTitle);
-                      
-                      // 자동 입력 상태 설정
-                      setIsAutoFilled(true);
-                      setAutoFillSource('ocr');
-                      
-                                           showToast(`"${book.bookTitle}" 모든 정보가 자동으로 입력되었습니다!`, 'success' as ToastType);
-                     return true;
-                     
-                 } else if (result.detectedBookTitle) {
-                     // 검색 결과가 0건인 경우 모든 필드 초기화 (책 제목 포함)
-                     if (!result.searchResults || result.searchResults.length === 0) {
-                         console.log('검색 결과가 0건이므로 모든 필드 초기화');
-                         resetBookFields();
-                         
-                         // 모든 필드를 비우고 (책 제목도 포함)
-                         setBookTitle('');
-                         setContents('');
-                         
-                         // AI 조회 실패 팝업 표시
-                         setShowAiFailurePopup(true);
-                         return false;
-                     }
-                     
-                     // 이 부분은 실제로는 도달하지 않음 (위에서 이미 처리됨)
-                     // 하지만 혹시 모를 상황을 대비해 남겨둠
-                     console.log('예상치 못한 상황: 제목은 감지되었지만 검색 결과 처리 로직에 도달');
-                     return false;
-                    
-                } else {
-                    // OCR 실패
-                    console.log('OCR 감지 실패 - 신뢰도:', result.confidence);
-                    showToast('책 제목을 인식하지 못했습니다. 수동으로 입력해주세요.', 'error' as ToastType);
-                    
-                    // OCR 실패 시 책 관련 필드 초기화
-                    resetBookFields();
-                    
-                    return false;
-                }
-            } else {
-                // 상세한 에러 로깅
-            const errorData = await response.json().catch(() => null);
-            console.error('OCR API 오류:', {
-                status: response.status,
-                statusText: response.statusText,
-                errorData: errorData
-            });
-            
-            const errorMessage = errorData?.msg || `HTTP ${response.status}: ${response.statusText}`;
-            showToast(`${errorMessage}`, 'error' as ToastType);
-            
-            // API 오류 시에도 책 관련 필드 초기화
-            resetBookFields();
+                // 에러 처리 및 자동 입력
+                return handleOcrError(result);
+            }
             
             return false;
-            }
             
         } catch (error) {
             console.error('OCR 네트워크 오류:', error);
             showToast('네트워크 오류가 발생했습니다. 수동으로 검색해주세요.', 'error' as ToastType);
-            
-            // 네트워크 오류 시에도 책 관련 필드 초기화
             resetBookFields();
-            
             return false;
             
         } finally {
-            setProgressValue(CONSTANTS.PROGRESS_THRESHOLD_100); // 프로그레스 바 100% 완료
+            // OCR 상태를 한 번에 정리
+            setProgressValue(CONSTANTS.PROGRESS_THRESHOLD_100);
             setTimeout(() => {
                 setIsOcrProcessing(false);
-                setProgressValue(0); // 상태 초기화
-            }, CONSTANTS.OCR_POPUP_DELAY); // 0.5초 후 팝업 닫기
+                setProgressValue(0);
+            }, CONSTANTS.OCR_POPUP_DELAY);
             console.log('OCR 처리 완료');
         }
     };
@@ -498,6 +542,7 @@ ${conditionAnalysis}`;
             return;
         }
 
+        // 이미지 업로드 처리
         if(bookImage){
             const imageFormData = new FormData();
             imageFormData.append('file', bookImage);
@@ -524,6 +569,7 @@ ${conditionAnalysis}`;
             }
         }
 
+        // 폼 데이터를 한 번에 구성
         const formData = {
             title: title,
             bookCondition: bookCondition,
@@ -551,12 +597,13 @@ ${conditionAnalysis}`;
                 resetForm();
                 setShowPopup(true);
             } else {
-
+                // 에러 응답 처리
                 const errorData = await res.json();
                 console.error('책 등록 실패', errorData);
                 showToast(`책 등록에 실패했습니다. ${errorData.msg || res.statusText}`, 'error' as ToastType);
             }
         } catch(error) {
+            // 네트워크 에러 처리
             console.error('책 등록 중 네트워크 에러', error);
             showToast('책 등록 중 네트워크 에러가 발생했습니다.', 'error' as ToastType);
         }
@@ -572,11 +619,11 @@ ${conditionAnalysis}`;
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     
-                    {/* AI 작성 모드 선택 */}
-                    <AiModeSelector 
-                        isAiModeEnabled={isAiModeEnabled}
-                        onToggle={setIsAiModeEnabled}
-                    />
+                                                              {/* AI 작성 모드 선택 */}
+                     <AiModeSelector 
+                         isAiModeEnabled={isAiModeEnabled}
+                         onToggle={setIsAiModeEnabled}
+                     />
 
                                           {/* 이미지 업로드 섹션 */}
                      <ImageUploadSection
@@ -587,11 +634,11 @@ ${conditionAnalysis}`;
                          onImageChange={handleImageChange}
                      />
 
-                    {/* AI 분석 중 로딩 팝업 (AI 모드에서만) */}
-                    <AiLoadingPopup 
-                        isVisible={isAiModeEnabled && isOcrProcessing}
-                        progressValue={progressValue}
-                    />
+                                          {/* AI 분석 중 로딩 팝업 (AI 모드에서만) */}
+                     <AiLoadingPopup 
+                         isVisible={isAiModeEnabled && isOcrProcessing}
+                         progressValue={progressValue}
+                     />
 
                     {/* 폼 필드 섹션 */}
                     <FormFieldsSection
@@ -642,35 +689,35 @@ ${conditionAnalysis}`;
                 </form>
             </div>
 
-                         {/* 팝업 모달들 */}
-             <PopupModals
-                 showPopup={showPopup}
-                 onClosePopup={() => setShowPopup(false)}
-                 showAiFailurePopup={showAiFailurePopup}
-                 onCloseAiFailurePopup={() => setShowAiFailurePopup(false)}
-                 isAddressPopupOpen={isAddressPopupOpen}
-                 onCloseAddressPopup={() => setIsAddressPopupOpen(false)}
-                 onSelectAddress={(address: string) => {
-                     setSelectedAddress(address);
-                     setIsAddressPopupOpen(false);
-                 }}
-             />
-             
-             {/* 토스트 알림 컴포넌트 */}
-             <ToastNotification 
-                 message={toastState.message} 
-                 type={toastState.type} 
-             />
-             
-             {/* 주소 선택 팝업 */}
-             <AddressSelectionPopup
-                 isOpen={isAddressPopupOpen}
-                 onClose={() => setIsAddressPopupOpen(false)}
-                 onSelectAddress={(address: string) => {
-                     setSelectedAddress(address);
-                     setIsAddressPopupOpen(false);
-                 }}
-             />
+            {/* 팝업 모달들 */}
+            <PopupModals
+                showPopup={showPopup}
+                onClosePopup={() => setShowPopup(false)}
+                showAiFailurePopup={showAiFailurePopup}
+                onCloseAiFailurePopup={() => setShowAiFailurePopup(false)}
+                isAddressPopupOpen={isAddressPopupOpen}
+                onCloseAddressPopup={() => setIsAddressPopupOpen(false)}
+                onSelectAddress={(address: string) => {
+                    setSelectedAddress(address);
+                    setIsAddressPopupOpen(false);
+                }}
+            />
+            
+            {/* 토스트 알림 컴포넌트 */}
+            <ToastNotification 
+                message={toastState.message} 
+                type={toastState.type} 
+            />
+            
+            {/* 주소 선택 팝업 */}
+            <AddressSelectionPopup
+                isOpen={isAddressPopupOpen}
+                onClose={() => setIsAddressPopupOpen(false)}
+                onSelectAddress={(address: string) => {
+                    setSelectedAddress(address);
+                    setIsAddressPopupOpen(false);
+                }}
+            />
         </div>
     )
 };
