@@ -159,7 +159,7 @@ class ReviewService(
         // 중복 리뷰 방지 - 같은 사람이 같은 대여 건에 이미 리뷰 작성했는지 확인
         val existingReview = reviewRepository.findByRentIdAndReviewerId(rentId, reviewerId)
         // Optional.isPresent(): Optional에 값이 있으면 true (= 이미 리뷰 존재)
-        if (existingReview.isPresent) {
+        if (existingReview != null) {
             throw ServiceException("409-1", "이미 리뷰를 작성하셨습니다.")
         }
 
@@ -179,10 +179,10 @@ class ReviewService(
      */
     private fun updateUserRating(userId: Long) {
         val averageRating = reviewRepository.findAverageRatingByRevieweeId(userId)
-        if (averageRating.isPresent) {
+        if (averageRating != null) {
             val user = userRepository.findById(userId)
                 .orElseThrow { ServiceException("404-1", "사용자를 찾을 수 없습니다.") }
-            user.changeRating(averageRating.get().toFloat())
+            user.changeRating(averageRating.toFloat())
             userRepository.save(user)
         }
     }
