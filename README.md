@@ -1,8 +1,8 @@
 # 📚 BookBook - 도서 대여 서비스
 
 ## 📖 프로젝트 소개
-BookBook은 사용자 간 도서 대여를 편리하게 관리할 수 있는 웹 애플리케이션입니다. 
-사용자들은 자신의 도서를 등록하고, 다른 사용자의 도서를 대여할 수 있으며, 
+BookBook은 사용자 간 도서 대여를 편리하게 관리할 수 있는 웹 애플리케이션입니다.
+사용자들은 자신의 도서를 등록하고, 다른 사용자의 도서를 대여할 수 있으며,
 대여 기록과 상태를 실시간으로 확인할 수 있습니다.
 
 ### 주요 기능
@@ -141,12 +141,16 @@ NBE6-8-3-Team01/
 │   │   │   │       ├── domain/
 │   │   │   │       │   ├── user/
 │   │   │   │       │   ├── rent/
+│   │   │   │       │   ├── rentList/
+│   │   │   │       │   ├── rentBookList/
+│   │   │   │       │   ├── lendList/
 │   │   │   │       │   ├── review/
 │   │   │   │       │   ├── chat/
 │   │   │   │       │   ├── notification/
 │   │   │   │       │   ├── report/
+│   │   │   │       │   ├── suspend/
 │   │   │   │       │   ├── wishList/
-│   │   │   │       │   └── lendList/
+│   │   │   │       │   └── home/
 │   │   │   │       └── global/
 │   │   │   │           ├── security/
 │   │   │   │           ├── exception/
@@ -181,20 +185,32 @@ NBE6-8-3-Team01/
 
 | 도메인 | 테스트 클래스 | 주요 테스트 항목 |
 |--------|--------------|-----------------|
-| **사용자** | UserServiceTest | • 사용자 조회 및 생성<br>• 프로필 관리<br>• 회원가입/탈퇴 |
-| **인증** | JwtAuthenticationFilterTest | • JWT 토큰 검증<br>• 인증 필터링<br>• 토큰 갱신 |
-| **대여** | RentAdminControllerTest<br>RentListControllerTest | • 대여 게시글 CRUD<br>• 대여 상태 관리<br>• 페이징 처리 |
+| **사용자** | UserServiceTest<br>UserControllerTest<br>AdminControllerTest | • 사용자 조회 및 생성<br>• 프로필 관리<br>• 회원가입/탈퇴 |
+| **인증** | JwtAuthenticationFilterTest<br>LoginSuccessHandlerTest<br>RefreshTokenControllerTest | • JWT 토큰 검증<br>• 인증 필터링<br>• 토큰 갱신 |
+| **대여** | RentAdminControllerTest<br>RentListControllerTest<br>RentBookListServiceTest | • 대여 게시글 CRUD<br>• 대여 상태 관리<br>• 페이징 처리 |
+| **대출** | LendListControllerTest | • 대출 목록 관리<br>• 대출 상태 확인 |
 | **리뷰** | ReviewControllerTest | • 대여자/대여받은 사람 리뷰<br>• 평점 관리 |
 | **채팅** | ChatServiceTest | • 메시지 전송/수신<br>• 채팅방 관리 |
 | **알림** | NotificationServiceTest | • 알림 발송<br>• 알림 조회 |
-| **신고** | ReportServiceTest<br>ReportControllerTest | • 신고 접수<br>• 신고 처리 |
+| **신고** | ReportServiceTest<br>ReportControllerTest<br>ReportAdminControllerTest | • 신고 접수<br>• 신고 처리<br>• 관리자 신고 관리 |
+| **정지** | SuspendedUserControllerTest | • 사용자 정지 관리<br>• 정지 해제 |
 | **찜목록** | WishListControllerTest | • 찜하기/해제<br>• 찜목록 조회 |
+| **홈** | HomeServiceTest | • 홈 화면 데이터 조회<br>• 추천 도서 |
 
 ### 테스트 커버리지
 - Spring Boot Test를 활용한 통합 테스트
 - MockMvc를 통한 Controller 계층 테스트
 - @Transactional을 활용한 롤백 테스트
 - @ActiveProfiles("test")로 테스트 환경 분리
+
+<br>
+
+## 🌟 기타
+
+### 기여 가이드
+프로젝트에 기여하고 싶으시다면 아래 작업 흐름을 참고해주세요.
+
+---
 
 <br>
 
@@ -233,37 +249,37 @@ NBE6-8-3-Team01/
 <br>
 
 5. 코드 리뷰 및 머지 상세
-  - **Squash and Merge:** 여러 개의 커밋을 하나의 커밋으로 합쳐서 `main` 브랜치에 머지합니다.
-  - `main` 브랜치의 커밋 히스토리를 깔끔하게 유지할 수 있습니다.
+- **Squash and Merge:** 여러 개의 커밋을 하나의 커밋으로 합쳐서 `main` 브랜치에 머지합니다.
+- `main` 브랜치의 커밋 히스토리를 깔끔하게 유지할 수 있습니다.
 
 <br>
 
 ## 💭 JDK, 코틀린 컴파일러 버전
 - JDK 21
 - 코틀린 버전 1.9.25 (스프링부트 3.5 버전 호환성)
-    - 2.0.0 부터는 K2 컴파일러의 도입으로 기존 대비 평균 2배 이상의 컴파일 속도 개선이 이루어졌고,  
-    코틀린 코드로 좀 더 자연스럽게 마이그레이션 된다고 합니다.  
-    - 스프링부트 4부터는 코틀린 2.2.0 버전을 기본으로 지원할 것이라 하네요 (25년 11월 경)
+  - 2.0.0 부터는 K2 컴파일러의 도입으로 기존 대비 평균 2배 이상의 컴파일 속도 개선이 이루어졌고,  
+    코틀린 코드로 좀 더 자연스럽게 마이그레이션 된다고 합니다.
+  - 스프링부트 4부터는 코틀린 2.2.0 버전을 기본으로 지원할 것이라 하네요 (25년 11월 경)
 
 <br>
 
 ## 💻인텔리제이를 활용하기
 - 자바 -> 코틀린로 마이그레이션 후 커밋하면, 내역은 파일 수정(확장자 변경 -> 코드 수정)이 아닌,  
-기존 파일 삭제 -> 새 파일 생성으로 남습니다. 이는 PR 때 코드 리뷰 시 불편함을 발생시킬 수 있습니다.  
+  기존 파일 삭제 -> 새 파일 생성으로 남습니다. 이는 PR 때 코드 리뷰 시 불편함을 발생시킬 수 있습니다.
 - 터미널로 커밋 메세지를 한글로 입력하게 되면 인코딩 문제로 인해, 깨진 상태로 커밋이 올라오는 경우가 있습니다.  
-인텔리제이는 이러한 부분을 잘 지원해주기 때문에 버전 관리에 용이할 것으로 보입니다.
+  인텔리제이는 이러한 부분을 잘 지원해주기 때문에 버전 관리에 용이할 것으로 보입니다.
 
 <br>
 
 ---
 참고 그림 1  
 <img
-  src="https://cdn.discordapp.com/attachments/1399363484558299217/1409962038142435439/image.png?ex=68aff1b9&is=68aea039&hm=81c985fb38493bfbf342cba753d952b899da5f9f565c31e9068fad5898ae711f&"
-  width="50%"
+src="https://cdn.discordapp.com/attachments/1399363484558299217/1409962038142435439/image.png?ex=68aff1b9&is=68aea039&hm=81c985fb38493bfbf342cba753d952b899da5f9f565c31e9068fad5898ae711f&"
+width="50%"
 />
 
 참고 그림 2  
 <img
-  src="https://cdn.discordapp.com/attachments/1399363484558299217/1409962038469595236/image.png?ex=68aff1b9&is=68aea039&hm=efc3f153d3ab548d0457c89233a2bd15b25bae7b9b5225698ea537f9cedd5686&"
-  width="80%"
+src="https://cdn.discordapp.com/attachments/1399363484558299217/1409962038469595236/image.png?ex=68aff1b9&is=68aea039&hm=efc3f153d3ab548d0457c89233a2bd15b25bae7b9b5225698ea537f9cedd5686&"
+width="80%"
 />
