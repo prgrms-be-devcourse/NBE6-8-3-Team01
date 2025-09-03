@@ -15,8 +15,9 @@ import BookSearchSection from './BookSearchSection';
 import ImageUploadSection from './ImageUploadSection';
 // AI 분석 로딩 팝업 컴포넌트를 import
 import AiLoadingPopup from './AiLoadingPopup';
-// 폼 필드 섹션 컴포넌트를 import
-import FormFieldsSection from './FormFieldsSection';
+// 폼 필드 섹션 컴포넌트들을 import
+import PostFormSection from './PostFormSection';
+import BookFormSection from './BookFormSection';
 // 팝업 모달들 컴포넌트를 import
 import PopupModals from './PopupModals';
 // 토스트 알림 모듈을 import
@@ -640,8 +641,8 @@ ${conditionAnalysis}`;
                          progressValue={progressValue}
                      />
 
-                    {/* 폼 필드 섹션 */}
-                    <FormFieldsSection
+                    {/* 게시글 폼 필드 섹션 */}
+                    <PostFormSection
                         title={title}
                         onTitleChange={setTitle}
                         bookCondition={bookCondition}
@@ -651,16 +652,6 @@ ${conditionAnalysis}`;
                         onAddressPopupOpen={() => setIsAddressPopupOpen(true)}
                         contents={contents}
                         onContentsChange={setContents}
-                        bookTitle={bookTitle}
-                        onBookTitleChange={setBookTitle}
-                        author={author}
-                        onAuthorChange={setAuthor}
-                        publisher={publisher}
-                        onPublisherChange={setPublisher}
-                        category={category}
-                        onCategoryChange={setCategory}
-                        description={description}
-                        onDescriptionChange={setDescription}
                         maxContentLength={CONSTANTS.MAX_CONTENT_LENGTH}
                     />
 
@@ -677,6 +668,21 @@ ${conditionAnalysis}`;
                         hasMoreResults={hasMoreResults}
                     />
 
+                    {/* 책 정보 폼 필드 섹션 */}
+                    <BookFormSection
+                        bookTitle={bookTitle}
+                        onBookTitleChange={setBookTitle}
+                        author={author}
+                        onAuthorChange={setAuthor}
+                        publisher={publisher}
+                        onPublisherChange={setPublisher}
+                        category={category}
+                        onCategoryChange={setCategory}
+                        description={description}
+                        onDescriptionChange={setDescription}
+                        maxContentLength={CONSTANTS.MAX_CONTENT_LENGTH}
+                    />
+                
                     <div className="pt-4 flex justify-center">
                         <button
                             type="submit"
