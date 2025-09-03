@@ -117,8 +117,7 @@ class RentListService(
             .map { it.nickname }
             .orElse("알 수 없음")
 
-        val hasReview = reviewRepository.findByRentIdAndReviewerId(rentList.rent.id, borrowerUserId)
-            .isPresent
+        val hasReview = reviewRepository.findByRentIdAndReviewerId(rentList.rent.id, borrowerUserId) != null
 
         return RentListResponseDto(rentList, lenderNickname, hasReview)
     }
