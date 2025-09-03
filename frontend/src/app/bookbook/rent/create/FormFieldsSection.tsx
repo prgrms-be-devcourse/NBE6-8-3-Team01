@@ -33,6 +33,9 @@ interface FormFieldsSectionProps {
     // 책 설명
     description: string;
     onDescriptionChange: (value: string) => void;
+    
+    // 상수 값들
+    maxContentLength: number;
 }
 
 export default function FormFieldsSection({
@@ -54,7 +57,8 @@ export default function FormFieldsSection({
     category,
     onCategoryChange,
     description,
-    onDescriptionChange
+    onDescriptionChange,
+    maxContentLength
 }: FormFieldsSectionProps) {
     return (
         <>
@@ -132,12 +136,12 @@ export default function FormFieldsSection({
                     placeholder="책에 대한 설명, 상태 등을 자세히 적어주세요."
                     value={contents}
                     onChange={(e) => onContentsChange(e.target.value)}
-                    maxLength={500}
-                    required
-                ></textarea>
-                <div className="text-right text-sm text-gray-500 mt-1">
-                    {contents.length}/500
-                </div>
+                                            maxLength={maxContentLength}
+                        required
+                    ></textarea>
+                    <div className="text-right text-sm text-gray-500 mt-1">
+                        {contents.length}/{maxContentLength}
+                    </div>
             </div>
 
             {/* 책 제목 */}
@@ -214,12 +218,12 @@ export default function FormFieldsSection({
                     placeholder="책에 대한 간략한 설명을 입력하거나, 검색된 내용을 확인하세요."
                     value={description}
                     onChange={(e) => onDescriptionChange(e.target.value)}
-                    maxLength={500}
-                    required
-                ></textarea>
-                <div className="text-right text-sm text-gray-500 mt-1">
-                    {description.length}/500
-                </div>
+                                            maxLength={maxContentLength}
+                        required
+                    ></textarea>
+                    <div className="text-right text-sm text-gray-500 mt-1">
+                        {description.length}/{maxContentLength}
+                    </div>
             </div>
         </>
     );

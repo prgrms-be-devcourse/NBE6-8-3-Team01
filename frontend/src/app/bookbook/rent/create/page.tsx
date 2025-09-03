@@ -32,6 +32,14 @@ interface BookSearchResult {
     bookDescription: string;
 }
 
+// OCR 결과에 대한 구체적인 타입 정의
+interface OcrResult {
+    extractedText: string;
+    detectedBookTitle: string | null;
+    confidence: number;
+    searchResults: BookSearchResult[] | null;
+}
+
 // 새로운 타입 정의 : 현재 유저 정보
 interface CurrentUserDto {
     userId: number;
@@ -39,6 +47,23 @@ interface CurrentUserDto {
 }
 
 export default function BookRentPage() {
+    // 상수 정의 - 매직 넘버 제거
+    const CONSTANTS = {
+        PROGRESS_ANIMATION_INTERVAL: 200,
+        PROGRESS_INCREMENT_MAX: 15,
+        PROGRESS_THRESHOLD_90: 90,
+        PROGRESS_THRESHOLD_100: 100,
+        OCR_POPUP_DELAY: 500,
+        CONFIDENCE_THRESHOLD_HIGH: 0.7,
+        CONFIDENCE_THRESHOLD_MEDIUM: 0.6,
+        CONFIDENCE_THRESHOLD_LOW: 0.5,
+        TOAST_DELAY_INFO: 2000,
+        TOAST_DELAY_DEFAULT: 3000,
+        ITEMS_PER_PAGE: 10,
+        MAX_CONTENT_LENGTH: 500,
+        DEFAULT_IMAGE_URL: 'https://i.postimg.cc/pLC9D2vW/noimg.gif'
+    } as const;
+
     const [title, setTitle] = useState('');
     const [bookImage, setBookImage] = useState<File | null>(null);
     const [bookCondition, setBookCondition] = useState('');
@@ -52,12 +77,7 @@ export default function BookRentPage() {
 
     // OCR 처리 상태 관리
     const [isOcrProcessing, setIsOcrProcessing] = useState(false);
-    const [ocrResult, setOcrResult] = useState<{
-        extractedText: string;
-        detectedBookTitle: string | null;
-        confidence: number;
-        searchResults: any[] | null;
-    } | null>(null);
+    const [ocrResult, setOcrResult] = useState<OcrResult | null>(null);
     
     // 프로그레스 바 진행률 상태 추가
     const [progressValue, setProgressValue] = useState(0);
@@ -77,11 +97,9 @@ export default function BookRentPage() {
 
     // 페이지네이션 관련 상태 추가 및 수정
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10; // 백엔드 MaxResults와 동일하게 10으로 설정
     const [hasMoreResults, setHasMoreResults] = useState(false);
 
-    const defaultImageUrl = 'https://i.postimg.cc/pLC9D2vW/noimg.gif';
-    const [previewImageUrl, setPreviewImageUrl] = useState<string>(defaultImageUrl);
+    const [previewImageUrl, setPreviewImageUrl] = useState<string>(CONSTANTS.DEFAULT_IMAGE_URL);
 
     // 주소 선택 관련 상태 추가
     const [isAddressPopupOpen, setIsAddressPopupOpen] = useState(false); // 팝업 출력 용
@@ -109,7 +127,7 @@ export default function BookRentPage() {
             setPreviewImageUrl(objectUrl);
             return () => URL.revokeObjectURL(objectUrl);
         } else {
-            setPreviewImageUrl(defaultImageUrl);
+            setPreviewImageUrl(CONSTANTS.DEFAULT_IMAGE_URL);
         }
     }, [bookImage]);
 
@@ -120,16 +138,16 @@ export default function BookRentPage() {
 
 
     // AI 분석 기반 자동 글 내용 생성 함수
-    const generateAutoContents = (book: any, ocrResult: any) => {
+    const generateAutoContents = (book: BookSearchResult, ocrResult: OcrResult) => {
         const confidence = (ocrResult.confidence * 100).toFixed(1);
         
         // 책 상태 분석 (OCR 신뢰도 기반)
         let conditionAnalysis = '';
-        if (ocrResult.confidence > 0.7) {
+        if (ocrResult.confidence > CONSTANTS.CONFIDENCE_THRESHOLD_HIGH) {
             conditionAnalysis = '책 상태가 아주 좋습니다.';
-        } else if (ocrResult.confidence > 0.6) {
+        } else if (ocrResult.confidence > CONSTANTS.CONFIDENCE_THRESHOLD_MEDIUM) {
             conditionAnalysis = '책 상태가 양호합니다.';
-        } else if (ocrResult.confidence > 0.5) {
+        } else if (ocrResult.confidence > CONSTANTS.CONFIDENCE_THRESHOLD_LOW) {
             conditionAnalysis = '약간의 사용감이 있지만 양호합니다.';
         } else {
             conditionAnalysis = '사용감이 다소 있습니다.';
@@ -278,8 +296,8 @@ ${conditionAnalysis}`;
 
             if(data && data.length > 0){
                 setSearchResults(data);
-                // 가져온 결과 수가 itemsPerPage와 같으면 다음 페이지가 더 있을 수 있다고 가정
-                setHasMoreResults(data.length === itemsPerPage);
+                // 가져온 결과 수가 CONSTANTS.ITEMS_PER_PAGE와 같으면 다음 페이지가 더 있을 수 있다고 가정
+                setHasMoreResults(data.length === CONSTANTS.ITEMS_PER_PAGE);
                 setShowBookSearchModal(true);
                 setCurrentPage(pageNumber); // 검색 성공 시 현재 페이지 업데이트
             } else {
@@ -316,13 +334,13 @@ ${conditionAnalysis}`;
         // 프로그레스 바 애니메이션 시작
         const progressInterval = setInterval(() => {
             setProgressValue(prev => {
-                if (prev >= 90) {
+                if (prev >= CONSTANTS.PROGRESS_THRESHOLD_90) {
                     clearInterval(progressInterval);
-                    return 90; // 90%에서 멈춤 (실제 완료 시 100%로 설정)
+                    return CONSTANTS.PROGRESS_THRESHOLD_90; // 90%에서 멈춤 (실제 완료 시 100%로 설정)
                 }
-                return prev + Math.random() * 15; // 랜덤하게 진행
+                return prev + Math.random() * CONSTANTS.PROGRESS_INCREMENT_MAX; // 랜덤하게 진행
             });
-        }, 200);
+        }, CONSTANTS.PROGRESS_ANIMATION_INTERVAL);
 
         // 디버깅을 위한 상세 로깅
         console.log('🔍 OCR 요청 시작:', {
@@ -457,11 +475,11 @@ ${conditionAnalysis}`;
             return false;
             
         } finally {
-            setProgressValue(100); // 프로그레스 바 100% 완료
+            setProgressValue(CONSTANTS.PROGRESS_THRESHOLD_100); // 프로그레스 바 100% 완료
             setTimeout(() => {
                 setIsOcrProcessing(false);
                 setProgressValue(0); // 상태 초기화
-            }, 500); // 0.5초 후 팝업 닫기
+            }, CONSTANTS.OCR_POPUP_DELAY); // 0.5초 후 팝업 닫기
             console.log('OCR 처리 완료');
         }
     };
@@ -472,7 +490,7 @@ ${conditionAnalysis}`;
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        let imageUrl = 'https://i.postimg.cc/pLC9D2vW/noimg.gif'; // 기본 이미지 URL
+        let imageUrl = CONSTANTS.DEFAULT_IMAGE_URL; // 기본 이미지 URL
 
         // ✅ 핵심 로직: bookImage가 null이고 previewImageUrl이 defaultImageUrl과 같으면 등록 막기
         if (!bookImage) {
@@ -596,6 +614,7 @@ ${conditionAnalysis}`;
                         onCategoryChange={setCategory}
                         description={description}
                         onDescriptionChange={setDescription}
+                        maxContentLength={CONSTANTS.MAX_CONTENT_LENGTH}
                     />
 
                     {/* 책 검색 섹션 */}
