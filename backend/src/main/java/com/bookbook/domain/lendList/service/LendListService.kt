@@ -41,8 +41,8 @@ class LendListService(
             }
             
             val hasReview = rentList?.let {
-                rent.id?.let { rentId -> 
-                    reviewRepository.findByRentIdAndReviewerId(rentId, userId).isPresent 
+                rent.id?.let { rentId ->
+                    reviewRepository.findByRentIdAndReviewerId(rentId, userId) != null
                 }
             } ?: false
             
@@ -77,8 +77,8 @@ class LendListService(
             }
             
             val hasReview = rentList?.let {
-                rent.id?.let { rentId -> 
-                    reviewRepository.findByRentIdAndReviewerId(rentId, userId).isPresent 
+                rent.id?.let { rentId ->
+                    reviewRepository.findByRentIdAndReviewerId(rentId, userId) != null
                 }
             } ?: false
             
@@ -112,8 +112,8 @@ class LendListService(
             }
             
             val hasReview = rentList?.let {
-                rent.id?.let { rentId -> 
-                    reviewRepository.findByRentIdAndReviewerId(rentId, userId).isPresent 
+                rent.id?.let { rentId ->
+                    reviewRepository.findByRentIdAndReviewerId(rentId, userId) != null
                 }
             } ?: false
             
