@@ -44,8 +44,8 @@ class RentAdminController(
         @RequestParam(required = false) status: List<RentStatus>?,
         @RequestParam(required = false) userId: Long?
     ): ResponseEntity<RsData<PageResponseDto<RentSimpleResponseDto>>> {
-        if (page < 1) throw ServiceException("페이지 번호는 1보다 작을 수 없습니다.")
-        if (size < 1) throw ServiceException("페이지 당 크기는 1보다 작을 수 없습니다.")
+        val page = if (page < 1) 1 else page
+        val size = if (size < 1) 10 else size
 
         val pageable: Pageable = PageRequest.of(page - 1, size)
 
@@ -75,7 +75,7 @@ class RentAdminController(
         val responseDto = rentService.getRentPostDetail(id)
 
         return ResponseEntity.ok(
-            RsData("200-1", "$id 번 글 상태 변경 완료", responseDto)
+            RsData("200-1", "${id}번 글 조회 완료.", responseDto)
         )
     }
 
@@ -94,7 +94,7 @@ class RentAdminController(
         val responseDto = rentService.modifyRentPageStatus(id, status.status)
 
         return ResponseEntity.ok(
-            RsData("200-1", "$id 번 글 상태 변경 완료", responseDto)
+            RsData("200-1", "${id}번 글 상태 변경 완료.", responseDto)
         )
     }
 
@@ -106,12 +106,14 @@ class RentAdminController(
      */
     @PatchMapping("/{id}/restore")
     @Operation(summary = "대여 게시글 복구")
-    fun restoreRentPage(@PathVariable id: Long): ResponseEntity<RsData<RentDetailResponseDto>> { // 경로 변수로 전달된 id를 사용
+    fun restoreRentPage(
+      @PathVariable id: Long
+    ): ResponseEntity<RsData<RentDetailResponseDto>> { // 경로 변수로 전달된 id를 사용
         val responseDto = rentService.restoreRentPage(id)
 
         return ResponseEntity.ok(
             RsData(
-                "200-1", "$id 번 글 복구 완료", responseDto
+                "200-1", "${id}번 글 복구 완료.", responseDto
             )
         )
     }
