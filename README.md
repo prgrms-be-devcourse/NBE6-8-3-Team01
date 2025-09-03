@@ -40,6 +40,11 @@ BookBook은 사용자 간 도서 대여를 편리하게 관리할 수 있는 웹
 - **CI/CD:** GitHub Actions
 - **Version Control:** Git & GitHub
 
+### External APIs & Services
+- **OAuth Login:** Naver, Kakao, Google OAuth 2.0
+- **Book Search:** 알라딘 도서 검색 API
+- **Image Processing:** Google Vision API (도서 표지 분석 및 텍스트 추출)
+
 <br>
 
 ## 🚀 설치 및 실행 방법
@@ -105,6 +110,9 @@ jwt:
 - `POST /api/v1/auth/login` - 로그인
 - `POST /api/v1/auth/logout` - 로그아웃
 - `GET /api/v1/auth/refresh` - 토큰 갱신
+- `GET /api/v1/auth/oauth/naver` - 네이버 OAuth 로그인
+- `GET /api/v1/auth/oauth/kakao` - 카카오 OAuth 로그인
+- `GET /api/v1/auth/oauth/google` - 구글 OAuth 로그인
 
 #### 사용자
 - `GET /api/v1/user/{id}` - 사용자 정보 조회
@@ -126,6 +134,11 @@ jwt:
 - `GET /api/v1/admin/rent` - 전체 대여 목록 조회 (관리자)
 - `GET /api/v1/admin/report` - 신고 관리
 - `GET /api/v1/admin/user/suspended` - 정지 사용자 관리
+
+#### 도서 검색
+- `GET /api/v1/book/search` - 알라딘 API를 통한 도서 검색
+- `GET /api/v1/book/detail/{isbn}` - ISBN으로 도서 상세 정보 조회
+- `POST /api/v1/book/image/analyze` - Google Vision API를 통한 도서 표지 분석
 
 <br>
 
