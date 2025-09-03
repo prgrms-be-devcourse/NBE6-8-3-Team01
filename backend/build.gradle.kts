@@ -57,6 +57,12 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-websocket")
     implementation("org.springframework:spring-messaging")
     implementation("org.springframework:spring-websocket")
+
+    // Google Cloud BOM (Bill of Materials) - 버전 관리
+    implementation(platform("com.google.cloud:libraries-bom:26.29.0"))
+
+    // Google Vision API (BOM으로 버전 관리)
+    implementation("com.google.cloud:google-cloud-vision")
 }
 
 tasks.withType<Test> {

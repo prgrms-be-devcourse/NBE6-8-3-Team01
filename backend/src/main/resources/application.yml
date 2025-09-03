@@ -82,6 +82,15 @@ frontend:
   main-path: /bookbook
 aladin:
   ttbkey: ${ALADIN_API_KEY}
+google:
+  cloud:
+    vision:
+      credentials-path: ${GOOGLE_APPLICATION_CREDENTIALS}
+    project-id: ${GOOGLE_CLOUD_PROJECT_ID}
+ocr:
+  enabled: true
+  max-file-size: 10MB
+  supported-formats: jpg,jpeg,png,gif,bmp,webp
 jwt:
   secret-key: YourSuperSecretKeyForJWTGenerationAndValidationThatShouldBeAtLeast256BitsLongAndRandomlyGenerated
   access-token-validity-in-seconds: 3600
