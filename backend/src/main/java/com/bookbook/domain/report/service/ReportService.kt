@@ -93,18 +93,17 @@ class ReportService(
      * @param reportId 신고 글 ID
      * @param userId 처리 완료를 진행한 자의 ID
      * @throws ServiceException
+     * <p>(401) 허가되지 않은 접근
      * <p>(409) 처리가 완료된 신고를 다시 처리하고자 할 때
      * <p>(422) 대기 중인 신고를 처리 완료 상태로 바꾸고자 할 때
      */
     @Transactional
     fun markReportAsProcessed(reportId: Long, userId: Long) {
-        val report = findReportById(reportId)
-
         val closer = userService.findById(userId)
-            ?: throw ServiceException("404-1", "존재하지 않는 사용자입니다.")
+            ?. takeIf { it.isAdmin }
+            ?: throw ServiceException("401-1", "허가되지 않은 접근입니다 처리할 권한이 없습니다.")
 
-        if (!closer.isAdmin)
-            throw ServiceException("403-1", "신고를 처리할 권한이 없습니다.")
+        val report = findReportById(reportId)
 
         val status = report.status
 

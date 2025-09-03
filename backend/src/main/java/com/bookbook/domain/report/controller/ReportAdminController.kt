@@ -4,6 +4,7 @@ import com.bookbook.domain.report.dto.response.ReportDetailResponseDto
 import com.bookbook.domain.report.dto.response.ReportSimpleResponseDto
 import com.bookbook.domain.report.enums.ReportStatus
 import com.bookbook.domain.report.service.ReportService
+import com.bookbook.global.extension.requireAdmin
 import com.bookbook.global.jpa.dto.response.PageResponseDto
 import com.bookbook.global.rsdata.RsData
 import com.bookbook.global.security.CustomOAuth2User
@@ -41,9 +42,15 @@ class ReportAdminController (
     fun getReportPage(
         @RequestParam(defaultValue = "1") page: Int,
         @RequestParam(defaultValue = "10") size: Int,
-        @RequestParam(required = false) status: MutableList<ReportStatus>?,
-        @RequestParam(required = false) targetUserId: Long?
+        @RequestParam(required = false) status: List<ReportStatus>?,
+        @RequestParam(required = false) targetUserId: Long?,
+        @AuthenticationPrincipal customOAuth2User: CustomOAuth2User?
     ): ResponseEntity<RsData<PageResponseDto<ReportSimpleResponseDto>>> {
+        customOAuth2User.requireAdmin()
+
+        val page = if (page < 1) 1 else page
+        val size = if (size < 1) 10 else size
+
         val pageable: Pageable = PageRequest.of(page - 1, size)
 
         val reportHistoryPage = reportService.getReportPage(pageable, status, targetUserId)
@@ -52,7 +59,7 @@ class ReportAdminController (
         return ResponseEntity.ok(
             RsData(
                 "200-1",
-                "${response.pageInfo.totalElements}개의 신고글을 발견했습니다.",
+                "${response.pageInfo.totalElements}개의 신고글 조회 완료.",
                 response
             )
         )
@@ -67,8 +74,11 @@ class ReportAdminController (
     @GetMapping("/{reportId}/review")
     @Operation(summary = "단일 신고 상세 조회")
     fun getReportDetail(
-        @PathVariable reportId: Long
+        @PathVariable reportId: Long,
+        @AuthenticationPrincipal customOAuth2User: CustomOAuth2User?
     ): ResponseEntity<RsData<ReportDetailResponseDto>> {
+        customOAuth2User.requireAdmin()
+
         val reportDetail = reportService.getReportDetail(reportId)
 
         return ResponseEntity.ok(
@@ -89,9 +99,11 @@ class ReportAdminController (
     @Operation(summary = "단일 신고 처리 완료")
     fun processReport(
         @PathVariable reportId: Long,
-        @AuthenticationPrincipal adminUser: CustomOAuth2User
+        @AuthenticationPrincipal customOAuth2User: CustomOAuth2User?
     ): ResponseEntity<RsData<Void>> {
-        reportService.markReportAsProcessed(reportId, adminUser.userId)
+        val customOAuth2User = customOAuth2User.requireAdmin()
+
+        reportService.markReportAsProcessed(reportId, customOAuth2User.userId)
         log.info("{}번 신고 처리 완료", reportId)
 
         return ResponseEntity.ok(

@@ -5,6 +5,7 @@ import com.bookbook.domain.rent.dto.response.RentDetailResponseDto
 import com.bookbook.domain.rent.dto.response.RentSimpleResponseDto
 import com.bookbook.domain.rent.entity.RentStatus
 import com.bookbook.domain.rent.service.RentService
+import com.bookbook.global.exception.ServiceException
 import com.bookbook.global.jpa.dto.response.PageResponseDto
 import com.bookbook.global.rsdata.RsData
 import io.swagger.v3.oas.annotations.Operation
@@ -105,7 +106,9 @@ class RentAdminController(
      */
     @PatchMapping("/{id}/restore")
     @Operation(summary = "대여 게시글 복구")
-    fun restoreRentPage(@PathVariable id: Long): ResponseEntity<RsData<RentDetailResponseDto>> { // 경로 변수로 전달된 id를 사용
+    fun restoreRentPage(
+      @PathVariable id: Long
+    ): ResponseEntity<RsData<RentDetailResponseDto>> { // 경로 변수로 전달된 id를 사용
         val responseDto = rentService.restoreRentPage(id)
 
         return ResponseEntity.ok(
