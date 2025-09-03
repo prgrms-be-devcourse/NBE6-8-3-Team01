@@ -67,3 +67,42 @@
   src="https://cdn.discordapp.com/attachments/1399363484558299217/1409962038469595236/image.png?ex=68aff1b9&is=68aea039&hm=efc3f153d3ab548d0457c89233a2bd15b25bae7b9b5225698ea537f9cedd5686&"
   width="80%"
 />
+
+
+### 📁 프로젝트 구조
+
+#### Frontend
+```
+frontend/src/app/
+├── bookbook/              # 메인 서비스
+│   ├── rent/             # 도서 대여
+│   ├── user/             # 사용자 페이지
+│   │   ├── lendlist/     # 빌려준 책 목록
+│   │   ├── rentlist/     # 빌린 책 목록
+│   │   ├── wishlist/     # 위시리스트
+│   │   ├── notification/ # 알림
+│   │   └── profile/      # 프로필
+│   └── MessagePopup/     # 실시간 채팅
+├── admin/                # 관리자 페이지
+│   └── dashboard/        # 관리자 대시보드
+└── components/           # 공통 컴포넌트
+```
+
+#### Backend
+```
+backend/src/main/java/com/
+├── domain/
+│   ├── user/             # 사용자 관리
+│   ├── rent/             # 도서 대여
+│   ├── rentBookList/     # 대여 가능한 도서 목록
+│   ├── rentList/         # 빌린 책 관리
+│   ├── lendList/         # 빌려준 책 관리
+│   ├── wishList/         # 위시리스트
+│   ├── chat/             # 실시간 채팅
+│   ├── review/           # 리뷰 시스템
+│   ├── notification/     # 알림 시스템
+│   ├── report/           # 신고 관리
+│   ├── suspend/          # 사용자 정지 관리
+│   └── home/             # 홈페이지 데이터
+└── global/               # 공통 설정 및 유틸리티
+```
