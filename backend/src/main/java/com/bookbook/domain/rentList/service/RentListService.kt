@@ -55,17 +55,12 @@ class RentListService(
      * @param searchKeyword 검색어 (책 제목, 저자, 출판사, 게시글 제목에서 검색)
      * @return 검색된 대여한 도서 목록
      */
-    fun searchRentListByUserId(borrowerUserId: Long, searchKeyword: String?): List<RentListResponseDto> {
+    fun searchRentListByUserId(borrowerUserId: Long, searchKeyword: String): List<RentListResponseDto> {
         val rentLists = rentListRepository.findByBorrowerUserIdOrderByCreatedDateDesc(borrowerUserId)
-        
-        return if (searchKeyword.isNullOrBlank()) {
-            rentLists.map { toRentListResponseDto(it, borrowerUserId) }
-        } else {
-            val searchLower = searchKeyword.lowercase().trim()
-            rentLists
-                .filter { matchesSearchKeyword(it.rent, searchLower) }
-                .map { toRentListResponseDto(it, borrowerUserId) }
-        }
+        val searchLower = searchKeyword.lowercase().trim()
+        return rentLists
+            .filter { matchesSearchKeyword(it.rent, searchLower) }
+            .map { toRentListResponseDto(it, borrowerUserId) }
     }
 
     /**
