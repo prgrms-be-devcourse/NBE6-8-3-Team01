@@ -1,3 +1,219 @@
+# 📚 BookBook - 도서 대여 서비스
+
+## 📖 프로젝트 소개
+BookBook은 사용자 간 도서 대여를 편리하게 관리할 수 있는 웹 애플리케이션입니다.
+사용자들은 자신의 도서를 등록하고, 다른 사용자의 도서를 대여할 수 있으며,
+대여 기록과 상태를 실시간으로 확인할 수 있습니다.
+
+### 주요 기능
+- 📚 도서 등록 및 대여 관리
+- 🔍 도서 검색 및 필터링
+- 📅 대여/반납 상태 관리
+- 👤 사용자 인증 및 프로필 관리
+- 💬 채팅 기능
+- ⭐ 리뷰 시스템
+- 📢 알림 기능
+- 🚨 신고 및 정지 관리
+
+<br>
+
+## 🛠 기술 스택
+
+### Backend
+- **Language:** Kotlin 1.9.25
+- **Framework:** Spring Boot 3.x
+- **Database:** PostgreSQL / H2 (테스트용)
+- **ORM:** Spring Data JPA
+- **Build Tool:** Gradle
+- **JDK:** 21
+- **Security:** Spring Security + JWT
+
+### Frontend
+- **Framework:** Next.js 14
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS
+- **State Management:** Zustand
+- **HTTP Client:** Axios
+
+### Infrastructure
+- **Container:** Docker
+- **CI/CD:** GitHub Actions
+- **Version Control:** Git & GitHub
+
+<br>
+
+## 🚀 설치 및 실행 방법
+
+### Prerequisites
+- JDK 21
+- Node.js 18+
+- Docker & Docker Compose (선택사항)
+- PostgreSQL (로컬 실행 시)
+
+### Backend 실행
+```bash
+# 프로젝트 클론
+git clone https://github.com/your-org/NBE6-8-3-Team01.git
+cd NBE6-8-3-Team01/backend
+
+# 의존성 설치 및 빌드
+./gradlew build
+
+# 애플리케이션 실행
+./gradlew bootRun
+
+# 테스트 실행
+./gradlew test
+```
+
+### Frontend 실행
+```bash
+cd NBE6-8-3-Team01/frontend
+
+# 의존성 설치
+npm install
+
+# 개발 서버 실행
+npm run dev
+
+# 프로덕션 빌드
+npm run build
+npm start
+```
+
+### 환경 변수 설정
+```bash
+# backend/application.yml
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/bookbook
+  profiles:
+    active: dev
+
+jwt:
+  secret: your-secret-key
+```
+
+<br>
+
+## 📋 API 문서
+
+### 주요 엔드포인트
+
+#### 인증
+- `POST /api/v1/auth/signup` - 회원가입
+- `POST /api/v1/auth/login` - 로그인
+- `POST /api/v1/auth/logout` - 로그아웃
+- `GET /api/v1/auth/refresh` - 토큰 갱신
+
+#### 사용자
+- `GET /api/v1/user/{id}` - 사용자 정보 조회
+- `PUT /api/v1/user/{id}` - 사용자 정보 수정
+- `DELETE /api/v1/user/{id}` - 회원 탈퇴
+- `GET /api/v1/user/profile/{id}` - 프로필 상세 조회
+
+#### 대여 관리
+- `GET /api/v1/rent` - 대여 목록 조회
+- `POST /api/v1/rent` - 대여 게시글 생성
+- `GET /api/v1/rent/{id}` - 대여 상세 조회
+- `PATCH /api/v1/rent/{id}/status` - 대여 상태 변경
+
+#### 리뷰
+- `POST /api/v1/review/lender/{lenderId}/rent/{rentId}` - 대여자 리뷰 작성
+- `POST /api/v1/review/borrower/{borrowerId}/rent/{rentId}` - 대여받은 사람 리뷰 작성
+
+#### 관리자
+- `GET /api/v1/admin/rent` - 전체 대여 목록 조회 (관리자)
+- `GET /api/v1/admin/report` - 신고 관리
+- `GET /api/v1/admin/user/suspended` - 정지 사용자 관리
+
+<br>
+
+## 📁 프로젝트 구조
+
+```
+NBE6-8-3-Team01/
+├── backend/
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── kotlin/
+│   │   │   │   └── com/bookbook/
+│   │   │   │       ├── domain/
+│   │   │   │       │   ├── user/
+│   │   │   │       │   ├── rent/
+│   │   │   │       │   ├── rentList/
+│   │   │   │       │   ├── rentBookList/
+│   │   │   │       │   ├── lendList/
+│   │   │   │       │   ├── review/
+│   │   │   │       │   ├── chat/
+│   │   │   │       │   ├── notification/
+│   │   │   │       │   ├── report/
+│   │   │   │       │   ├── suspend/
+│   │   │   │       │   ├── wishList/
+│   │   │   │       │   └── home/
+│   │   │   │       └── global/
+│   │   │   │           ├── security/
+│   │   │   │           ├── exception/
+│   │   │   │           └── config/
+│   │   │   └── resources/
+│   │   └── test/
+│   └── build.gradle.kts
+├── frontend/
+│   ├── src/
+│   │   ├── app/
+│   │   │   └── bookbook/
+│   │   ├── components/
+│   │   └── lib/
+│   └── package.json
+└── docker-compose.yml
+```
+
+<br>
+
+## 🧪 테스트
+
+### 테스트 실행
+```bash
+# 전체 테스트 실행
+./gradlew test
+
+# 특정 도메인 테스트 실행
+./gradlew test --tests "com.bookbook.domain.user.*"
+```
+
+### 테스트 구성
+
+| 도메인 | 테스트 클래스 | 주요 테스트 항목 |
+|--------|--------------|-----------------|
+| **사용자** | UserServiceTest<br>UserControllerTest<br>AdminControllerTest | • 사용자 조회 및 생성<br>• 프로필 관리<br>• 회원가입/탈퇴 |
+| **인증** | JwtAuthenticationFilterTest<br>LoginSuccessHandlerTest<br>RefreshTokenControllerTest | • JWT 토큰 검증<br>• 인증 필터링<br>• 토큰 갱신 |
+| **대여** | RentAdminControllerTest<br>RentListControllerTest<br>RentBookListServiceTest | • 대여 게시글 CRUD<br>• 대여 상태 관리<br>• 페이징 처리 |
+| **대출** | LendListControllerTest | • 대출 목록 관리<br>• 대출 상태 확인 |
+| **리뷰** | ReviewControllerTest | • 대여자/대여받은 사람 리뷰<br>• 평점 관리 |
+| **채팅** | ChatServiceTest | • 메시지 전송/수신<br>• 채팅방 관리 |
+| **알림** | NotificationServiceTest | • 알림 발송<br>• 알림 조회 |
+| **신고** | ReportServiceTest<br>ReportControllerTest<br>ReportAdminControllerTest | • 신고 접수<br>• 신고 처리<br>• 관리자 신고 관리 |
+| **정지** | SuspendedUserControllerTest | • 사용자 정지 관리<br>• 정지 해제 |
+| **찜목록** | WishListControllerTest | • 찜하기/해제<br>• 찜목록 조회 |
+| **홈** | HomeServiceTest | • 홈 화면 데이터 조회<br>• 추천 도서 |
+
+### 테스트 커버리지
+- Spring Boot Test를 활용한 통합 테스트
+- MockMvc를 통한 Controller 계층 테스트
+- @Transactional을 활용한 롤백 테스트
+- @ActiveProfiles("test")로 테스트 환경 분리
+
+<br>
+
+## 🌟 기타
+
+### 기여 가이드
+프로젝트에 기여하고 싶으시다면 아래 작업 흐름을 참고해주세요.
+
+---
+
+<br>
+
 ### 작업 흐름 상세
 
 1. **이슈 생성**
